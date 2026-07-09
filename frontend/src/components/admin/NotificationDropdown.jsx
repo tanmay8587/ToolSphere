@@ -124,6 +124,7 @@ export default function NotificationDropdown() {
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
   const pollingRef = useRef(null);
+  const inFlightRef = useRef(false);
   const [confirmingId, setConfirmingId] = useState(null);
 
   /* ==========================================
@@ -162,22 +163,30 @@ export default function NotificationDropdown() {
   }, [loading, hasMore, page, fetchNotifications]);
 
   /* ==========================================
-      POLLING FOR UNREAD COUNT
-      (derived from the existing fetched notifications list)
+      AUTO REFRESH (every POLL_INTERVAL)
+      Refreshes the notification list AND the unread badge count from
+      the existing API. Does not reload the page, keeps the dropdown
+      open if it is, and guards against overlapping requests.
   ========================================== */
 
   useEffect(() => {
-    // Populate the notification list on mount so the badge reflects the
-    // existing notifications (count of items where isRead === false).
+    // Initial fetch so the badge reflects existing notifications
+    // (count of items where isRead === false).
     fetchNotifications(1, false);
+
     pollingRef.current = setInterval(() => {
-      // Avoid disrupting the open dropdown / optimistic read updates
-      if (!isOpen) fetchNotifications(1, false);
+      // Prevent duplicate/overlapping requests
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
+      fetchNotifications(1, false).finally(() => {
+        inFlightRef.current = false;
+      });
     }, POLL_INTERVAL);
+
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [fetchNotifications, isOpen]);
+  }, [fetchNotifications]);
 
   /* ==========================================
      FETCH WHEN DROPDOWN OPENS
