@@ -100,12 +100,14 @@ export const updateSmtpSetting = async (req, res) => {
       }
     }
 
-    // Sanitize the value for SMTP host
+    // Sanitize the value for SMTP host; preserve existing password when left blank
     const sanitizedValue = key === "smtp_host" && value !== undefined
       ? sanitizeSmtpHost(value)
-      : value !== undefined
-        ? value.trim()
-        : value;
+      : key === "smtp_password" && value !== undefined && value.trim() === ""
+        ? undefined
+        : value !== undefined
+          ? value.trim()
+          : value;
 
     // Find or create the setting
     let setting = await SmtpSetting.findOne({ key });
