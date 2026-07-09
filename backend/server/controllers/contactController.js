@@ -66,6 +66,62 @@ export async function submitContact(req, res) {
 }
 
 /* ===========================
+   SUBMIT CONTACT FORM (AUTHENTICATED)
+   POST /api/contact/auth
+   Uses req.user.email, ignores client-provided email
+   =========================== */
+export async function submitContactAuth(req, res) {
+  try {
+    const { name, subject, message } = req.body;
+    const email = req.user.email; // Always use the authenticated user's email
+
+    // Validation
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: "Name is required" });
+    }
+
+    if (!message || !message.trim()) {
+      return res.status(400).json({ success: false, message: "Message is required" });
+    }
+
+    if (message.length > 5000) {
+      return res.status(400).json({ success: false, message: "Message is too long (max 5000 characters)" });
+    }
+
+    const contact = await Contact.create({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      subject: subject ? subject.trim() : "",
+      message: message.trim(),
+    });
+
+    await Notification.create({
+      title: "New Contact Message",
+      message: "A new contact message has been received.",
+      type: "contact",
+      isRead: false,
+    });
+
+    logger.info(`Contact form submitted by authenticated user ${contact.email}`);
+
+    return res.status(201).json({
+      success: true,
+      message: "Your message has been sent successfully.",
+      data: { id: contact._id },
+    });
+  } catch (error) {
+    logger.error("Contact form (auth) error:", error.message);
+
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res.status(400).json({ success: false, message: messages.join(", ") });
+    }
+
+    return res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
+  }
+}
+
+/* ===========================
    GET ALL CONTACT MESSAGES (ADMIN)
    GET /api/admin/contact-messages
    =========================== */

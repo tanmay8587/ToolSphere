@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAdminToken } from "../utils/auth";
+import { getAdminToken, getToken } from "../utils/auth";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -33,6 +33,26 @@ export async function submitContact({ name, email, subject, message }) {
   return request("/contact", {
     method: "POST",
     body: JSON.stringify({ name, email, subject, message }),
+  });
+}
+
+/**
+ * Submit a contact form message (authenticated user)
+ * Uses the user's auth token. Backend will use req.user.email.
+ * @param {Object} params - { name, subject, message } (no email needed)
+ * @returns {Promise<Object>} - { success, message, data }
+ */
+export async function submitContactAuth({ name, subject, message }) {
+  const token = getToken();
+  const headers = { "Content-Type": "application/json" };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return request("/contact/auth", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ name, subject, message }),
   });
 }
 
