@@ -58,10 +58,12 @@ export const getUnreadCount = async (req, res) => {
 export const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.admin.id;
 
-    const notification = await Notification.findOneAndUpdate(
-      { _id: id, user: userId },
+    // Admin-only route (verifyAdmin). Notifications shown in the admin
+    // dropdown are platform-wide and may not be scoped to a single user,
+    // so we update by _id directly to persist isRead in MongoDB.
+    const notification = await Notification.findByIdAndUpdate(
+      id,
       { $set: { isRead: true } },
       { new: true }
     );
