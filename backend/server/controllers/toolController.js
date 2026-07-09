@@ -798,6 +798,37 @@ export const getPendingReviews = async (req, res) => {
 };
 
 /* =====================================
+   ADMIN - APPROVE REVIEW
+===================================== */
+
+export const approveReview = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    review.status = "approved";
+    await review.save();
+
+    res.json({
+      success: true,
+      message: "Review approved successfully",
+      review,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to approve review",
+    });
+  }
+};
+
+/* =====================================
    ADMIN - CATEGORIES
 ===================================== */
 
