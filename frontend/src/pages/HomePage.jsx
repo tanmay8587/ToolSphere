@@ -650,7 +650,7 @@ export default function HomePage() {
             type="submit"
             onClick={handleNewsletterSubmit}
             disabled={newsletterLoading}
-            className="w-[220px] rounded-2xl bg-white px-5 py-3.5 font-semibold text-slate-900 shadow-lg transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 flex-shrink-0"
+            className="w-[220px] rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-3.5 font-semibold text-white shadow-lg shadow-blue-500/30 transition duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 flex-shrink-0"
           >
             {newsletterLoading ? (
               <>
