@@ -7,6 +7,7 @@ const smtpApi = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 30000, // 30 second timeout for SMTP requests
 });
 
 // Get all SMTP settings (admin only)
