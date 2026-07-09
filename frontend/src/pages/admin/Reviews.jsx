@@ -111,12 +111,18 @@ export default function Reviews() {
     }
   }, [successMsg]);
 
-  // Handle reject (API not connected yet)
+  // Handle reject
   const handleReject = async (id) => {
     setProcessingId(id);
     setError("");
     try {
-      // TODO: Connect to PUT /api/admin/reviews/:id/reject
+      const { data } = await adminApi.put(`/admin/reviews/${id}/reject`);
+
+      if (data.success) {
+        setReviews((prev) => prev.filter((r) => r._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
+        setSuccessMsg("Review rejected successfully");
+      }
     } catch (err) {
       setError(
         err.response?.data?.message || err.message || "Failed to reject review"
