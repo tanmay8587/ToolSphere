@@ -16,7 +16,7 @@ import {
   FiFileText,
 } from "react-icons/fi";
 import {
-  getNotifications,
+  getAdminNotifications,
   getUnreadCount,
   markAsRead,
   markAllAsRead,
@@ -117,14 +117,15 @@ export default function NotificationDropdown() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getNotifications({ page: pageNum, limit: 20 });
-      const data = res.data;
+      // Use the admin-wide endpoint (latest 20 notifications across the platform)
+      const data = await getAdminNotifications();
       if (data.success) {
-        setNotifications((prev) =>
-          append ? [...prev, ...data.notifications] : data.notifications
-        );
-        setHasMore(data.pagination?.hasMore || false);
+        const list = data.notifications || [];
+        setNotifications((prev) => (append ? [...prev, ...list] : list));
+        setHasMore(false); // admin endpoint returns a fixed latest-20 window
         setPage(pageNum);
+        // Derive unread count from the returned list (per-user count is 0 for these)
+        setUnreadCount(list.filter((n) => n.isRead === false).length);
       }
     } catch (err) {
       setError("Failed to load notifications");
@@ -139,8 +140,7 @@ export default function NotificationDropdown() {
 
   const fetchUnreadCount = useCallback(async () => {
     try {
-      const res = await getUnreadCount();
-      const data = res.data;
+      const data = await getUnreadCount();
       if (data.success) {
         setUnreadCount(data.count);
       }

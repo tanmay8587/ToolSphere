@@ -42,6 +42,16 @@ export async function getUnreadCount() {
 }
 
 /**
+ * Get the latest 20 notifications across the entire platform (admin-wide).
+ * Uses the dedicated admin endpoint GET /admin/notifications.
+ * @returns {Promise<Object>} - { success, notifications: [...] }
+ */
+export async function getAdminNotifications() {
+  const { data } = await adminApi.get("/admin/notifications");
+  return data;
+}
+
+/**
  * Mark a single notification as read (admin only)
  * @param {string} id - Notification ID
  * @returns {Promise<Object>} - { success, message, notification }

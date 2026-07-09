@@ -143,3 +143,29 @@ export const deleteNotification = async (req, res) => {
     });
   }
 };
+
+/* ==========================================
+   GET ALL NOTIFICATIONS (ADMIN-WIDE)
+   GET /api/admin/notifications
+   Returns the latest 20 notifications across the
+   entire platform (not scoped to a single user).
+========================================== */
+
+export const getAdminNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({})
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+
+    res.json({
+      success: true,
+      notifications,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch notifications",
+    });
+  }
+};

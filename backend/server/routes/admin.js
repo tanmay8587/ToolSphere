@@ -60,6 +60,8 @@ import {
   deleteSubscriber,
 } from "../controllers/newsletterController.js";
 
+import { getAdminNotifications } from "../controllers/notificationController.js";
+
 const router = express.Router();
 
 /* ===========================
@@ -139,6 +141,11 @@ router.get("/export/users", verifyAdmin, exportUsers);
 =========================== */
 router.get("/newsletter/subscribers", verifyAdmin, getSubscribers);
 router.delete("/newsletter/subscribers/:id", verifyAdmin, deleteSubscriber);
+
+/* ===========================
+    NOTIFICATIONS (ADMIN-WIDE)
+=========================== */
+router.get("/notifications", verifyAdmin, getAdminNotifications);
 
 /* ===========================
     REVIEWS MODERATION (ADMIN)
