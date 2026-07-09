@@ -641,8 +641,8 @@ export default function HomePage() {
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               disabled={newsletterLoading}
-              className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3.5 text-white outline-none backdrop-blur-md placeholder:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:flex-1"
-              placeholder="Enter your email"
+              className="w-full rounded-full border border-white/20 bg-white/10 px-5 py-3.5 text-white placeholder:text-slate-300 backdrop-blur-md transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/70 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:flex-1"
+              placeholder="you@example.com"
             />
           )}
 
