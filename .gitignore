@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Log files
+*.log
+*.log.*
+
+# Backup files
+*.backup
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
+
+# Debug and test files
+debug_*.mjs
+audit_test.mjs
+test_*.mjs
+driver-test.js
+*.test.js
+*.spec.js
+
+# Data files
+*.db
+*.sqlite
+
+backend/.env
+frontend/.env
+frontend/dist/
