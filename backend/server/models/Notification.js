@@ -52,4 +52,11 @@ const notificationSchema = new mongoose.Schema(
   }
 );
 
+/* ==========================================
+   STATIC METHODS
+========================================== */
+notificationSchema.statics.getUnreadCount = function (userId) {
+  return this.countDocuments({ user: userId, isRead: false });
+};
+
 export default mongoose.model("Notification", notificationSchema);
