@@ -59,7 +59,7 @@ export default function ImageUploader({
       onChange(url);
       if (onUpload) onUpload(url);
     } catch (err) {
-      setError("Upload failed. Please try again.");
+      setError(err.response?.data?.message || err.message);
     } finally {
       setUploading(false);
       setTimeout(() => setUploadProgress(0), 500);
