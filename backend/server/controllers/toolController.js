@@ -829,6 +829,37 @@ export const approveReview = async (req, res) => {
 };
 
 /* =====================================
+   ADMIN - REJECT REVIEW
+===================================== */
+
+export const rejectReview = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    review.status = "rejected";
+    await review.save();
+
+    res.json({
+      success: true,
+      message: "Review rejected successfully",
+      review,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to reject review",
+    });
+  }
+};
+
+/* =====================================
    ADMIN - CATEGORIES
 ===================================== */
 
