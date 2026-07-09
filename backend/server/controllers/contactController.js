@@ -1,4 +1,5 @@
 import Contact from "../models/Contact.js";
+import Notification from "../models/Notification.js";
 import logger from "../utils/logger.js";
 import { validateEmail } from "../utils/validation.js";
 
@@ -36,6 +37,13 @@ export async function submitContact(req, res) {
       email: email.trim().toLowerCase(),
       subject: subject ? subject.trim() : "",
       message: message.trim(),
+    });
+
+    await Notification.create({
+      title: "New Contact Message",
+      message: "A new contact message has been received.",
+      type: "contact",
+      isRead: false,
     });
 
     logger.info(`Contact form submitted by ${contact.email}`);
