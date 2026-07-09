@@ -1,6 +1,7 @@
 import SmtpSetting from "../models/SmtpSetting.js";
 import logger from "../utils/logger.js";
 import nodemailer from "nodemailer";
+import dns from "node:dns";
 
 // Helper to sanitize SMTP host value
 const sanitizeSmtpHost = (value) => {
