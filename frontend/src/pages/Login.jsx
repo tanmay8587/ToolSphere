@@ -24,9 +24,11 @@ const parseJwt = (token) => {
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  // Allow navbar "Register" button to open the register form via navigation state
+  // Allow navbar "Register" button (and /register route) to open the register form
   const [mode, setMode] = useState(
-    location.state?.mode === "register" ? "register" : "login"
+    location.state?.mode === "register" || location.pathname === "/register"
+      ? "register"
+      : "login"
   );
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");

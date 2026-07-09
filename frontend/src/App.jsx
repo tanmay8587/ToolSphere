@@ -88,6 +88,7 @@ function App() {
 
 {/* AUTH */}
 <Route path="/login" element={<Login />} />
+<Route path="/register" element={<Login />} />
 <Route path="/register-success" element={<RegisterSuccess />} />
 <Route path="/forgot-password" element={<ForgotPassword />} />
 <Route path="/reset-password/:token" element={<ResetPassword />} />

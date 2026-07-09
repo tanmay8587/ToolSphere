@@ -307,8 +307,7 @@ export default function Layout() {
                   Login
                 </Link>
                 <Link
-                  to="/login"
-                  state={{ mode: "register" }}
+                  to="/register"
                   className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
                 >
                   Register
@@ -408,8 +407,7 @@ export default function Layout() {
                     Login
                   </Link>
                   <Link
-                    to="/login"
-                    state={{ mode: "register" }}
+                    to="/register"
                     onClick={() => setMenuOpen(false)}
                     className="block rounded-xl bg-cyan-500 px-4 py-4 text-center text-lg font-semibold text-white transition hover:bg-cyan-600"
                   >
