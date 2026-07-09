@@ -80,42 +80,65 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-slate-950 px-4 py-10 text-white">
       <div className="mx-auto max-w-5xl space-y-8">
-        <div className="rounded-[2rem] border border-slate-800 bg-slate-900 p-10 shadow-2xl">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-            <div className="flex-1 rounded-3xl border border-slate-800 bg-slate-950/40 p-8">
-              <div className="mb-6 flex items-center gap-4">
-                <div className="h-20 w-20 overflow-hidden rounded-3xl bg-slate-800">
-                  {profile?.avatar ? (
-                    <img src={profile.avatar} alt={profile.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-3xl font-bold text-slate-300">
-                      {profile?.name?.[0] || "U"}
-                    </div>
-                  )}
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-950/70 p-10 shadow-2xl backdrop-blur-xl">
+          {/* Subtle gradient glow effects */}
+          <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl"></div>
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl"></div>
+
+          <div className="relative flex flex-col gap-10 lg:flex-row lg:items-center">
+            {/* Identity column */}
+            <div className="flex flex-col items-center gap-5 text-center lg:items-start lg:text-left">
+              {/* Large circular gradient avatar */}
+              <div className="relative">
+                <div className="h-28 w-28 rounded-full bg-gradient-to-br from-cyan-400 via-indigo-500 to-purple-600 p-[3px] shadow-lg shadow-cyan-500/30">
+                  <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-900">
+                    {profile?.avatar ? (
+                      <img src={profile.avatar} alt={profile.name} className="h-full w-full rounded-full object-cover" />
+                    ) : (
+                      <span className="text-4xl font-bold text-white">
+                        {profile?.name?.[0] || "U"}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-semibold">{profile?.name}</h1>
-                  <p className="text-slate-400">{profile?.email}</p>
-                </div>
+                {/* Verified badge on avatar */}
+                <span
+                  className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-slate-950 bg-cyan-500 text-white shadow-md"
+                  title="Verified User"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                    <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 1 1 1.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 0 1 1.04-.208Z" clipRule="evenodd" />
+                  </svg>
+                </span>
               </div>
 
-              <div className="space-y-4">
-                <div className="rounded-3xl border border-slate-800 bg-slate-950/60 p-6">
-                  <h2 className="text-lg font-semibold text-white">About</h2>
-                  <p className="mt-3 text-slate-400">Welcome back, {profile?.name}. Manage bookmarks and reviews from the tools directory.</p>
-                </div>
-                <div className="rounded-3xl border border-slate-800 bg-slate-950/60 p-6">
-                  <h2 className="text-lg font-semibold text-white">Account</h2>
-                  <p className="mt-3 text-slate-400">User ID: {profile?._id}</p>
-                  <p className="mt-2 text-slate-400">Member since: {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "-"}</p>
-                </div>
+              <div>
+                <h1 className="text-3xl font-semibold text-white">{profile?.name}</h1>
+                <p className="mt-1 text-slate-300">{profile?.email}</p>
+                <p className="mt-2 text-sm text-slate-400">
+                  Joined{" "}
+                  {profile?.createdAt
+                    ? new Date(profile.createdAt).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "-"}
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                    <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+                  </svg>
+                  Verified User
+                </span>
               </div>
             </div>
 
-            <div className="w-full max-w-xl rounded-3xl border border-slate-800 bg-slate-950/40 p-8">
+            {/* Summary panel */}
+            <div className="w-full max-w-xl lg:flex-1">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-semibold">Summary</h2>
+                  <h2 className="text-2xl font-semibold text-white">Summary</h2>
                   <p className="mt-2 text-sm text-slate-400">Quick access to your saved tools and reviews.</p>
                 </div>
                 <button
@@ -127,11 +150,11 @@ export default function Profile() {
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
                   <p className="text-sm text-slate-400">Bookmarks</p>
                   <p className="mt-3 text-3xl font-semibold text-white">{bookmarks.length}</p>
                 </div>
-                <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
                   <p className="text-sm text-slate-400">Reviews</p>
                   <p className="mt-3 text-3xl font-semibold text-white">{reviews.length}</p>
                 </div>
