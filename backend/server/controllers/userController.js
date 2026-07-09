@@ -276,6 +276,46 @@ export const getProfile = async (req, res) => {
   }
 };
 
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, avatar } = req.body;
+
+    if (!name && !avatar) {
+      return res.status(400).json({ success: false, message: "Nothing to update." });
+    }
+
+    const updateFields = {};
+    if (name) {
+      const sanitizedName = sanitizeInput(name);
+      if (sanitizedName.trim().length < 1) {
+        return res.status(400).json({ success: false, message: "Name cannot be empty." });
+      }
+      updateFields.name = sanitizedName;
+    }
+    if (avatar) {
+      updateFields.avatar = avatar;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    res.json({
+      success: true,
+      user,
+      message: "Profile updated successfully.",
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to update profile." });
+  }
+};
+
 export const updateNewsletterPreference = async (req, res) => {
   try {
     const { newsletterEnabled } = req.body;

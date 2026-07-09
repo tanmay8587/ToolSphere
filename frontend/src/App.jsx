@@ -38,6 +38,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const Profile = lazy(() => import("./pages/Profile"));
+const EditProfile = lazy(() => import("./pages/EditProfile"));
 const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
 
 /* Admin Pages - Lazy Loaded */
@@ -100,6 +101,15 @@ function App() {
             element={
               <ProtectedRoute role="user">
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile/edit"
+            element={
+              <ProtectedRoute role="user">
+                <EditProfile />
               </ProtectedRoute>
             }
           />

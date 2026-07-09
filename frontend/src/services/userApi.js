@@ -36,6 +36,7 @@ export const googleAuth = (data) => API.post("/auth/google", data);
 export const forgotPassword = (data) => API.post("/auth/forgot-password", data);
 export const resetPassword = (token, data) => API.put(`/auth/reset-password/${token}`, data);
 export const getProfile = () => API.get("/auth/profile");
+export const updateProfile = (data) => API.put("/auth/profile", data);
 export const updateNewsletterPreference = (newsletterEnabled) =>
   API.put("/auth/newsletter-preference", { newsletterEnabled });
 export const bookmarkTool = (toolId) => API.post(`/auth/tools/${toolId}/bookmark`);

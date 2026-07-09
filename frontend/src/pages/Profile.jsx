@@ -331,7 +331,7 @@ export default function Profile() {
                   </motion.button>
 
                   <motion.button
-                    onClick={() => navigate("/profile")}
+                    onClick={() => navigate("/profile/edit")}
                     whileHover={{ y: -4, boxShadow: "0 14px 30px -10px rgba(168,85,247,0.3)" }}
                     whileTap={{ scale: 0.97 }}
                     transition={liftSpring}
