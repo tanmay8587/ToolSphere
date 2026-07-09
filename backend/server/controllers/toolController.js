@@ -34,9 +34,10 @@ export const getTools = async (req, res) => {
       status: "active",
     };
 
-    // Category filter
+    // Category filter (case-insensitive exact match)
     if (category && category !== "All") {
-      filters.category = category;
+      const escapedCategory = String(category).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filters.category = { $regex: new RegExp(`^${escapedCategory}$`, "i") };
     }
 
     // Pricing filter
@@ -93,6 +94,7 @@ export const getTools = async (req, res) => {
     });
 
   } catch (err) {
+    console.error("[getTools] Error fetching tools:", err);
     res.status(500).json({
       success: false,
       message: "Failed to fetch tools",
@@ -237,7 +239,8 @@ export const getAllToolsAdmin = async (req, res) => {
     const filters = {};
 
     if (category !== "All") {
-      filters.category = category;
+      const escapedCategory = String(category).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filters.category = { $regex: new RegExp(`^${escapedCategory}$`, "i") };
     }
 
     if (status !== "All") {

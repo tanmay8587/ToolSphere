@@ -15,6 +15,7 @@ async function request(path) {
 
     return data;
   } catch (error) {
+    console.error(`[toolsService] Request failed for "${path}":`, error);
     return {
       success: false,
       tools: [],
