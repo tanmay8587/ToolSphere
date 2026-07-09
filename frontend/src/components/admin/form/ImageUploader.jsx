@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { uploadFile } from "../../../services/uploadService";
 import { FiUpload, FiX, FiRefreshCw, FiAlertCircle } from "react-icons/fi";
 
@@ -20,6 +20,15 @@ export default function ImageUploader({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
+  // Local object URL used to show an instant preview before the upload finishes.
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  // Revoke any object URL we created to avoid memory leaks.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const handleFileSelect = async (file) => {
     if (!file) return;
@@ -36,6 +45,12 @@ export default function ImageUploader({
     }
 
     setError("");
+
+    // Show an immediate local preview while the file uploads in the background.
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    const localUrl = URL.createObjectURL(file);
+    setPreviewUrl(localUrl);
+
     setUploading(true);
     setUploadProgress(0);
 
@@ -53,14 +68,22 @@ export default function ImageUploader({
 
   const handleDrop = (e) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
     if (file) handleFileSelect(file);
   };
 
-  const handleDragOver = (e) => e.preventDefault();
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
   const handleRemove = () => {
     onChange("");
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl("");
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -74,6 +97,10 @@ export default function ImageUploader({
     ? "h-20 w-20" 
     : "h-32 w-32";
 
+  // Prefer the instant local preview, then the saved value, then the placeholder.
+  const displaySrc = previewUrl || value || placeholder;
+  const hasImage = Boolean(previewUrl || value);
+
   return (
     <div className="space-y-3">
       <label className="block text-sm text-slate-300">
@@ -84,6 +111,7 @@ export default function ImageUploader({
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        onDragEnter={handleDragOver}
         onClick={handleReplace}
         className={`
           cursor-pointer rounded-xl border-2 border-dashed p-4 text-center transition-all
@@ -105,11 +133,11 @@ export default function ImageUploader({
           className="hidden"
         />
         
-        {value ? (
+        {hasImage ? (
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
               <img
-                src={value}
+                src={displaySrc}
                 alt="Preview"
                 className={`${sizeClasses} rounded-xl object-cover border border-slate-700`}
                 onError={(e) => {
