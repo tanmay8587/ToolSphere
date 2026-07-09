@@ -45,6 +45,26 @@ export default function Profile() {
 
   const localUser = getUser();
 
+  const recentActivity = [
+    ...bookmarks.map((b) => ({
+      id: b._id,
+      type: "bookmark",
+      title: b.name,
+      subtitle: b.category || "Tool",
+      date: b.createdAt,
+    })),
+    ...reviews.map((r) => ({
+      id: r._id,
+      type: "review",
+      title: r.tool?.name || "Tool review",
+      subtitle: `Rating: ${r.rating} / 5`,
+      date: r.createdAt,
+    })),
+  ]
+    .filter((a) => a.date)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5);
+
   if (!localUser && !loading) {
     navigate("/login");
     return null;
@@ -250,6 +270,70 @@ export default function Profile() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8">
+          <h2 className="text-2xl font-semibold text-white">Recent Activity</h2>
+          <p className="mt-2 text-sm text-slate-400">Your latest bookmarks and reviews across the directory.</p>
+
+          {recentActivity.length ? (
+            <div className="mt-6 space-y-3">
+              {recentActivity.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 transition-colors hover:border-slate-700"
+                >
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                      item.type === "review"
+                        ? "bg-amber-500/15 text-amber-300"
+                        : "bg-cyan-500/15 text-cyan-300"
+                    }`}
+                  >
+                    {item.type === "review" ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                        <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006Z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                        <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-white">{item.title}</p>
+                    <p className="mt-0.5 text-sm text-slate-400">{item.subtitle}</p>
+                  </div>
+                  <span className="shrink-0 text-xs text-slate-500">
+                    {new Date(item.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/20 via-indigo-500/20 to-purple-600/20 ring-1 ring-white/10">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-cyan-300">
+                  <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-white">No recent activity yet</h3>
+              <p className="mt-1 max-w-sm text-sm text-slate-400">
+                Start exploring the directory and bookmarking your favorite AI tools to see your activity here.
+              </p>
+              <button
+                onClick={() => navigate("/tools")}
+                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M15.75 8.25a.75.75 0 0 1 .82.66l.54 5.42a.75.75 0 0 1-.84.82l-5.42-.54a.75.75 0 0 1-.66-.82l.54-5.42a.75.75 0 0 1 .82-.66Z" />
+                  <path fillRule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75Zm0 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Zm9.75-7.5a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm-15 0a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm12.53 5.03a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm-9.19-9.19a.75.75 0 0 1-1.06 0L4.22 7.78a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm9.19-1.06a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 1 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0ZM6.53 16.28a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 0 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+                </svg>
+                Explore AI Tools
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
