@@ -533,6 +533,12 @@ export default function Profile() {
             />
             <span className="text-sm font-medium text-white">Receive Weekly AI Newsletter</span>
           </label>
+          <button
+            type="button"
+            className="mt-4 rounded-2xl border border-slate-700 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:border-red-400/40 hover:bg-red-500/10"
+          >
+            Unsubscribe from Newsletter
+          </button>
         </motion.div>
       </motion.div>
     </motion.div>
