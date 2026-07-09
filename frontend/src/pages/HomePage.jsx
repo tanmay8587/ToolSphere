@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FiArrowRight, FiSearch, FiStar, FiZap, FiLoader } from 'react-icons/fi';
+import { FiArrowRight, FiSearch, FiStar, FiZap, FiLoader, FiCheck } from 'react-icons/fi';
 import { Link, useNavigate } from "react-router-dom";
 
 import { useEffect, useState } from "react";
@@ -663,6 +663,21 @@ export default function HomePage() {
           </button>
 
         </form>
+
+        <div className="relative mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-300">
+          <span className="inline-flex items-center gap-2">
+            <FiCheck className="h-4 w-4 text-emerald-400" />
+            Weekly AI Updates
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <FiCheck className="h-4 w-4 text-emerald-400" />
+            No Spam
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <FiCheck className="h-4 w-4 text-emerald-400" />
+            Unsubscribe Anytime
+          </span>
+        </div>
 
       </section>
 
