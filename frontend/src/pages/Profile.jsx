@@ -16,6 +16,11 @@ const sectionVariants = {
 
 const liftSpring = { type: "spring", stiffness: 300, damping: 22 };
 
+const pageVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.4, ease: "easeOut" } },
+};
+
 export default function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
@@ -113,9 +118,9 @@ export default function Profile() {
   return (
     <motion.div
       className="min-h-screen bg-slate-950 px-4 py-10 text-white"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      variants={pageVariants}
+      initial="hidden"
+      animate="show"
     >
       <motion.div
         className="mx-auto max-w-5xl space-y-8"
