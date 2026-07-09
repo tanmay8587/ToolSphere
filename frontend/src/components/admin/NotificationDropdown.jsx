@@ -17,7 +17,6 @@ import {
 } from "react-icons/fi";
 import {
   getAdminNotifications,
-  getUnreadCount,
   markAsRead,
   markAllAsRead,
   deleteNotification,
@@ -135,22 +134,7 @@ export default function NotificationDropdown() {
   }, []);
 
   /* ==========================================
-     FETCH UNREAD COUNT
-  ========================================== */
-
-  const fetchUnreadCount = useCallback(async () => {
-    try {
-      const data = await getUnreadCount();
-      if (data.success) {
-        setUnreadCount(data.count);
-      }
-    } catch (err) {
-      // Silently fail - count is non-critical
-    }
-  }, []);
-
-  /* ==========================================
-     LOAD MORE (LAZY LOADING)
+      LOAD MORE (LAZY LOADING)
   ========================================== */
 
   const loadMore = useCallback(() => {
@@ -160,16 +144,22 @@ export default function NotificationDropdown() {
   }, [loading, hasMore, page, fetchNotifications]);
 
   /* ==========================================
-     POLLING FOR UNREAD COUNT
+      POLLING FOR UNREAD COUNT
+      (derived from the existing fetched notifications list)
   ========================================== */
 
   useEffect(() => {
-    fetchUnreadCount();
-    pollingRef.current = setInterval(fetchUnreadCount, POLL_INTERVAL);
+    // Populate the notification list on mount so the badge reflects the
+    // existing notifications (count of items where isRead === false).
+    fetchNotifications(1, false);
+    pollingRef.current = setInterval(() => {
+      // Avoid disrupting the open dropdown / optimistic read updates
+      if (!isOpen) fetchNotifications(1, false);
+    }, POLL_INTERVAL);
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [fetchUnreadCount]);
+  }, [fetchNotifications, isOpen]);
 
   /* ==========================================
      FETCH WHEN DROPDOWN OPENS
