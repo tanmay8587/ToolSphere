@@ -200,8 +200,8 @@ export default function Reviews() {
           </button>
         </div>
 
-        {/* Summary Card */}
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* Summary Cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10">
@@ -211,6 +211,48 @@ export default function Reviews() {
                 <p className="text-sm text-slate-400">Pending Reviews</p>
                 <p className="mt-1 text-2xl font-semibold text-white">
                   {loading ? "—" : total}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
+                <FiCheck className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">Approved Reviews</p>
+                <p className="mt-1 text-2xl font-semibold text-white">
+                  {loading ? "—" : "—"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10">
+                <FiX className="h-6 w-6 text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">Rejected Reviews</p>
+                <p className="mt-1 text-2xl font-semibold text-white">
+                  {loading ? "—" : "—"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10">
+                <FiInbox className="h-6 w-6 text-cyan-400" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">Total Reviews</p>
+                <p className="mt-1 text-2xl font-semibold text-white">
+                  {loading ? "—" : "—"}
                 </p>
               </div>
             </div>
