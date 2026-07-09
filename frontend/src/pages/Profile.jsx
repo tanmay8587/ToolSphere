@@ -149,14 +149,55 @@ export default function Profile() {
                 </button>
               </div>
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-                  <p className="text-sm text-slate-400">Bookmarks</p>
-                  <p className="mt-3 text-3xl font-semibold text-white">{bookmarks.length}</p>
+              <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {/* Bookmarks */}
+                <div className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:bg-white/10 hover:shadow-lg hover:shadow-cyan-500/10">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-500/15 text-cyan-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                      <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="mt-4 text-3xl font-semibold text-white">{bookmarks.length}</p>
+                  <p className="mt-1 text-sm text-slate-400">Bookmarks</p>
                 </div>
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-                  <p className="text-sm text-slate-400">Reviews</p>
-                  <p className="mt-3 text-3xl font-semibold text-white">{reviews.length}</p>
+
+                {/* Reviews */}
+                <div className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/40 hover:bg-white/10 hover:shadow-lg hover:shadow-amber-500/10">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                      <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006Z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="mt-4 text-3xl font-semibold text-white">{reviews.length}</p>
+                  <p className="mt-1 text-sm text-slate-400">Reviews</p>
+                </div>
+
+                {/* Favorite Categories */}
+                <div className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400/40 hover:bg-white/10 hover:shadow-lg hover:shadow-indigo-500/10">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                      <path fillRule="evenodd" d="M5.25 2.25a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3V5.25a3 3 0 0 0-3-3H5.25Zm0 9a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-4a3 3 0 0 0-3-3H5.25Zm9-9a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3V5.25Zm0 9a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3v-4Z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="mt-4 text-3xl font-semibold text-white">
+                    {new Set(bookmarks.map((b) => b.category).filter(Boolean)).size}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-400">Favorite Categories</p>
+                </div>
+
+                {/* Member Since */}
+                <div className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-purple-400/40 hover:bg-white/10 hover:shadow-lg hover:shadow-purple-500/10">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                      <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75A2.25 2.25 0 0 1 21 6.75v12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18.75v-12A2.25 2.25 0 0 1 5.25 4.5H6V3a.75.75 0 0 1 .75-.75Zm-3 9a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 4.5a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="mt-4 text-xl font-semibold text-white">
+                    {profile?.createdAt
+                      ? new Date(profile.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "short" })
+                      : "-"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-400">Member Since</p>
                 </div>
               </div>
             </div>
