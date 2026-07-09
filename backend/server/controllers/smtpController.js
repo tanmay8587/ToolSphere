@@ -253,6 +253,7 @@ export const testEmail = async (req, res) => {
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 10000,
+      dns: { family: 4 }, // Force IPv4 to avoid IPv6 unreachable errors
     });
 
     // Verify connection
@@ -342,6 +343,7 @@ export const sendEmail = async (to, subject, html) => {
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 10000,
+      dns: { family: 4 }, // Force IPv4 to avoid IPv6 unreachable errors
     });
 
     const info = await transporter.sendMail({
