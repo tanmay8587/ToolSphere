@@ -59,7 +59,7 @@ export const verifyUser = async (req, res, next) => {
     const user = await User.findById(decoded.id);
 
     if (!user) {
-      return res.status(401).json({ success: false, message: "Unauthorized." });
+      return res.status(401).json({ success: false, message: "User account not found." });
     }
 
     // Check if user is verified

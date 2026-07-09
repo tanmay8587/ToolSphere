@@ -31,7 +31,11 @@ export default function Login() {
       : "login"
   );
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    new URLSearchParams(location.search).get("deleted") === "true"
+      ? "Your account no longer exists. Please sign in again."
+      : ""
+  );
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [needsVerification, setNeedsVerification] = useState(false);

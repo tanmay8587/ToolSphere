@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { isLoggedIn, isAdminLoggedIn } from "../utils/auth";
+import { isLoggedIn, isAdminLoggedIn, logout } from "../utils/auth";
+import { getProfile } from "../services/userApi";
 
 /**
  * Reusable route guard.
@@ -17,18 +19,53 @@ import { isLoggedIn, isAdminLoggedIn } from "../utils/auth";
 export default function ProtectedRoute({ children, role = "user" }) {
   const location = useLocation();
 
+  // For admin routes, keep the existing logic (no backend check)
   if (role === "admin") {
     if (!isAdminLoggedIn()) {
-      // Admin not authenticated -> send to admin login (no need to preserve route)
       return <Navigate to="/admin/login" replace />;
     }
     return children;
   }
 
-  // Default: user role
-  if (!isLoggedIn()) {
-    // User not authenticated -> send to /login and remember where they
-    // were trying to go so we can return them after a successful login.
+  // For user routes, verify the session is still valid on the backend.
+  // This catches cases where an admin deleted the user's account.
+  const [verifying, setVerifying] = useState(true);
+  const [valid, setValid] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const verify = async () => {
+      try {
+        await getProfile();
+        if (!cancelled) setValid(true);
+      } catch {
+        // Profile fetch failed (401/User account not found) — clear session
+        if (!cancelled) {
+          logout();
+          setValid(false);
+        }
+      } finally {
+        if (!cancelled) setVerifying(false);
+      }
+    };
+
+    if (isLoggedIn()) {
+      verify();
+    } else {
+      setVerifying(false);
+      setValid(false);
+    }
+
+    return () => { cancelled = true; };
+  }, []);
+
+  if (verifying) {
+    // Show nothing while verifying (prevents flash of content)
+    return null;
+  }
+
+  if (!valid) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 

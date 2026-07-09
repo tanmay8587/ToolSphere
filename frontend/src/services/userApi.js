@@ -18,13 +18,20 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor to handle 403 errors (unverified users)
+// Response interceptor to handle auth errors
 API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 403) {
       // Log out unverified users automatically
       logout();
+    } else if (
+      error.response?.status === 401 &&
+      error.response?.data?.message === "User account not found."
+    ) {
+      // User was deleted by admin — clear auth and redirect to login
+      logout();
+      window.location.href = "/login?deleted=true";
     }
     return Promise.reject(error);
   }
