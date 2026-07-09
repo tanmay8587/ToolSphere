@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { FiMenu, FiSearch, FiX } from 'react-icons/fi';
+import { FiMenu, FiSearch, FiX, FiUser, FiUserPlus } from 'react-icons/fi';
 import { Mail, MapPin, Clock, Zap, ArrowRight } from 'lucide-react';
 import { SiX, SiGithub, SiInstagram, SiYoutube, SiDiscord, SiTelegram, SiFacebook } from 'react-icons/si';
 import { FaLinkedin } from 'react-icons/fa6';
@@ -299,20 +299,41 @@ export default function Layout() {
             {authUser ? (
               <UserMenu user={authUser} />
             ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/login"
-                  className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
-                >
-                  Register
-                </Link>
-              </div>
+              <>
+                {/* Text labels - desktop & tablet */}
+                <div className="hidden items-center gap-2 md:flex">
+                  <Link
+                    to="/login"
+                    className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                  >
+                    Register
+                  </Link>
+                </div>
+
+                {/* Icon-only - mobile */}
+                <div className="flex items-center gap-2 md:hidden">
+                  <Link
+                    to="/login"
+                    aria-label="Login"
+                    className="flex items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-3 text-cyan-300 transition hover:bg-cyan-500/20"
+                  >
+                    <FiUser className="h-5 w-5" />
+                  </Link>
+                  <Link
+                    to="/register"
+                    aria-label="Register"
+                    className="flex items-center justify-center rounded-full bg-cyan-500 p-3 text-white transition hover:bg-cyan-600"
+                  >
+                    <FiUserPlus className="h-5 w-5" />
+                  </Link>
+                </div>
+              </>
             )}
 
             {/* Search Icon - Desktop & Mobile */}
