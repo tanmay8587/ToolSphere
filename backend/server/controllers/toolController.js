@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import Review from "../models/Review.js";
 import Report from "../models/Report.js";
 import Bookmark from "../models/Bookmark.js";
+import Notification from "../models/Notification.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 
@@ -429,6 +430,13 @@ export const addTool = async (req, res) => {
     payload.approvedAt = payload.approved ? Date.now() : null;
 
     const tool = await Tool.create(payload);
+
+    await Notification.create({
+      title: "New Tool Submitted",
+      message: "A new tool is waiting for approval.",
+      type: "tool",
+      isRead: false,
+    });
 
     // Send newsletter if requested
     let newsletterResult = null;
