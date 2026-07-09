@@ -80,6 +80,23 @@ const notificationConfig = {
     icon: FiInfo,
     color: "bg-purple-500/10 text-purple-400",
   },
+  // Generic category fallbacks (user / tool / review / contact)
+  user: {
+    icon: FiUserPlus,
+    color: "bg-violet-500/10 text-violet-400",
+  },
+  tool: {
+    icon: FiTool,
+    color: "bg-blue-500/10 text-blue-400",
+  },
+  review: {
+    icon: FiStar,
+    color: "bg-yellow-500/10 text-yellow-400",
+  },
+  contact: {
+    icon: FiMessageSquare,
+    color: "bg-cyan-500/10 text-cyan-400",
+  },
   default: {
     icon: FiCheckCircle,
     color: "bg-slate-500/10 text-slate-400",
@@ -303,15 +320,39 @@ export default function NotificationDropdown() {
     if (!dateString) return "";
     const date = new Date(dateString);
     const now = new Date();
+
+    // Midnight timestamps for day-level comparisons
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const startOfYesterday = new Date(startOfToday);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    const startOfDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 60)
+      return `${diffMins} min${diffMins > 1 ? "s" : ""} ago`;
+    if (
+      diffHours < 24 &&
+      startOfDate.getTime() === startOfToday.getTime()
+    )
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    if (startOfDate.getTime() === startOfYesterday.getTime())
+      return "Yesterday";
+    if (diffMs < 7 * 86400000) {
+      const diffDays = Math.floor(diffMs / 86400000);
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    }
     return date.toLocaleDateString();
   };
 
@@ -438,64 +479,71 @@ export default function NotificationDropdown() {
 
               {/* Notification List */}
               {notifications.length > 0 && (
-                <div className="divide-y divide-white/5">
+                <div className="space-y-2 p-3">
                   {notifications.map((notification, index) => {
                     const config = getConfig(notification.type);
                     const Icon = config.icon;
                     const colorClass = config.color;
                     const isUnread =
-                      notification.isRead === false || notification.read === false;
+                      notification.isRead === false ||
+                      notification.read === false;
 
                     return (
                       <div
                         key={notification._id}
-                        className={`group relative transition-all ${
-                          isUnread ? "bg-cyan-500/5" : ""
+                        className={`group relative overflow-hidden rounded-xl border transition-all duration-200 ${
+                          isUnread
+                            ? "border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/[0.15]"
+                            : "border-white/5 bg-white/[0.02] hover:bg-white/[0.06]"
                         }`}
-                        style={{
-                          animationDelay: `${index * 30}ms`,
-                        }}
+                        style={{ animationDelay: `${index * 30}ms` }}
                       >
+                        {/* Unread left accent bar */}
+                        {isUnread && (
+                          <span className="absolute inset-y-0 left-0 w-1 bg-cyan-400" />
+                        )}
+
                         <button
                           onClick={() => {
                             if (isUnread) {
                               handleMarkAsRead(notification._id);
                             }
                           }}
-                          className={`flex w-full gap-3 px-5 py-4 pr-12 text-left transition hover:bg-white/5 ${
-                            isUnread
-                              ? "font-semibold text-white"
-                              : "text-slate-300"
-                          }`}
+                          className="flex w-full gap-3 px-4 py-3 pl-5 text-left"
                           role="menuitem"
                         >
+                          {/* Type icon */}
                           <div
                             className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${colorClass}`}
                           >
                             <Icon size={16} />
                           </div>
+
+                          {/* Content */}
                           <div className="min-w-0 flex-1">
-                            <p
-                              className={`text-sm ${
-                                isUnread
-                                  ? "font-semibold text-white"
-                                  : "text-slate-300"
-                              }`}
-                            >
-                              {notification.title}
-                            </p>
+                            <div className="flex items-start justify-between gap-2">
+                              <p
+                                className={`truncate text-sm ${
+                                  isUnread
+                                    ? "font-semibold text-white"
+                                    : "font-medium text-slate-200"
+                                }`}
+                              >
+                                {notification.title}
+                              </p>
+                              {isUnread && (
+                                <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-cyan-400" />
+                              )}
+                            </div>
                             {notification.message && (
-                              <p className="mt-0.5 truncate text-xs text-slate-400">
+                              <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">
                                 {notification.message}
                               </p>
                             )}
-                            <p className="mt-1 text-[11px] text-slate-500">
+                            <p className="mt-1.5 text-[11px] text-slate-500">
                               {formatTime(notification.createdAt)}
                             </p>
                           </div>
-                          {isUnread && (
-                            <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-cyan-400" />
-                          )}
                         </button>
 
                         {/* Delete Button */}
@@ -503,7 +551,7 @@ export default function NotificationDropdown() {
                           onClick={(e) =>
                             handleDelete(e, notification._id, isUnread)
                           }
-                          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-600 opacity-0 transition hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 focus:opacity-100"
+                          className="absolute right-2 top-2 rounded-lg p-1.5 text-slate-600 opacity-0 transition hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 focus:opacity-100"
                           aria-label="Delete notification"
                           title="Delete notification"
                         >
