@@ -483,7 +483,7 @@ export default function ContactPage() {
                   <FiLock className="h-7 w-7" />
                 </div>
                 <h3 className="mt-5 text-xl font-semibold text-slate-100">
-                  Please login to contact us.
+                  Please login to submit feedback.
                 </h3>
                 <p className="mt-2 max-w-md text-sm text-slate-400">
                   Create a free account or sign in to send us a message.
