@@ -32,6 +32,10 @@ const getNewToolEmailTemplate = (tool) => {
           You're receiving this email because you subscribed to our newsletter.
           <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}/unsubscribe" style="color: #0891b2;">Unsubscribe</a>
         </p>
+
+        <p style="color: #64748b; font-size: 14px; margin-top: 10px;">
+          <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}/profile" style="color: #0891b2;">Manage Email Preferences</a>
+        </p>
       </div>
     `,
   };
@@ -61,6 +65,10 @@ const getNewBlogEmailTemplate = (blog) => {
         <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
           You're receiving this email because you subscribed to our newsletter.
           <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}/unsubscribe" style="color: #0891b2;">Unsubscribe</a>
+        </p>
+
+        <p style="color: #64748b; font-size: 14px; margin-top: 10px;">
+          <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}/profile" style="color: #0891b2;">Manage Email Preferences</a>
         </p>
       </div>
     `,
