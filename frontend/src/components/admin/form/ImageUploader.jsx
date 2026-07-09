@@ -2,7 +2,15 @@ import { useRef, useState, useEffect } from "react";
 import { uploadFile } from "../../../services/uploadService";
 import { FiUpload, FiX, FiRefreshCw, FiAlertCircle } from "react-icons/fi";
 
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+const ALLOWED_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "image/svg+xml",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+];
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 export default function ImageUploader({ 
