@@ -860,6 +860,35 @@ export const rejectReview = async (req, res) => {
 };
 
 /* =====================================
+   ADMIN - DELETE REVIEW
+===================================== */
+
+export const deleteReview = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    await review.deleteOne();
+
+    res.json({
+      success: true,
+      message: "Review deleted successfully",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete review",
+    });
+  }
+};
+
+/* =====================================
    ADMIN - CATEGORIES
 ===================================== */
 
