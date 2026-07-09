@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getProfile, updateNewsletterPreference } from "../services/userApi";
-import { unsubscribeFromNewsletter } from "../services/newsletterService";
+import { getProfile } from "../services/userApi";
+import { subscribeToNewsletter, unsubscribeFromNewsletter } from "../services/newsletterService";
 import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
 
@@ -30,10 +30,31 @@ export default function Profile() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [newsletterEnabled, setNewsletterEnabled] = useState(true);
+  const [newsletterEnabled, setNewsletterEnabled] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
   const [unsubscribing, setUnsubscribing] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
+
+  // Loads the newsletter checkbox state from the Newsletter subscription
+  // status exposed by the newsletter API (resolved from the auth token).
+  const loadNewsletterStatus = async () => {
+    try {
+      const token = localStorage.getItem("userAuthToken");
+      const base = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const res = await fetch(`${base}/newsletter/status`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const data = await res.json().catch(() => null);
+      if (data?.success) {
+        setNewsletterEnabled(data.subscribed === true);
+      }
+    } catch (err) {
+      // If the subscription status can't be determined, leave the default unchecked.
+    }
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -44,7 +65,7 @@ export default function Profile() {
           setProfile(data.user);
           setBookmarks(data.bookmarks || []);
           setReviews(data.reviews || []);
-          setNewsletterEnabled(data.user.newsletterEnabled !== false);
+          await loadNewsletterStatus();
         } else {
           setError(data.message || "Unable to load profile.");
         }
@@ -72,7 +93,11 @@ export default function Profile() {
     setNewsletterEnabled(checked);
     setSavingPref(true);
     try {
-      await updateNewsletterPreference(checked);
+      if (checked) {
+        await subscribeToNewsletter();
+      } else {
+        await unsubscribeFromNewsletter(profile?.email);
+      }
     } catch (err) {
       // Revert on failure
       setNewsletterEnabled(!checked);
