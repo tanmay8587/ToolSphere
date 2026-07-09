@@ -287,6 +287,8 @@ export const testEmail = async (req, res) => {
       success: false,
       message: userMessage,
       error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      errorCode: err.code || null,
+      errorMessage: err.message || null,
     });
   }
 };
