@@ -1,50 +1,71 @@
-import API from "./adminApi";
+import axios from "axios";
+import { getAdminToken } from "../utils/auth";
 
-/* ===============================
-   Notification API Service
-   All endpoints require admin auth (handled by adminApi interceptor)
-=============================== */
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+// Create an axios instance with admin auth interceptor
+const adminApi = axios.create({
+  baseURL: API_BASE,
+  headers: { "Content-Type": "application/json" },
+});
+
+adminApi.interceptors.request.use((config) => {
+  const token = getAdminToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 /**
- * Fetch paginated notifications
- * @param {Object} params - Query params { page, limit, type }
- * @returns {Promise<Object>} { success, notifications, pagination }
+ * Get paginated notifications (admin only)
+ * @param {Object} params - { page, limit }
+ * @returns {Promise<Object>} - { success, notifications, total, unreadCount, page, totalPages }
  */
-export const getNotifications = (params = {}) => {
+export async function getNotifications(params = {}) {
   const query = new URLSearchParams();
   if (params.page) query.set("page", params.page);
   if (params.limit) query.set("limit", params.limit);
-  if (params.type) query.set("type", params.type);
-  const qs = query.toString();
-  return API.get(`/notifications${qs ? `?${qs}` : ""}`);
-};
+
+  const queryString = query.toString();
+  const { data } = await adminApi.get(`/notifications${queryString ? `?${queryString}` : ""}`);
+  return data;
+}
 
 /**
- * Get unread notification count
- * @returns {Promise<Object>} { success, count }
+ * Get unread notifications count (admin only)
+ * @returns {Promise<Object>} - { success, unreadCount }
  */
-export const getUnreadCount = () =>
-  API.get("/notifications/unread-count");
+export async function getUnreadCount() {
+  const { data } = await adminApi.get("/notifications/unread-count");
+  return data;
+}
 
 /**
- * Mark a single notification as read
+ * Mark a single notification as read (admin only)
  * @param {string} id - Notification ID
- * @returns {Promise<Object>} { success, message, notification }
+ * @returns {Promise<Object>} - { success, message, notification }
  */
-export const markAsRead = (id) =>
-  API.patch(`/notifications/${id}/read`);
+export async function markAsRead(id) {
+  const { data } = await adminApi.patch(`/notifications/${id}/read`);
+  return data;
+}
 
 /**
- * Mark all notifications as read
- * @returns {Promise<Object>} { success, message, modifiedCount }
+ * Mark all notifications as read (admin only)
+ * @returns {Promise<Object>} - { success, message, modifiedCount }
  */
-export const markAllAsRead = () =>
-  API.patch("/notifications/read-all");
+export async function markAllAsRead() {
+  const { data } = await adminApi.patch("/notifications/read-all");
+  return data;
+}
 
 /**
- * Delete a notification
+ * Delete a notification (admin only)
  * @param {string} id - Notification ID
- * @returns {Promise<Object>} { success, message }
+ * @returns {Promise<Object>} - { success, message }
  */
-export const deleteNotification = (id) =>
-  API.delete(`/notifications/${id}`);
+export async function deleteNotification(id) {
+  const { data } = await adminApi.delete(`/notifications/${id}`);
+  return data;
+}
