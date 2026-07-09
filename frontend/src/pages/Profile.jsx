@@ -125,6 +125,8 @@ export default function Profile() {
       >
         <motion.div
           variants={sectionVariants}
+          whileHover={{ y: -6, boxShadow: "0 30px 60px -20px rgba(34,211,238,0.25)" }}
+          transition={liftSpring}
           className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-950/70 p-10 shadow-2xl backdrop-blur-xl"
         >
           {/* Subtle gradient glow effects */}
