@@ -1,5 +1,6 @@
 import Newsletter from "../models/Newsletter.js";
 import User from "../models/User.js";
+import Notification from "../models/Notification.js";
 import jwt from "jsonwebtoken";
 import { validateEmail, sanitizeInput } from "../utils/validation.js";
 import logger from "../utils/logger.js";
@@ -91,6 +92,13 @@ export const subscribe = async (req, res) => {
     const subscriber = await Newsletter.create({
       email: email,
       source: source || "website",
+    });
+
+    await Notification.create({
+      title: "New Newsletter Subscriber",
+      message: "A new user subscribed to the newsletter.",
+      type: "newsletter",
+      isRead: false,
     });
 
     logger.info(`New newsletter subscription: ${email}`);
