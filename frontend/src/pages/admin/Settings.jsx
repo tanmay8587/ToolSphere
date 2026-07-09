@@ -1817,7 +1817,7 @@ const loadData = async () => {
                               Use hasPassword flag to determine if password exists. */}
                           <input
                             type="password"
-                            value=""
+                            value={setting.value}
                             onChange={(e) => {
                               const newValue = e.target.value;
                               setSmtpSettings(prev =>
