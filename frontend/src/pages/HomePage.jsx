@@ -614,19 +614,22 @@ export default function HomePage() {
       </section>
 
       {/* NEWSLETTER */}
-      <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-cyan-500/10 to-fuchsia-500/10 px-6 py-12 text-center shadow-xl sm:px-8 sm:py-16 lg:px-12 lg:py-20">
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-indigo-500/20 px-6 py-12 text-center shadow-2xl shadow-blue-950/40 backdrop-blur-xl sm:px-8 sm:py-16 lg:px-12 lg:py-20">
 
-        <div className="mx-auto max-w-2xl space-y-4">
+        {/* Subtle glass highlight overlay */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-60" />
+
+        <div className="relative mx-auto max-w-2xl space-y-4">
           <h2 className="text-3xl font-semibold sm:text-4xl lg:text-5xl">
             Stay Updated with the Latest AI Tools
           </h2>
 
-          <p className="mx-auto text-base text-slate-300 sm:text-lg lg:text-xl">
+          <p className="mx-auto text-base text-slate-200 sm:text-lg lg:text-xl">
             Get notified when new AI tools, product launches, and important updates are published.
           </p>
         </div>
 
-        <form onSubmit={handleNewsletterSubmit} className="mx-auto mt-8 flex max-w-xl flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-3">
+        <form onSubmit={handleNewsletterSubmit} className="relative mx-auto mt-8 flex max-w-xl flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-3">
 
           {!isLoggedIn() && (
             <input
@@ -634,7 +637,7 @@ export default function HomePage() {
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               disabled={newsletterLoading}
-              className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3.5 outline-none disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:flex-1"
+              className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3.5 text-white outline-none backdrop-blur-md placeholder:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:flex-1"
               placeholder="Enter your email"
             />
           )}
@@ -643,7 +646,7 @@ export default function HomePage() {
             type="submit"
             onClick={handleNewsletterSubmit}
             disabled={newsletterLoading}
-            className="w-[220px] rounded-2xl bg-white px-5 py-3.5 font-semibold text-slate-900 transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 flex-shrink-0"
+            className="w-[220px] rounded-2xl bg-white px-5 py-3.5 font-semibold text-slate-900 shadow-lg transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 flex-shrink-0"
           >
             {newsletterLoading ? (
               <>
