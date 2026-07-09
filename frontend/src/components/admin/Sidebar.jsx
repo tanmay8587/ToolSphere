@@ -12,6 +12,7 @@ import {
   FiUsers,
   FiMail,
   FiSend,
+  FiStar,
 } from "react-icons/fi";
 import { useState, useEffect } from "react";
 
@@ -98,6 +99,11 @@ export default function Sidebar() {
       name: "Newsletter Subscribers",
       icon: <FiSend size={20} />,
       path: "/admin/newsletter-subscribers",
+    },
+    {
+      name: "Reviews",
+      icon: <FiStar size={20} />,
+      path: "/admin/reviews",
     },
     {
       name: "Settings",
