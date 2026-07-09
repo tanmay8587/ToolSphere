@@ -51,7 +51,8 @@ const ChangePassword = lazy(() => import("./pages/admin/ChangePassword"));
 const ManageUsers = lazy(() => import("./pages/admin/ManageUsers"));
 const ContactMessages = lazy(() => import("./pages/admin/ContactMessages"));
 const ContactMessageDetail = lazy(() => import("./pages/admin/ContactMessageDetail"));
-const NewsletterSubscribers = lazy(() => import("./pages/admin/NewsletterSubscribers"));
+  const NewsletterSubscribers = lazy(() => import("./pages/admin/NewsletterSubscribers"));
+  const Reviews = lazy(() => import("./pages/admin/Reviews"));
 
 function App() {
 
@@ -201,6 +202,15 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <NewsletterSubscribers />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/reviews"
+            element={
+              <ProtectedRoute role="admin">
+                <Reviews />
               </ProtectedRoute>
             }
           />
