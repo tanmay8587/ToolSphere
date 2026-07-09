@@ -25,6 +25,7 @@ export default function Reviews() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [processingId, setProcessingId] = useState(null);
 
   const loadReviews = useCallback(async () => {
@@ -81,11 +82,18 @@ export default function Reviews() {
     });
   };
 
-  // Handle approve (API not connected yet)
+  // Handle approve
   const handleApprove = async (id) => {
     setProcessingId(id);
+    setError("");
     try {
-      // TODO: Connect to PUT /api/admin/reviews/:id/approve
+      const { data } = await adminApi.put(`/admin/reviews/${id}/approve`);
+
+      if (data.success) {
+        setReviews((prev) => prev.filter((r) => r._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
+        setSuccessMsg("Review approved successfully");
+      }
     } catch (err) {
       setError(
         err.response?.data?.message || err.message || "Failed to approve review"
@@ -94,6 +102,14 @@ export default function Reviews() {
       setProcessingId(null);
     }
   };
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => setSuccessMsg(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
 
   // Render star rating
   const renderRating = (rating) => {
@@ -166,6 +182,13 @@ export default function Reviews() {
         {error && (
           <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-red-200">
             {error}
+          </div>
+        )}
+
+        {/* Success Message */}
+        {successMsg && (
+          <div className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-emerald-200">
+            {successMsg}
           </div>
         )}
 
