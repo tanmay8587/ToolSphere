@@ -502,6 +502,20 @@ export default function Profile() {
             </div>
           </div>
         </motion.div>
+
+        {/* Email Preferences */}
+        <motion.div variants={sectionVariants} className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
+          <h2 className="text-2xl font-semibold text-white">Email Preferences</h2>
+          <p className="mt-2 text-sm text-slate-400">Manage the emails you'd like to receive from us.</p>
+          <label className="mt-6 flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              defaultChecked
+              className="h-5 w-5 cursor-pointer rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
+            />
+            <span className="text-sm font-medium text-white">Receive Weekly AI Newsletter</span>
+          </label>
+        </motion.div>
       </motion.div>
     </motion.div>
   );
