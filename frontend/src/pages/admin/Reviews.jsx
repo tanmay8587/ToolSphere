@@ -132,12 +132,22 @@ export default function Reviews() {
     }
   };
 
-  // Handle delete (API not connected yet)
+  // Handle delete
   const handleDelete = async (id) => {
+    if (!window.confirm("Delete this review? This action cannot be undone.")) {
+      return;
+    }
+
     setProcessingId(id);
     setError("");
     try {
-      // TODO: Connect to DELETE /api/admin/reviews/:id
+      const { data } = await adminApi.delete(`/admin/reviews/${id}`);
+
+      if (data.success) {
+        setReviews((prev) => prev.filter((r) => r._id !== id));
+        setTotal((prev) => Math.max(0, prev - 1));
+        setSuccessMsg("Review deleted successfully");
+      }
     } catch (err) {
       setError(
         err.response?.data?.message || err.message || "Failed to delete review"
