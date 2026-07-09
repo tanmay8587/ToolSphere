@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getProfile, updateNewsletterPreference } from "../services/userApi";
+import { unsubscribeFromNewsletter } from "../services/newsletterService";
 import { getUser, logout } from "../utils/auth";
+import { useToast, ToastContainer } from "../components/common/Toast";
 
 const containerVariants = {
   hidden: {},
@@ -30,6 +32,8 @@ export default function Profile() {
   const [error, setError] = useState("");
   const [newsletterEnabled, setNewsletterEnabled] = useState(true);
   const [savingPref, setSavingPref] = useState(false);
+  const [unsubscribing, setUnsubscribing] = useState(false);
+  const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -74,6 +78,19 @@ export default function Profile() {
       setNewsletterEnabled(!checked);
     } finally {
       setSavingPref(false);
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    setUnsubscribing(true);
+    try {
+      await unsubscribeFromNewsletter(profile?.email);
+      setNewsletterEnabled(false);
+      addToast("You have been unsubscribed from the newsletter.", "success");
+    } catch (err) {
+      addToast(err.message || "Failed to unsubscribe. Please try again.", "error");
+    } finally {
+      setUnsubscribing(false);
     }
   };
 
@@ -535,12 +552,16 @@ export default function Profile() {
           </label>
           <button
             type="button"
-            className="mt-4 rounded-2xl border border-slate-700 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:border-red-400/40 hover:bg-red-500/10"
+            onClick={handleUnsubscribe}
+            disabled={unsubscribing || !newsletterEnabled}
+            className="mt-4 rounded-2xl border border-slate-700 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:border-red-400/40 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Unsubscribe from Newsletter
+            {unsubscribing ? "Unsubscribing..." : "Unsubscribe from Newsletter"}
           </button>
         </motion.div>
       </motion.div>
+
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </motion.div>
   );
 }
