@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
 import Review from "../models/Review.js";
+import Notification from "../models/Notification.js";
 import Bookmark from "../models/Bookmark.js";
 import Tool from "../models/Tool.js";
 import { validateEmail, validatePassword, sanitizeInput } from "../utils/validation.js";
@@ -334,6 +335,13 @@ export const addReview = async (req, res) => {
       { rating, comment },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+
+    await Notification.create({
+      title: "New Review",
+      message: "A new review has been submitted and is waiting for approval.",
+      type: "review",
+      isRead: false,
+    });
 
     const reviews = await Review.find({ tool: tool._id }).populate("user", "name avatar");
     const averageRating = reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length;
