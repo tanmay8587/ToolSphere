@@ -18,20 +18,22 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor to handle auth errors
+// Response interceptor to handle auth errors globally
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 403) {
+    // Handle 401 – user not found / invalid token / deleted account
+    if (error.response?.status === 401) {
+      logout();
+      // Dispatch event so Layout/navbar updates its auth state immediately
+      window.dispatchEvent(new Event("auth-change"));
+      // Store a toast message that Layout will pick up on next mount
+      sessionStorage.setItem("authToast", "Your account has been deleted. Please sign in again.");
+      window.location.href = "/login?deleted=true";
+    } else if (error.response?.status === 403) {
       // Log out unverified users automatically
       logout();
-    } else if (
-      error.response?.status === 401 &&
-      error.response?.data?.message === "User account not found."
-    ) {
-      // User was deleted by admin — clear auth and redirect to login
-      logout();
-      window.location.href = "/login?deleted=true";
+      window.dispatchEvent(new Event("auth-change"));
     }
     return Promise.reject(error);
   }

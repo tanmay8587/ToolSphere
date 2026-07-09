@@ -109,6 +109,15 @@ export default function Layout() {
     };
   }, []);
 
+  // Show a toast if the user was redirected here due to account deletion
+  useEffect(() => {
+    const toastMessage = sessionStorage.getItem("authToast");
+    if (toastMessage) {
+      sessionStorage.removeItem("authToast");
+      addToast(toastMessage, "error", 5000);
+    }
+  }, []);
+
   useEffect(() => {
     document.documentElement.classList.add("dark");
   }, []);
