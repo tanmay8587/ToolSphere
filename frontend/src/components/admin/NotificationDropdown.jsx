@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FiBell,
   FiX,
@@ -110,6 +111,21 @@ const notificationConfig = {
 const POLL_INTERVAL = 30000; // 30 seconds
 
 /* ==========================================
+   NOTIFICATION -> ADMIN PAGE MAPPING
+   Maps a notification type to its related admin route.
+   Unknown types resolve to null so we never navigate/crash.
+========================================== */
+
+const NOTIFICATION_ROUTES = {
+  user: "/admin/users",
+  tool: "/admin/tools",
+  review: "/admin/reviews",
+  contact: "/admin/contact-messages",
+};
+
+const getNotificationPath = (type) => NOTIFICATION_ROUTES[type] || null;
+
+/* ==========================================
    NOTIFICATION DROPDOWN COMPONENT
 ========================================== */
 
@@ -126,6 +142,7 @@ export default function NotificationDropdown() {
   const pollingRef = useRef(null);
   const inFlightRef = useRef(false);
   const [confirmingId, setConfirmingId] = useState(null);
+  const navigate = useNavigate();
 
   /* ==========================================
      FETCH NOTIFICATIONS
@@ -269,6 +286,28 @@ export default function NotificationDropdown() {
       }
     },
     []
+  );
+
+  /* ==========================================
+     NOTIFICATION CLICK -> NAVIGATE
+     Marks unread as read (optimistic + API) and navigates
+     to the related admin page, then closes the dropdown.
+     No-op (no crash) if there is no valid destination.
+  ========================================== */
+
+  const handleNotificationClick = useCallback(
+    (notification) => {
+      const path = getNotificationPath(notification.type);
+      if (!path) return; // No valid destination - do nothing
+
+      if (notification.isRead === false || notification.read === false) {
+        handleMarkAsRead(notification._id);
+      }
+
+      close();
+      navigate(path);
+    },
+    [close, navigate, handleMarkAsRead]
   );
 
   /* ==========================================
@@ -525,11 +564,7 @@ export default function NotificationDropdown() {
                         )}
 
                         <button
-                          onClick={() => {
-                            if (isUnread) {
-                              handleMarkAsRead(notification._id);
-                            }
-                          }}
+                          onClick={() => handleNotificationClick(notification)}
                           className="flex w-full gap-3 px-4 py-3 pl-5 text-left"
                           role="menuitem"
                         >
