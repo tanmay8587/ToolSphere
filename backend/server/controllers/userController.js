@@ -268,6 +268,35 @@ export const getProfile = async (req, res) => {
   }
 };
 
+export const updateNewsletterPreference = async (req, res) => {
+  try {
+    const { newsletterEnabled } = req.body;
+
+    if (typeof newsletterEnabled !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "newsletterEnabled must be a boolean.",
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    user.newsletterEnabled = newsletterEnabled;
+    await user.save();
+
+    res.json({
+      success: true,
+      newsletterEnabled: user.newsletterEnabled,
+      message: "Newsletter preference updated.",
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to update newsletter preference." });
+  }
+};
+
 export const toggleBookmark = async (req, res) => {
   try {
     const tool = await Tool.findById(req.params.toolId);

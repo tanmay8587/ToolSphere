@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getProfile } from "../services/userApi";
+import { getProfile, updateNewsletterPreference } from "../services/userApi";
 import { getUser, logout } from "../utils/auth";
 
 const containerVariants = {
@@ -28,6 +28,8 @@ export default function Profile() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [newsletterEnabled, setNewsletterEnabled] = useState(true);
+  const [savingPref, setSavingPref] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -38,6 +40,7 @@ export default function Profile() {
           setProfile(data.user);
           setBookmarks(data.bookmarks || []);
           setReviews(data.reviews || []);
+          setNewsletterEnabled(data.user.newsletterEnabled !== false);
         } else {
           setError(data.message || "Unable to load profile.");
         }
@@ -59,6 +62,19 @@ export default function Profile() {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleNewsletterToggle = async (checked) => {
+    setNewsletterEnabled(checked);
+    setSavingPref(true);
+    try {
+      await updateNewsletterPreference(checked);
+    } catch (err) {
+      // Revert on failure
+      setNewsletterEnabled(!checked);
+    } finally {
+      setSavingPref(false);
+    }
   };
 
   const localUser = getUser();
@@ -510,7 +526,9 @@ export default function Profile() {
           <label className="mt-6 flex cursor-pointer items-center gap-3">
             <input
               type="checkbox"
-              defaultChecked
+              checked={newsletterEnabled}
+              disabled={savingPref}
+              onChange={(e) => handleNewsletterToggle(e.target.checked)}
               className="h-5 w-5 cursor-pointer rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
             />
             <span className="text-sm font-medium text-white">Receive Weekly AI Newsletter</span>

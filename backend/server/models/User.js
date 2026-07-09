@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    newsletterEnabled: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

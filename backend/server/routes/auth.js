@@ -4,6 +4,7 @@ import {
   loginUser,
   googleAuth,
   getProfile,
+  updateNewsletterPreference,
   toggleBookmark,
   addReview,
   forgotPassword,
@@ -28,6 +29,7 @@ router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", resendVerificationEmail);
 
 router.get("/profile", verifyUser, getProfile);
+router.put("/newsletter-preference", verifyUser, updateNewsletterPreference);
 router.post("/tools/:toolId/bookmark", verifyUser, toggleBookmark);
 router.post("/tools/:toolId/review", verifyUser, addReview);
 
