@@ -106,7 +106,7 @@ export default function Profile() {
           <p className="mt-4 text-sm text-red-300">{error}</p>
           <button
             onClick={handleLogout}
-            className="mt-6 rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-600"
+            className="mt-6 rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600"
           >
             Return to login
           </button>
@@ -196,7 +196,7 @@ export default function Profile() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="rounded-2xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+                  className="rounded-2xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-colors duration-300 hover:bg-red-600"
                 >
                   Sign Out
                 </button>
@@ -391,7 +391,7 @@ export default function Profile() {
               </p>
               <button
                 onClick={() => navigate("/tools")}
-                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-600"
+                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                   <path d="M15.75 8.25a.75.75 0 0 1 .82.66l.54 5.42a.75.75 0 0 1-.84.82l-5.42-.54a.75.75 0 0 1-.66-.82l.54-5.42a.75.75 0 0 1 .82-.66Z" />
@@ -436,7 +436,7 @@ export default function Profile() {
                   <p className="mt-2 max-w-sm text-sm text-slate-400">Save your favorite AI tools to keep them handy in one place.</p>
                   <button
                     onClick={() => navigate("/tools")}
-                    className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-600"
+                    className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                       <path d="M15.75 8.25a.75.75 0 0 1 .82.66l.54 5.42a.75.75 0 0 1-.84.82l-5.42-.54a.75.75 0 0 1-.66-.82l.54-5.42a.75.75 0 0 1 .82-.66Z" />
@@ -489,7 +489,7 @@ export default function Profile() {
                   <p className="mt-2 max-w-sm text-sm text-slate-400">Share your experience with the tools you've tried to help others.</p>
                   <button
                     onClick={() => navigate("/tools")}
-                    className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cyan-600"
+                    className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                       <path d="M15.75 8.25a.75.75 0 0 1 .82.66l.54 5.42a.75.75 0 0 1-.84.82l-5.42-.54a.75.75 0 0 1-.66-.82l.54-5.42a.75.75 0 0 1 .82-.66Z" />
