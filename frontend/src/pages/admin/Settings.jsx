@@ -835,7 +835,6 @@ const loadData = async () => {
       const token = localStorage.getItem("adminToken");
       if (!token) {
         addToast("Authentication required", "error");
-        setTestEmailSending(false);
         return;
       }
       

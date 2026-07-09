@@ -247,6 +247,7 @@ export const testEmail = async (req, res) => {
       host: config.host,
       port: config.port,
       secure: config.port === 465, // true for 465, false for other ports
+      requireTLS: config.port === 587, // require TLS for port 587
       auth: {
         user: config.auth.user,
         pass: config.auth.pass,
@@ -256,7 +257,7 @@ export const testEmail = async (req, res) => {
       socketTimeout: 10000,
       lookup: (hostname, options, callback) => {
         // Force IPv4 to avoid IPv6 unreachable errors in environments without IPv6 connectivity
-        dns.lookup(hostname, { family: 4, ...options }, callback);
+        dns.lookup(hostname, { family: 4, all: false }, callback);
       },
     });
 
@@ -340,6 +341,7 @@ export const sendEmail = async (to, subject, html) => {
       host: config.host,
       port: config.port,
       secure: config.port === 465,
+      requireTLS: config.port === 587, // require TLS for port 587
       auth: {
         user: config.auth.user,
         pass: config.auth.pass,
@@ -349,7 +351,7 @@ export const sendEmail = async (to, subject, html) => {
       socketTimeout: 10000,
       lookup: (hostname, options, callback) => {
         // Force IPv4 to avoid IPv6 unreachable errors in environments without IPv6 connectivity
-        dns.lookup(hostname, { family: 4, ...options }, callback);
+        dns.lookup(hostname, { family: 4, all: false }, callback);
       },
     });
 
