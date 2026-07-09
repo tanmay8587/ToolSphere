@@ -2,6 +2,15 @@ import SmtpSetting from "../models/SmtpSetting.js";
 import logger from "../utils/logger.js";
 import nodemailer from "nodemailer";
 
+// Helper to sanitize SMTP host value
+const sanitizeSmtpHost = (value) => {
+  if (!value) return "";
+  let sanitized = value.trim();
+  sanitized = sanitized.replace(/^https?:\/\//i, "");
+  sanitized = sanitized.replace(/\/+$/, "");
+  return sanitized;
+};
+
 // Default SMTP settings
 const DEFAULT_SMTP_SETTINGS = [
   { key: "smtp_host", value: "" },
@@ -91,6 +100,13 @@ export const updateSmtpSetting = async (req, res) => {
       }
     }
 
+    // Sanitize the value for SMTP host
+    const sanitizedValue = key === "smtp_host" && value !== undefined
+      ? sanitizeSmtpHost(value)
+      : value !== undefined
+        ? value.trim()
+        : value;
+
     // Find or create the setting
     let setting = await SmtpSetting.findOne({ key });
 
@@ -98,12 +114,12 @@ export const updateSmtpSetting = async (req, res) => {
       // Create new setting if it doesn't exist
       setting = new SmtpSetting({
         key,
-        value: value || "",
+        value: sanitizedValue || "",
       });
     } else {
       // Update existing setting
-      if (value !== undefined) {
-        setting.value = value.trim();
+      if (sanitizedValue !== undefined) {
+        setting.value = sanitizedValue;
       }
     }
 
