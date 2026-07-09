@@ -16,7 +16,7 @@ import { createDefaultAdmin } from "./utils/createAdmin.js";
 import toolsRouter from "./routes/tools.js";
 import adminRoutes from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
-import { buildSeedTools, buildSeedCategories } from "./utils/seedtools.js";
+import { buildSeedTools, buildSeedCategories } from "./utils/seedTools.js";
 import uploadRoutes from "./routes/upload.js";
 import newsletterRoutes from "./routes/newsletter.js";
 import notificationRoutes from "./routes/notifications.js";
