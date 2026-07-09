@@ -97,7 +97,7 @@ function App() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="user">
                 <Profile />
               </ProtectedRoute>
             }
@@ -109,7 +109,7 @@ function App() {
           <Route
             path="/admin/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Dashboard />
               </ProtectedRoute>
             }
@@ -118,7 +118,7 @@ function App() {
           <Route
             path="/admin/tools"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Tools />
               </ProtectedRoute>
             }
@@ -127,7 +127,7 @@ function App() {
           <Route
             path="/admin/tools/add"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <ToolForm />
               </ProtectedRoute>
             }
@@ -136,7 +136,7 @@ function App() {
           <Route
             path="/admin/tools/:id/edit"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <ToolForm />
               </ProtectedRoute>
             }
@@ -145,7 +145,7 @@ function App() {
           <Route
             path="/admin/settings"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <Settings />
               </ProtectedRoute>
             }
@@ -154,7 +154,7 @@ function App() {
           <Route
             path="/admin/profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <AdminProfilePage />
               </ProtectedRoute>
             }
@@ -163,7 +163,7 @@ function App() {
 <Route
             path="/admin/change-password"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <ChangePassword />
               </ProtectedRoute>
             }
@@ -172,7 +172,7 @@ function App() {
           <Route
             path="/admin/users"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <ManageUsers />
               </ProtectedRoute>
             }
@@ -181,7 +181,7 @@ function App() {
           <Route
             path="/admin/contact-messages"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <ContactMessages />
               </ProtectedRoute>
             }
@@ -190,7 +190,7 @@ function App() {
           <Route
             path="/admin/contact-messages/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <ContactMessageDetail />
               </ProtectedRoute>
             }
@@ -199,7 +199,7 @@ function App() {
           <Route
             path="/admin/newsletter-subscribers"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="admin">
                 <NewsletterSubscribers />
               </ProtectedRoute>
             }

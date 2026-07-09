@@ -54,13 +54,16 @@ export default function Login() {
     console.log("Login response data:", data);
     console.log("data.success:", data.success);
     console.log("data.user?.isVerified:", data.user?.isVerified);
-    
+
     if (data.success) {
       // Only save token and navigate if user is verified
       if (data.user?.isVerified === true) {
         saveToken(data.token);
         saveUser(data.user);
-        navigate("/");
+        // Return to the page the user was trying to reach (if any),
+        // otherwise go to the home page.
+        const destination = location.state?.from?.pathname || "/";
+        navigate(destination, { replace: true });
       } else {
         // User is verified in DB but isVerified is not true in response
         // This can happen if the backend returns an unexpected response
