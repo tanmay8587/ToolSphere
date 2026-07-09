@@ -620,8 +620,12 @@ export default function HomePage() {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-60" />
 
         <div className="relative mx-auto max-w-2xl space-y-4">
-          <h2 className="text-3xl font-semibold sm:text-4xl lg:text-5xl">
-            Stay Updated with the Latest AI Tools
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200/80">
+            Join the Newsletter
+          </p>
+
+          <h2 className="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl lg:text-5xl">
+            Never Miss a New AI Tool
           </h2>
 
           <p className="mx-auto text-base text-slate-200 sm:text-lg lg:text-xl">
