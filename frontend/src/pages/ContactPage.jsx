@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FiLoader, FiMail, FiMapPin, FiClock, FiSend, FiMessageCircle } from "react-icons/fi";
+import { FiLoader, FiMail, FiMapPin, FiClock, FiSend, FiMessageCircle, FiLock } from "react-icons/fi";
 import { FaXTwitter, FaLinkedin, FaGithub, FaInstagram, FaYoutube, FaDiscord, FaTelegram, FaFacebook } from "react-icons/fa6";
 import { Helmet } from "react-helmet-async";
 import { submitContact } from "../services/contactService";
 import { getContactSettings } from "../services/contactSettingService";
 import { getSocialLinks } from "../services/socialService";
+import { isLoggedIn } from "../utils/auth";
 
 // Platform configuration with icons and labels
 const platformConfig = {
@@ -40,6 +41,18 @@ export default function ContactPage() {
   
   // Track if settings have been loaded to prevent duplicate requests
   const settingsLoadedRef = useRef(false);
+
+  // Auth: detect login state (reuses existing auth utilities)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+
+  // Keep login state in sync (e.g. after login in another tab or on storage change)
+  useEffect(() => {
+    const syncAuth = () => setLoggedIn(isLoggedIn());
+    window.addEventListener("storage", syncAuth);
+    return () => window.removeEventListener("storage", syncAuth);
+  }, []);
 
   // Default values for contact settings
   const defaultSettings = {
@@ -338,6 +351,7 @@ export default function ContactPage() {
               Fill out the form below and we'll get back to you as soon as possible.
             </p>
 
+            {loggedIn ? (
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
                 {/* Name */}
@@ -462,9 +476,39 @@ export default function ContactPage() {
                 )}
               </button>
             </form>
+            ) : (
+              /* Not logged in: show login prompt */
+              <div className="mt-8 flex flex-col items-center rounded-2xl border border-cyan-400/20 bg-cyan-500/5 px-6 py-12 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
+                  <FiLock className="h-7 w-7" />
+                </div>
+                <h3 className="mt-5 text-xl font-semibold text-slate-100">
+                  Please login to contact us.
+                </h3>
+                <p className="mt-2 max-w-md text-sm text-slate-400">
+                  Create a free account or sign in to send us a message.
+                </p>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/login", { state: { from: location } })}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-6 py-3 font-semibold text-white transition hover:opacity-90"
+                  >
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/register", { state: { mode: "register", from: location } })}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-slate-950/70 px-6 py-3 font-semibold text-slate-200 transition hover:border-cyan-400/50 hover:text-cyan-300"
+                  >
+                    Register
+                  </button>
+                </div>
+              </div>
+            )}
 
-            {/* Status Message */}
-            {submitStatus && (
+            {/* Status Message - only relevant when logged in (set after a successful submit) */}
+            {loggedIn && submitStatus && (
               <div
                 className={`mt-6 rounded-2xl border p-4 ${
                   submitStatus.type === "success"
