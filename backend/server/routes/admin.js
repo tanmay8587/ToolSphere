@@ -33,6 +33,10 @@ import {
   getAdminUsers,
   updateAdminUser,
   deleteAdminUser,
+  getPendingReviews,
+  approveReview,
+  rejectReview,
+  deleteReview,
 } from "../controllers/toolController.js";
 
 import { verifyAdmin } from "../middleware/auth.js";
@@ -135,5 +139,13 @@ router.get("/export/users", verifyAdmin, exportUsers);
 =========================== */
 router.get("/newsletter/subscribers", verifyAdmin, getSubscribers);
 router.delete("/newsletter/subscribers/:id", verifyAdmin, deleteSubscriber);
+
+/* ===========================
+    REVIEWS MODERATION (ADMIN)
+=========================== */
+router.get("/reviews", verifyAdmin, getPendingReviews);
+router.put("/reviews/:id/approve", verifyAdmin, approveReview);
+router.put("/reviews/:id/reject", verifyAdmin, rejectReview);
+router.delete("/reviews/:id", verifyAdmin, deleteReview);
 
 export default router;
