@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { loginUser, registerUser, googleAuth, resendVerificationEmail } from "../services/userApi";
 import { saveToken, saveUser } from "../utils/auth";
 import PasswordInput from "../components/common/PasswordInput";
@@ -23,7 +23,11 @@ const parseJwt = (token) => {
 
 export default function Login() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("login");
+  const location = useLocation();
+  // Allow navbar "Register" button to open the register form via navigation state
+  const [mode, setMode] = useState(
+    location.state?.mode === "register" ? "register" : "login"
+  );
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);

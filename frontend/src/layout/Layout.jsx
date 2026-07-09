@@ -5,7 +5,9 @@ import { Mail, MapPin, Clock, Zap, ArrowRight } from 'lucide-react';
 import { SiX, SiGithub, SiInstagram, SiYoutube, SiDiscord, SiTelegram, SiFacebook } from 'react-icons/si';
 import { FaLinkedin } from 'react-icons/fa6';
 import SearchModal from '../components/common/SearchModal';
+import UserMenu from '../components/common/UserMenu';
 import { ToastContainer, useToast } from '../components/common/Toast';
+import { isLoggedIn, getUser, logout as logoutUser } from '../utils/auth';
 import { getContactSettings } from '../services/contactSettingService';
 import { getSocialLinks } from '../services/socialService';
 import { getBrandingSettings } from '../services/websiteBrandingService';
@@ -90,6 +92,22 @@ export default function Layout() {
   
   // Error state for graceful error handling
   const [settingsError, setSettingsError] = useState(null);
+
+  // Auth state - reuses existing utils/auth (no new auth system)
+  const [authUser, setAuthUser] = useState(() => (isLoggedIn() ? getUser() : null));
+
+  // Keep navbar in sync with login/logout across tabs/components
+  useEffect(() => {
+    const syncAuth = () => {
+      setAuthUser(isLoggedIn() ? getUser() : null);
+    };
+    window.addEventListener("auth-change", syncAuth);
+    window.addEventListener("storage", syncAuth);
+    return () => {
+      window.removeEventListener("auth-change", syncAuth);
+      window.removeEventListener("storage", syncAuth);
+    };
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
@@ -277,6 +295,27 @@ export default function Layout() {
           {/* Actions */}
           <div className="flex items-center gap-2">
 
+            {/* Auth UI - Desktop & Mobile */}
+            {authUser ? (
+              <UserMenu user={authUser} />
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/login"
+                  state={{ mode: "register" }}
+                  className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+
             {/* Search Icon - Desktop & Mobile */}
             <button
               onClick={() => setSearchOpen(true)}
@@ -336,6 +375,49 @@ export default function Layout() {
                 {item.name}
               </NavLink>
             ))}
+
+            {/* Auth UI - Mobile Menu */}
+            <div className="mt-4 border-t border-white/10 pt-4">
+              {authUser ? (
+                <>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-xl bg-white/5 px-4 py-4 text-lg text-white transition hover:bg-white/10"
+                  >
+                    My Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logoutUser();
+                      setMenuOpen(false);
+                      window.dispatchEvent(new Event("auth-change"));
+                    }}
+                    className="mt-2 block w-full rounded-xl bg-red-500/10 px-4 py-4 text-left text-lg text-red-400 transition hover:bg-red-500/20"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Link
+                    to="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-4 text-center text-lg font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/login"
+                    state={{ mode: "register" }}
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-xl bg-cyan-500 px-4 py-4 text-center text-lg font-semibold text-white transition hover:bg-cyan-600"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+            </div>
 
           </div>
 
