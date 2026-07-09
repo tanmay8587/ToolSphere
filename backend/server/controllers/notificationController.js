@@ -95,9 +95,13 @@ export const markAsRead = async (req, res) => {
 
 export const markAllAsRead = async (req, res) => {
   try {
-    const userId = req.admin.id;
-
-    const result = await Notification.markAllAsRead(userId);
+    // Admin-only route (verifyAdmin). The admin dropdown shows platform-wide
+    // notifications that are not scoped to a single user, so we mark every
+    // unread notification as read regardless of user.
+    const result = await Notification.updateMany(
+      { isRead: false },
+      { $set: { isRead: true } }
+    );
 
     res.json({
       success: true,
