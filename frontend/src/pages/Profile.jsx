@@ -207,7 +207,7 @@ export default function Profile() {
                 <motion.div
                   whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(34,211,238,0.3)" }}
                   transition={liftSpring}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-colors duration-300 hover:border-cyan-400/40 hover:bg-white/10"
+                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-cyan-400/40 hover:bg-white/10"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-500/15 text-cyan-300">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
@@ -222,7 +222,7 @@ export default function Profile() {
                 <motion.div
                   whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(251,191,36,0.3)" }}
                   transition={liftSpring}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-colors duration-300 hover:border-amber-400/40 hover:bg-white/10"
+                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-amber-400/40 hover:bg-white/10"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
@@ -237,7 +237,7 @@ export default function Profile() {
                 <motion.div
                   whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(99,102,241,0.3)" }}
                   transition={liftSpring}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-colors duration-300 hover:border-indigo-400/40 hover:bg-white/10"
+                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-indigo-400/40 hover:bg-white/10"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-300">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
@@ -254,7 +254,7 @@ export default function Profile() {
                 <motion.div
                   whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(168,85,247,0.3)" }}
                   transition={liftSpring}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-colors duration-300 hover:border-purple-400/40 hover:bg-white/10"
+                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-purple-400/40 hover:bg-white/10"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-300">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
@@ -279,7 +279,7 @@ export default function Profile() {
                     whileHover={{ y: -4, boxShadow: "0 14px 30px -10px rgba(34,211,238,0.3)" }}
                     whileTap={{ scale: 0.97 }}
                     transition={liftSpring}
-                    className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white backdrop-blur-md transition-colors duration-300 hover:border-cyan-400/40 hover:bg-white/10"
+                    className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-cyan-400/40 hover:bg-white/10"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-cyan-300">
                       <path d="M15.75 8.25a.75.75 0 0 1 .82.66l.54 5.42a.75.75 0 0 1-.84.82l-5.42-.54a.75.75 0 0 1-.66-.82l.54-5.42a.75.75 0 0 1 .82-.66Z" />
@@ -293,7 +293,7 @@ export default function Profile() {
                     whileHover={{ y: -4, boxShadow: "0 14px 30px -10px rgba(99,102,241,0.3)" }}
                     whileTap={{ scale: 0.97 }}
                     transition={liftSpring}
-                    className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white backdrop-blur-md transition-colors duration-300 hover:border-indigo-400/40 hover:bg-white/10"
+                    className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-indigo-400/40 hover:bg-white/10"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-indigo-300">
                       <path fillRule="evenodd" d="M5.25 2.25a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3V5.25a3 3 0 0 0-3-3H5.25Zm0 9a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-4a3 3 0 0 0-3-3H5.25Zm9-9a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3V5.25Zm0 9a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3v-4Z" clipRule="evenodd" />
@@ -306,7 +306,7 @@ export default function Profile() {
                     whileHover={{ y: -4, boxShadow: "0 14px 30px -10px rgba(168,85,247,0.3)" }}
                     whileTap={{ scale: 0.97 }}
                     transition={liftSpring}
-                    className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white backdrop-blur-md transition-colors duration-300 hover:border-purple-400/40 hover:bg-white/10"
+                    className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-purple-400/40 hover:bg-white/10"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-purple-300">
                       <path d="M21.73 3.27a2.25 2.25 0 0 0-3.18 0l-1.27 1.27 3.18 3.18 1.27-1.27a2.25 2.25 0 0 0 0-3.18ZM3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Z" />
@@ -319,7 +319,7 @@ export default function Profile() {
                     whileHover={{ y: -4, boxShadow: "0 14px 30px -10px rgba(16,185,129,0.3)" }}
                     whileTap={{ scale: 0.97 }}
                     transition={liftSpring}
-                    className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white backdrop-blur-md transition-colors duration-300 hover:border-emerald-400/40 hover:bg-white/10"
+                    className="group flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-emerald-400/40 hover:bg-white/10"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-emerald-300">
                       <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.93 5.43a3 3 0 0 1-3.14 0L1.5 8.67Z" />
@@ -334,7 +334,7 @@ export default function Profile() {
         </motion.div>
 
         {/* Recent Activity */}
-        <motion.div variants={sectionVariants} className="rounded-3xl border border-slate-800 bg-slate-900 p-8">
+        <motion.div variants={sectionVariants} className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
           <h2 className="text-2xl font-semibold text-white">Recent Activity</h2>
           <p className="mt-2 text-sm text-slate-400">Your latest bookmarks and reviews across the directory.</p>
 
@@ -345,7 +345,7 @@ export default function Profile() {
                   key={item.id}
                   whileHover={{ y: -2, boxShadow: "0 12px 28px -12px rgba(148,163,184,0.25)" }}
                   transition={liftSpring}
-                  className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 transition-colors hover:border-slate-700"
+                  className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 shadow-lg transition-colors hover:border-slate-700"
                 >
                   <div
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
@@ -378,7 +378,7 @@ export default function Profile() {
             <motion.div
               whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.2)" }}
               transition={liftSpring}
-              className="mt-6 flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center"
+              className="mt-6 flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center shadow-lg"
             >
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/20 via-indigo-500/20 to-purple-600/20 ring-1 ring-white/10">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-cyan-300">
@@ -404,7 +404,7 @@ export default function Profile() {
         </motion.div>
 
         <motion.div variants={sectionVariants} className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
             <h2 className="text-2xl font-semibold">Bookmarks</h2>
             <p className="mt-2 text-sm text-slate-400">Saved tools you can revisit anytime.</p>
             <div className="mt-6 space-y-4">
@@ -414,7 +414,7 @@ export default function Profile() {
                     key={tool._id}
                     whileHover={{ y: -3, boxShadow: "0 14px 30px -12px rgba(34,211,238,0.2)" }}
                     transition={liftSpring}
-                    className="rounded-3xl border border-slate-800 bg-slate-950/60 p-4"
+                    className="rounded-3xl border border-slate-800 bg-slate-950/60 p-4 shadow-lg"
                   >
                     <h3 className="font-semibold text-white">{tool.name}</h3>
                     <p className="mt-1 text-slate-400">{tool.category || "Tool"}</p>
@@ -424,7 +424,7 @@ export default function Profile() {
                 <motion.div
                   whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.2)" }}
                   transition={liftSpring}
-                  className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center"
+                  className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center shadow-lg"
                 >
                   <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/20 via-indigo-500/20 to-purple-600/20 ring-1 ring-white/10">
                     <div className="pointer-events-none absolute inset-0 rounded-full bg-cyan-500/20 blur-xl"></div>
@@ -449,7 +449,7 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
             <h2 className="text-2xl font-semibold">Reviews</h2>
             <p className="mt-2 text-sm text-slate-400">Your submitted ratings and comments.</p>
             <div className="mt-6 space-y-4">
@@ -459,7 +459,7 @@ export default function Profile() {
                     key={review._id}
                     whileHover={{ y: -3, boxShadow: "0 14px 30px -12px rgba(251,191,36,0.2)" }}
                     transition={liftSpring}
-                    className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5"
+                    className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5 shadow-lg"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div>
@@ -477,7 +477,7 @@ export default function Profile() {
                 <motion.div
                   whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(251,191,36,0.2)" }}
                   transition={liftSpring}
-                  className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center"
+                  className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center shadow-lg"
                 >
                   <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400/20 via-orange-500/20 to-pink-600/20 ring-1 ring-white/10">
                     <div className="pointer-events-none absolute inset-0 rounded-full bg-amber-500/20 blur-xl"></div>
