@@ -775,6 +775,29 @@ export const toggleFeaturedTool = async (req, res) => {
 };
 
 /* =====================================
+    ADMIN - GET PENDING REVIEWS
+===================================== */
+
+export const getPendingReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ status: "pending" })
+      .populate("user", "name email")
+      .populate("tool", "name")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      reviews,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch pending reviews",
+    });
+  }
+};
+
+/* =====================================
    ADMIN - CATEGORIES
 ===================================== */
 
