@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getProfile } from "../services/userApi";
-import { subscribeToNewsletter, unsubscribeFromNewsletter } from "../services/newsletterService";
+import { getProfile, updateNewsletterPreference } from "../services/userApi";
 import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
+import ToggleSwitch from "../components/common/ToggleSwitch";
 
 const containerVariants = {
   hidden: {},
@@ -32,29 +32,7 @@ export default function Profile() {
   const [error, setError] = useState("");
   const [newsletterEnabled, setNewsletterEnabled] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
-  const [unsubscribing, setUnsubscribing] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
-
-  // Loads the newsletter checkbox state from the Newsletter subscription
-  // status exposed by the newsletter API (resolved from the auth token).
-  const loadNewsletterStatus = async () => {
-    try {
-      const token = localStorage.getItem("userAuthToken");
-      const base = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-      const res = await fetch(`${base}/newsletter/status`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-      const data = await res.json().catch(() => null);
-      if (data?.success) {
-        setNewsletterEnabled(data.subscribed === true);
-      }
-    } catch (err) {
-      // If the subscription status can't be determined, leave the default unchecked.
-    }
-  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -65,7 +43,7 @@ export default function Profile() {
           setProfile(data.user);
           setBookmarks(data.bookmarks || []);
           setReviews(data.reviews || []);
-          await loadNewsletterStatus();
+          setNewsletterEnabled(data.user.newsletterEnabled === true);
         } else {
           setError(data.message || "Unable to load profile.");
         }
@@ -93,29 +71,22 @@ export default function Profile() {
     setNewsletterEnabled(checked);
     setSavingPref(true);
     try {
-      if (checked) {
-        await subscribeToNewsletter();
-      } else {
-        await unsubscribeFromNewsletter(profile?.email);
+      const { data } = await updateNewsletterPreference(checked);
+      if (!data?.success) {
+        throw new Error(data?.message || "Failed to update preference.");
       }
+      addToast(
+        checked
+          ? "You're now subscribed to the weekly AI newsletter."
+          : "You've been unsubscribed from the weekly AI newsletter.",
+        "success"
+      );
     } catch (err) {
-      // Revert on failure
+      // Revert on failure so the UI reflects the persisted value
       setNewsletterEnabled(!checked);
+      addToast(err.message || "Failed to update newsletter preference.", "error");
     } finally {
       setSavingPref(false);
-    }
-  };
-
-  const handleUnsubscribe = async () => {
-    setUnsubscribing(true);
-    try {
-      await unsubscribeFromNewsletter(profile?.email);
-      setNewsletterEnabled(false);
-      addToast("You have been unsubscribed from the newsletter.", "success");
-    } catch (err) {
-      addToast(err.message || "Failed to unsubscribe. Please try again.", "error");
-    } finally {
-      setUnsubscribing(false);
     }
   };
 
@@ -565,24 +536,35 @@ export default function Profile() {
         <motion.div variants={sectionVariants} className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
           <h2 className="text-2xl font-semibold text-white">Email Preferences</h2>
           <p className="mt-2 text-sm text-slate-400">Manage the emails you'd like to receive from us.</p>
-          <label className="mt-6 flex cursor-pointer items-center gap-3">
-            <input
-              type="checkbox"
-              checked={newsletterEnabled}
-              disabled={savingPref}
-              onChange={(e) => handleNewsletterToggle(e.target.checked)}
-              className="h-5 w-5 cursor-pointer rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
-            />
-            <span className="text-sm font-medium text-white">Receive Weekly AI Newsletter</span>
-          </label>
-          <button
-            type="button"
-            onClick={handleUnsubscribe}
-            disabled={unsubscribing || !newsletterEnabled}
-            className="mt-4 rounded-2xl border border-slate-700 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:border-red-400/40 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {unsubscribing ? "Unsubscribing..." : "Unsubscribe from Newsletter"}
-          </button>
+
+          <div className="mt-6 flex items-start justify-between gap-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-white">Receive Weekly AI Newsletter</span>
+                {savingPref && (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-300">
+                    <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
+                    </svg>
+                    Saving...
+                  </span>
+                )}
+              </div>
+              <p className="mt-1.5 text-sm text-slate-400">
+                Receive weekly updates about new AI tools, features and exclusive recommendations.
+              </p>
+            </div>
+
+            <div className="mt-0.5 shrink-0">
+              <ToggleSwitch
+                checked={newsletterEnabled}
+                disabled={savingPref}
+                onChange={handleNewsletterToggle}
+                aria-label="Receive Weekly AI Newsletter"
+              />
+            </div>
+          </div>
         </motion.div>
       </motion.div>
 
