@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { getAdminToken } from "../../utils/auth";
 import AdminLayout from "../../layout/AdminLayout";
-import { FiStar, FiInbox, FiRefreshCw, FiClock } from "react-icons/fi";
+import { FiStar, FiInbox, FiRefreshCw, FiClock, FiCheck } from "react-icons/fi";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -25,6 +25,7 @@ export default function Reviews() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [processingId, setProcessingId] = useState(null);
 
   const loadReviews = useCallback(async () => {
     setLoading(true);
@@ -78,6 +79,20 @@ export default function Reviews() {
       day: "numeric",
       year: "numeric",
     });
+  };
+
+  // Handle approve (API not connected yet)
+  const handleApprove = async (id) => {
+    setProcessingId(id);
+    try {
+      // TODO: Connect to PUT /api/admin/reviews/:id/approve
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Failed to approve review"
+      );
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   // Render star rating
@@ -169,18 +184,19 @@ export default function Reviews() {
                     Date
                   </div>
                 </th>
+                <th className="px-4 py-3 font-semibold text-slate-400">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {loading ? (
-                <tr>
-                  <td colSpan="5" className="px-4 py-8 text-center text-slate-500">
-                    Loading reviews...
-                  </td>
-                </tr>
+                 <tr>
+                   <td colSpan="6" className="px-4 py-8 text-center text-slate-500">
+                     Loading reviews...
+                   </td>
+                 </tr>
               ) : reviews.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-4 py-12 text-center text-slate-500">
+                 <tr>
+                   <td colSpan="6" className="px-4 py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center gap-2">
                       <FiInbox className="h-10 w-10 text-slate-600" />
                       <p className="font-medium">No pending reviews</p>
@@ -224,10 +240,21 @@ export default function Reviews() {
                         {review.comment || "(No comment)"}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-slate-400 whitespace-nowrap">
-                      {formatDate(review.createdAt)}
-                    </td>
-                  </tr>
+                     <td className="px-4 py-4 text-slate-400 whitespace-nowrap">
+                       {formatDate(review.createdAt)}
+                     </td>
+                     <td className="px-4 py-4">
+                       <button
+                         onClick={() => handleApprove(review._id)}
+                         disabled={processingId === review._id}
+                         className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600/20 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-600/30 disabled:opacity-50"
+                         title="Approve review"
+                       >
+                         <FiCheck size={14} />
+                         Approve
+                       </button>
+                     </td>
+                   </tr>
                 ))
               )}
             </tbody>
