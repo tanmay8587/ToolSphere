@@ -14,7 +14,6 @@ export const uploadFile = async (file, onProgress) => {
   try {
     const { data } = await axios.post(API_URL, formData, {
       headers: {
-        "Content-Type": "multipart/form-data",
         ...(token && { Authorization: `Bearer ${token}` }),
       },
 
@@ -29,8 +28,16 @@ export const uploadFile = async (file, onProgress) => {
       },
     });
 
-    // SAFE RESPONSE HANDLING
-    return data.url || data.image || data.secure_url;
+    // SAFE RESPONSE HANDLING (flat or nested)
+    const nested = data.data || {};
+    return (
+      data.url ||
+      data.image ||
+      data.secure_url ||
+      nested.url ||
+      nested.image ||
+      nested.secure_url
+    );
 
   } catch (error) {
     throw new Error(
