@@ -286,7 +286,15 @@ export const testEmail = async (req, res) => {
       message: `Test email sent successfully to ${testEmailAddress}`,
     });
   } catch (err) {
-    logger.error("Failed to send test email", { error: err.message, stack: err.stack });
+    logger.error("Failed to send test email", { 
+      error: err.message, 
+      stack: err.stack,
+      code: err.code,
+      errno: err.errno,
+      syscall: err.syscall,
+      hostname: err.hostname,
+      port: err.port
+    });
 
     // Provide user-friendly error messages based on the error type
     let userMessage = "Failed to send test email. ";
