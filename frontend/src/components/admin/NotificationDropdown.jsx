@@ -124,6 +124,7 @@ export default function NotificationDropdown() {
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
   const pollingRef = useRef(null);
+  const [confirmingId, setConfirmingId] = useState(null);
 
   /* ==========================================
      FETCH NOTIFICATIONS
@@ -288,9 +289,20 @@ export default function NotificationDropdown() {
      DELETE NOTIFICATION
   ========================================== */
 
-  const handleDelete = useCallback(
+  const handleDeleteClick = useCallback((e, id) => {
+    e.stopPropagation();
+    setConfirmingId(id);
+  }, []);
+
+  const handleCancelDelete = useCallback((e) => {
+    e.stopPropagation();
+    setConfirmingId(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(
     async (e, id, wasUnread) => {
       e.stopPropagation();
+      setConfirmingId(null);
 
       // Optimistic update
       setNotifications((prev) => prev.filter((n) => n._id !== id));
@@ -546,17 +558,48 @@ export default function NotificationDropdown() {
                           </div>
                         </button>
 
-                        {/* Delete Button */}
-                        <button
-                          onClick={(e) =>
-                            handleDelete(e, notification._id, isUnread)
-                          }
-                          className="absolute right-2 top-2 rounded-lg p-1.5 text-slate-600 opacity-0 transition hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 focus:opacity-100"
-                          aria-label="Delete notification"
-                          title="Delete notification"
-                        >
-                          <FiTrash2 size={14} />
-                        </button>
+                        {/* Delete / Confirm */}
+                        {confirmingId === notification._id ? (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-lg border border-white/10 bg-slate-800 p-1 shadow-lg shadow-black/40"
+                          >
+                            <span className="px-1 text-[11px] text-slate-300">
+                              Delete?
+                            </span>
+                            <button
+                              onClick={(e) =>
+                                handleConfirmDelete(
+                                  e,
+                                  notification._id,
+                                  isUnread
+                                )
+                              }
+                              className="rounded-md bg-red-500/90 px-2 py-1 text-[11px] font-medium text-white transition hover:bg-red-500"
+                              aria-label="Confirm delete"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={handleCancelDelete}
+                              className="rounded-md px-2 py-1 text-[11px] font-medium text-slate-300 transition hover:bg-white/10"
+                              aria-label="Cancel delete"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) =>
+                              handleDeleteClick(e, notification._id)
+                            }
+                            className="absolute right-2 top-2 rounded-lg p-1.5 text-slate-600 opacity-0 transition hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 focus:opacity-100"
+                            aria-label="Delete notification"
+                            title="Delete notification"
+                          >
+                            <FiTrash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     );
                   })}

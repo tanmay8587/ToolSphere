@@ -124,12 +124,11 @@ export const markAllAsRead = async (req, res) => {
 export const deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.admin.id;
 
-    const notification = await Notification.findOneAndDelete({
-      _id: id,
-      user: userId,
-    });
+    // Admin-only route (verifyAdmin). The admin dropdown shows platform-wide
+    // notifications that are not scoped to a single user, so we delete by
+    // _id directly.
+    const notification = await Notification.findByIdAndDelete(id);
 
     if (!notification) {
       return res.status(404).json({
