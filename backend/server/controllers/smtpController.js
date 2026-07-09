@@ -232,6 +232,9 @@ export const testEmail = async (req, res) => {
         user: config.auth.user,
         pass: config.auth.pass,
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
 
     // Verify connection
@@ -308,6 +311,9 @@ export const sendEmail = async (to, subject, html) => {
         user: config.auth.user,
         pass: config.auth.pass,
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
 
     const info = await transporter.sendMail({
