@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { getAdminToken } from "../../utils/auth";
 import AdminLayout from "../../layout/AdminLayout";
-import { FiStar, FiInbox, FiRefreshCw, FiClock, FiCheck, FiX } from "react-icons/fi";
+import { FiStar, FiInbox, FiRefreshCw, FiClock, FiCheck, FiX, FiTrash2 } from "react-icons/fi";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -126,6 +126,21 @@ export default function Reviews() {
     } catch (err) {
       setError(
         err.response?.data?.message || err.message || "Failed to reject review"
+      );
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // Handle delete (API not connected yet)
+  const handleDelete = async (id) => {
+    setProcessingId(id);
+    setError("");
+    try {
+      // TODO: Connect to DELETE /api/admin/reviews/:id
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Failed to delete review"
       );
     } finally {
       setProcessingId(null);
@@ -307,6 +322,16 @@ export default function Reviews() {
                          >
                            <FiX size={14} />
                            Reject
+                         </button>
+
+                         <button
+                           onClick={() => handleDelete(review._id)}
+                           disabled={processingId === review._id}
+                           className="inline-flex items-center gap-1.5 rounded-xl bg-red-600/20 px-3 py-2 text-xs font-semibold text-red-300 transition hover:bg-red-600/30 disabled:opacity-50"
+                           title="Delete review"
+                         >
+                           <FiTrash2 size={14} />
+                           Delete
                          </button>
                        </div>
                      </td>
