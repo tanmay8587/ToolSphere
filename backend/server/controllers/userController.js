@@ -69,6 +69,13 @@ export const registerUser = async (req, res) => {
       emailVerificationExpire: verificationTokenExpire,
     });
 
+    await Notification.create({
+      title: "New User Registered",
+      message: "A new user has created an account.",
+      type: "user",
+      isRead: false,
+    });
+
     // DEBUG LOGGING - User saved
     console.log("User created in MongoDB with ID:", user._id);
     console.log("User emailVerificationToken in DB:", user.emailVerificationToken);
