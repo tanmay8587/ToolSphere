@@ -59,4 +59,11 @@ notificationSchema.statics.getUnreadCount = function (userId) {
   return this.countDocuments({ user: userId, isRead: false });
 };
 
+notificationSchema.statics.markAllAsRead = function (userId) {
+  return this.updateMany(
+    { user: userId, isRead: false },
+    { $set: { isRead: true } }
+  );
+};
+
 export default mongoose.model("Notification", notificationSchema);
