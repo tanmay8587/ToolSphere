@@ -66,4 +66,31 @@ notificationSchema.statics.markAllAsRead = function (userId) {
   );
 };
 
+notificationSchema.statics.getPaginated = function (userId, options = {}) {
+  const { page = 1, limit = 20, type } = options;
+
+  const filter = { user: userId };
+  if (type) {
+    filter.type = type;
+  }
+
+  const currentPage = Math.max(parseInt(page, 10) || 1, 1);
+  const perPage = Math.max(parseInt(limit, 10) || 20, 1);
+  const skip = (currentPage - 1) * perPage;
+
+  return this.find(filter)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(perPage)
+    .then((notifications) =>
+      this.countDocuments(filter).then((total) => ({
+        notifications,
+        page: currentPage,
+        limit: perPage,
+        total,
+        totalPages: Math.ceil(total / perPage),
+      }))
+    );
+};
+
 export default mongoose.model("Notification", notificationSchema);
