@@ -200,7 +200,7 @@ export default function Profile() {
               <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
                 {/* Bookmarks */}
                 <motion.div
-                  whileHover={{ y: -6, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
+                  whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(34,211,238,0.3)" }}
                   transition={liftSpring}
                   className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-colors duration-300 hover:border-cyan-400/40 hover:bg-white/10"
                 >
@@ -215,7 +215,7 @@ export default function Profile() {
 
                 {/* Reviews */}
                 <motion.div
-                  whileHover={{ y: -6, boxShadow: "0 18px 40px -12px rgba(251,191,36,0.25)" }}
+                  whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(251,191,36,0.3)" }}
                   transition={liftSpring}
                   className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-colors duration-300 hover:border-amber-400/40 hover:bg-white/10"
                 >
@@ -230,7 +230,7 @@ export default function Profile() {
 
                 {/* Favorite Categories */}
                 <motion.div
-                  whileHover={{ y: -6, boxShadow: "0 18px 40px -12px rgba(99,102,241,0.25)" }}
+                  whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(99,102,241,0.3)" }}
                   transition={liftSpring}
                   className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-colors duration-300 hover:border-indigo-400/40 hover:bg-white/10"
                 >
@@ -247,7 +247,7 @@ export default function Profile() {
 
                 {/* Member Since */}
                 <motion.div
-                  whileHover={{ y: -6, boxShadow: "0 18px 40px -12px rgba(168,85,247,0.25)" }}
+                  whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(168,85,247,0.3)" }}
                   transition={liftSpring}
                   className="group rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md transition-colors duration-300 hover:border-purple-400/40 hover:bg-white/10"
                 >
