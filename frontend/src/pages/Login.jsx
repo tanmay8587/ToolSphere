@@ -60,6 +60,9 @@ export default function Login() {
       if (data.user?.isVerified === true) {
         saveToken(data.token);
         saveUser(data.user);
+        // Notify the navbar (and other components) that the session changed
+        // so the UserMenu appears immediately without a full page reload.
+        window.dispatchEvent(new Event("auth-change"));
         // Return to the page the user was trying to reach (if any),
         // otherwise go to the home page.
         const destination = location.state?.from?.pathname || "/";
