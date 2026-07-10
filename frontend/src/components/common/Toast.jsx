@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // added useCallback to memoize toast handlers (root-cause fix for infinite fetch loop)
 import { FiX, FiCheck, FiAlertCircle, FiInfo } from "react-icons/fi";
 
 const toastTypes = {
@@ -85,14 +85,20 @@ let toastId = 0;
 export function useToast() {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = (message, type = "info", duration = 4000) => {
+  // Memoized with useCallback + empty deps so the function reference is
+  // STABLE across renders. Previously addToast was recreated every render,
+  // which made any useCallback depending on it (e.g. fetchSubscribers in
+  // NewsletterSubscribers) also change every render and retrigger its
+  // data-fetching useEffect in an infinite loop.
+  const addToast = useCallback((message, type = "info", duration = 4000) => {
     const id = ++toastId;
     setToasts((prev) => [...prev, { id, message, type, duration }]);
-  };
+  }, []); // empty deps: addToast uses no external/props/state values
 
-  const removeToast = (id) => {
+  // Memoized for the same stability reason as addToast.
+  const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []); // empty deps: removeToast uses no external values
 
   return { toasts, addToast, removeToast };
 }
