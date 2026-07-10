@@ -18,6 +18,7 @@ import {
   FiAlertCircle,
   FiClock,
 } from "react-icons/fi";
+import { formatToIndiaTime } from "../../utils/dateFormatter";
 
 export default function ContactMessageDetail() {
   const { id } = useParams();
@@ -89,17 +90,9 @@ export default function ContactMessageDetail() {
     }
   }, [successMsg]);
 
-  // Format date
+  // Format date (India Standard Time)
   const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatToIndiaTime(dateStr);
   };
 
   // Get status badge

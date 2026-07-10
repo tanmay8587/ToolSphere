@@ -20,6 +20,7 @@ import {
   FiClock,
 } from "react-icons/fi";
 import Pagination from "../../components/common/Pagination";
+import { formatToIndiaTimeOnly, formatToIndiaDate } from "../../utils/dateFormatter";
 
 // Status Badge Component
 const StatusBadge = ({ status }) => {
@@ -144,7 +145,7 @@ export default function ContactMessages() {
     return text.length > max ? text.substring(0, max) + "..." : text;
   };
 
-  // Format date
+  // Format date (India Standard Time)
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -152,19 +153,15 @@ export default function ContactMessages() {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
-      return `Today at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+      return `Today at ${formatToIndiaTimeOnly(dateStr)}`;
     }
     if (diffDays === 1) {
-      return `Yesterday at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+      return `Yesterday at ${formatToIndiaTimeOnly(dateStr)}`;
     }
     if (diffDays < 7) {
       return `${diffDays} days ago`;
     }
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    return formatToIndiaDate(dateStr);
   };
 
   return (
