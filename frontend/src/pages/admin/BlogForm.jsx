@@ -56,7 +56,7 @@ const quillModules = {
     ["blockquote", "code-block"],
     [{ color: [] }, { background: [] }],
     ["link", "image"],
-    [{ table: [] }],
+    [{ script: "sub" }, { script: "super" }],
     ["clean"],
   ],
 };
@@ -67,16 +67,16 @@ const quillFormats = [
   "italic",
   "underline",
   "strike",
+  "blockquote",
   "list",
   "indent",
-  "align",
-  "blockquote",
-  "code-block",
-  "color",
-  "background",
   "link",
   "image",
-  "table",
+  "code-block",
+  "align",
+  "color",
+  "background",
+  "script",
 ];
 
 /* =====================================
