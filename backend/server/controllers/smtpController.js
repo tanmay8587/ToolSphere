@@ -243,6 +243,7 @@ export const testEmail = async (req, res) => {
     }
 
     // Create transporter
+    logger.info("Creating SMTP transporter", { host: config.host, port: config.port });
     const transporter = nodemailer.createTransport({
       host: config.host,
       port: config.port,
@@ -257,12 +258,23 @@ export const testEmail = async (req, res) => {
       socketTimeout: 10000,
       lookup: (hostname, options, callback) => {
         // Force IPv4 to avoid IPv6 unreachable errors in environments without IPv6 connectivity
-        dns.lookup(hostname, { family: 4, all: false }, callback);
+        logger.info("Custom lookup callback invoked", { hostname, options });
+        dns.lookup(hostname, { family: 4, all: false }, (err, address) => {
+          logger.info("DNS lookup result", { 
+            hostname, 
+            err: err ? err.message : null, 
+            address, 
+            family: address?.family 
+          });
+          callback(err, address);
+        });
       },
     });
 
     // Verify connection
+    logger.info("Calling transporter.verify()");
     await transporter.verify();
+    logger.info("transporter.verify() succeeded");
 
     // Send test email
     const info = await transporter.sendMail({
