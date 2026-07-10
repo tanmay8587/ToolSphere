@@ -24,6 +24,7 @@ const CategoriesPage = lazy(() => import("./pages/CategoriesPage"));
 const ToolsPage = lazy(() => import("./pages/ToolsPage"));
 const ToolDetailPage = lazy(() => import("./pages/ToolDetailPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
+const BlogDetailPage = lazy(() => import("./pages/BlogDetailPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
@@ -81,6 +82,7 @@ function App() {
             <Route path="tools" element={<ToolsPage />} />
             <Route path="tools/:slug" element={<ToolDetailPage />} />
             <Route path="blog" element={<BlogPage />} />
+            <Route path="blog/:slug" element={<BlogDetailPage />} />
             <Route path="about" element={<AboutPage />} />
             <Route path="contact" element={<ContactPage />} />
             <Route path="faq" element={<FAQPage />} />
