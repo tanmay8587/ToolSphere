@@ -575,8 +575,74 @@ export const unlikeBlog = async (req, res) => {
 };
 
 /* =====================================
-   ADMIN - GET BLOG STATS
-   ===================================== */
+    USER - BOOKMARK BLOG
+    ===================================== */
+export const bookmarkBlog = async (req, res) => {
+  try {
+    const blog = await Blog.findOne({ _id: req.params.id, isDeleted: false });
+
+    if (!blog) {
+      return sendErrorResponse(res, 404, "Blog not found");
+    }
+
+    const userId = req.user.id;
+
+    // Check if user already bookmarked this blog (prevent duplicates)
+    if (blog.bookmarkedBy.includes(userId)) {
+      return sendErrorResponse(res, 400, "You have already bookmarked this blog");
+    }
+
+    // Add user to bookmarkedBy array
+    blog.bookmarkedBy.push(userId);
+    await blog.save();
+
+    return res.json({
+      success: true,
+      message: "Blog bookmarked successfully",
+      bookmarks: blog.bookmarkedBy.length,
+    });
+  } catch (err) {
+    logger.error("[bookmarkBlog] Error bookmarking blog:", err);
+    return sendErrorResponse(res, 500, "Failed to bookmark blog");
+  }
+};
+
+/* =====================================
+    USER - REMOVE BOOKMARK
+    ===================================== */
+export const removeBookmark = async (req, res) => {
+  try {
+    const blog = await Blog.findOne({ _id: req.params.id, isDeleted: false });
+
+    if (!blog) {
+      return sendErrorResponse(res, 404, "Blog not found");
+    }
+
+    const userId = req.user.id;
+
+    // Check if user has bookmarked this blog
+    if (!blog.bookmarkedBy.includes(userId)) {
+      return sendErrorResponse(res, 400, "You have not bookmarked this blog");
+    }
+
+    // Remove user from bookmarkedBy array
+    blog.bookmarkedBy = blog.bookmarkedBy.filter(id => id.toString() !== userId.toString());
+    await blog.save();
+
+    return res.json({
+      success: true,
+      message: "Bookmark removed successfully",
+      bookmarks: blog.bookmarkedBy.length,
+    });
+  } catch (err) {
+    logger.error("[removeBookmark] Error removing bookmark:", err);
+    return sendErrorResponse(res, 500, "Failed to remove bookmark");
+  }
+};
+
+/* =====================================
+    ADMIN - GET BLOG STATS
+    ===================================== */
 export const getBlogStats = async (req, res) => {
   try {
     const [total, published, draft, scheduled, featured, viewsResult] = await Promise.all([

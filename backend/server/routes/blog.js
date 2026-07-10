@@ -12,6 +12,8 @@ import {
   getBlogStats,
   likeBlog,
   unlikeBlog,
+  bookmarkBlog,
+  removeBookmark,
 } from "../controllers/blogController.js";
 
 import { verifyAdmin, verifyUser } from "../middleware/auth.js";
@@ -44,6 +46,18 @@ blogRouter.post("/:id/like", verifyUser, likeBlog);
  * - Unlike a blog (logged-in users only)
  */
 blogRouter.delete("/:id/like", verifyUser, unlikeBlog);
+
+/**
+ * POST /api/blogs/:id/bookmark
+ * - Bookmark a blog (logged-in users only)
+ */
+blogRouter.post("/:id/bookmark", verifyUser, bookmarkBlog);
+
+/**
+ * DELETE /api/blogs/:id/bookmark
+ * - Remove bookmark (logged-in users only)
+ */
+blogRouter.delete("/:id/bookmark", verifyUser, removeBookmark);
 
 /* ===========================
    ADMIN ROUTES  (/api/admin/blogs)
