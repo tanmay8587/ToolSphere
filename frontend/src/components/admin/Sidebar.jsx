@@ -14,6 +14,7 @@ import {
   FiSend,
   FiStar,
   FiFileText,
+  FiMessageSquare,
 } from "react-icons/fi";
 import { useState, useEffect } from "react";
 
@@ -110,6 +111,11 @@ export default function Sidebar() {
       name: "Reviews",
       icon: <FiStar size={20} />,
       path: "/admin/reviews",
+    },
+    {
+      name: "Blog Comments",
+      icon: <FiMessageSquare size={20} />,
+      path: "/admin/blog-comments",
     },
     {
       name: "Settings",

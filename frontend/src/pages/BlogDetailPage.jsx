@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser, FiTag } from "react-icons/fi";
 import { getPublicBlogBySlug } from "../services/publicBlogService";
 import EmptyState from "../components/common/EmptyState";
+import BlogComments from "../components/blog/BlogComments";
 
 /* =====================================
    HELPERS
@@ -406,6 +407,9 @@ export default function BlogDetailPage() {
           </button>
         )}
       </article>
+
+      {/* Comments & Replies */}
+      {blog && <BlogComments slug={blog.slug} />}
     </>
   );
 }
