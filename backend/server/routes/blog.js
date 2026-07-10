@@ -10,9 +10,11 @@ import {
   toggleFeatured,
   updateStatus,
   getBlogStats,
+  likeBlog,
+  unlikeBlog,
 } from "../controllers/blogController.js";
 
-import { verifyAdmin } from "../middleware/auth.js";
+import { verifyAdmin, verifyUser } from "../middleware/auth.js";
 
 /* ===========================
    PUBLIC ROUTES  (/api/blogs)
@@ -30,6 +32,18 @@ blogRouter.get("/", getBlogs);
  * - Public single blog by slug (increments views, returns related)
  */
 blogRouter.get("/:slug", getBlogBySlug);
+
+/**
+ * POST /api/blogs/:id/like
+ * - Like a blog (logged-in users only)
+ */
+blogRouter.post("/:id/like", verifyUser, likeBlog);
+
+/**
+ * DELETE /api/blogs/:id/like
+ * - Unlike a blog (logged-in users only)
+ */
+blogRouter.delete("/:id/like", verifyUser, unlikeBlog);
 
 /* ===========================
    ADMIN ROUTES  (/api/admin/blogs)

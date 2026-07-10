@@ -507,6 +507,74 @@ export const updateStatus = async (req, res) => {
 };
 
 /* =====================================
+    USER - LIKE BLOG
+    ===================================== */
+export const likeBlog = async (req, res) => {
+  try {
+    const blog = await Blog.findOne({ _id: req.params.id, isDeleted: false });
+
+    if (!blog) {
+      return sendErrorResponse(res, 404, "Blog not found");
+    }
+
+    const userId = req.user.id;
+
+    // Check if user already liked this blog
+    if (blog.likedBy.includes(userId)) {
+      return sendErrorResponse(res, 400, "You have already liked this blog");
+    }
+
+    // Add user to likedBy array and increment likes count
+    blog.likedBy.push(userId);
+    blog.likes = (blog.likes || 0) + 1;
+    await blog.save();
+
+    return res.json({
+      success: true,
+      message: "Blog liked successfully",
+      likes: blog.likes,
+    });
+  } catch (err) {
+    logger.error("[likeBlog] Error liking blog:", err);
+    return sendErrorResponse(res, 500, "Failed to like blog");
+  }
+};
+
+/* =====================================
+    USER - UNLIKE BLOG
+    ===================================== */
+export const unlikeBlog = async (req, res) => {
+  try {
+    const blog = await Blog.findOne({ _id: req.params.id, isDeleted: false });
+
+    if (!blog) {
+      return sendErrorResponse(res, 404, "Blog not found");
+    }
+
+    const userId = req.user.id;
+
+    // Check if user has liked this blog
+    if (!blog.likedBy.includes(userId)) {
+      return sendErrorResponse(res, 400, "You have not liked this blog");
+    }
+
+    // Remove user from likedBy array and decrement likes count
+    blog.likedBy = blog.likedBy.filter(id => id.toString() !== userId.toString());
+    blog.likes = Math.max(0, (blog.likes || 0) - 1);
+    await blog.save();
+
+    return res.json({
+      success: true,
+      message: "Blog unliked successfully",
+      likes: blog.likes,
+    });
+  } catch (err) {
+    logger.error("[unlikeBlog] Error unliking blog:", err);
+    return sendErrorResponse(res, 500, "Failed to unlike blog");
+  }
+};
+
+/* =====================================
    ADMIN - GET BLOG STATS
    ===================================== */
 export const getBlogStats = async (req, res) => {
