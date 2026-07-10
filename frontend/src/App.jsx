@@ -241,6 +241,15 @@ function App() {
           />
 
           <Route
+            path="/admin/blogs/new"
+            element={
+              <ProtectedRoute role="admin">
+                <BlogForm />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/admin/blogs/:id/edit"
             element={
               <ProtectedRoute role="admin">

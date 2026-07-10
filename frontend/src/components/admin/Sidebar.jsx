@@ -13,6 +13,7 @@ import {
   FiMail,
   FiSend,
   FiStar,
+  FiFileText,
 } from "react-icons/fi";
 import { useState, useEffect } from "react";
 
@@ -83,6 +84,16 @@ export default function Sidebar() {
       name: "Add Tool",
       icon: <FiPlusCircle size={20} />,
       path: "/admin/tools/add",
+    },
+    {
+      name: "Blogs",
+      icon: <FiFileText size={20} />,
+      path: "/admin/blogs",
+    },
+    {
+      name: "Add Blog",
+      icon: <FiPlusCircle size={20} />,
+      path: "/admin/blogs/new",
     },
     {
       name: "Users",
