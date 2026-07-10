@@ -1,8 +1,10 @@
+import crypto from "crypto";
 import Contact from "../models/Contact.js";
 import Notification from "../models/Notification.js";
 import logger from "../utils/logger.js";
 import { validateEmail } from "../utils/validation.js";
 import { sendEmail } from "./smtpController.js";
+import { getContactVerificationTemplate } from "../utils/contactEmail.js";
 
 /* ===========================
    SUBMIT CONTACT FORM (PUBLIC)
@@ -33,11 +35,23 @@ export async function submitContact(req, res) {
       return res.status(400).json({ success: false, message: "Message is too long (max 5000 characters)" });
     }
 
+    // Generate a secure random verification token, hash it, and store the hash.
+    // The raw token is only sent via email and never persisted.
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const hashedVerificationToken = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     const contact = await Contact.create({
       name: name.trim(),
       email: email.trim().toLowerCase(),
       subject: subject ? subject.trim() : "",
       message: message.trim(),
+      emailVerified: false,
+      emailVerificationToken: hashedVerificationToken,
+      emailVerificationExpires: verificationExpires,
     });
 
     await Notification.create({
@@ -77,31 +91,13 @@ export async function submitContact(req, res) {
       // Don't fail the request if email fails
     }
 
-    // Send confirmation email to user
+    // Send verification email to the guest (does NOT mark as verified)
     try {
-      const userConfirmationHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #06b6d4;">Thank You for Contacting ToolSphere!</h2>
-          <p>Dear ${contact.name},</p>
-          <p>Thank you for reaching out to us. We have successfully received your message and appreciate you taking the time to contact us.</p>
-          <p><strong>Your message has been received and our team will get back to you as soon as possible.</strong></p>
-          <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
-            <h3 style="color: #0e7490; margin-top: 0;">What happens next?</h3>
-            <p>Our team typically responds within 24-48 hours. We'll review your message and get back to you with a helpful response.</p>
-          </div>
-          <p>In the meantime, feel free to explore our platform and discover amazing AI tools at <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}" style="color: #06b6d4;">ToolSphere</a>.</p>
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-          <p style="color: #6b7280; font-size: 12px;">
-            <strong>ToolSphere</strong><br />
-            Empowering your workflow with AI
-          </p>
-        </div>
-      `;
-
-      await sendEmail(contact.email, "Thanks for contacting ToolSphere", userConfirmationHtml);
-      logger.info(`Contact confirmation email sent to ${contact.email}`);
+      const { subject, html } = getContactVerificationTemplate(verificationToken, contact.name);
+      await sendEmail(contact.email, subject, html);
+      logger.info(`Contact verification email sent to ${contact.email}`);
     } catch (userEmailError) {
-      logger.error("Failed to send contact confirmation email to user:", userEmailError);
+      logger.error("Failed to send contact verification email to user:", userEmailError);
       // Don't fail the request if user email fails
     }
 
@@ -152,6 +148,8 @@ export async function submitContactAuth(req, res) {
       email: email.trim().toLowerCase(),
       subject: subject ? subject.trim() : "",
       message: message.trim(),
+      // Authenticated users are already verified via their account
+      emailVerified: true,
     });
 
     await Notification.create({
@@ -235,6 +233,86 @@ export async function submitContactAuth(req, res) {
     }
 
     return res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
+  }
+}
+
+/* ===========================
+   VERIFY CONTACT EMAIL (PUBLIC)
+   GET /api/contact/verify-email/:token
+   =========================== */
+export async function verifyContactEmail(req, res) {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification token is required.",
+      });
+    }
+
+    // Decode in case the token was URL-encoded by the client/mail client
+    const decodedToken = decodeURIComponent(token);
+
+    // Hash the incoming token to compare with the stored hashed token
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(decodedToken)
+      .digest("hex");
+
+    // Find the contact with a matching token that has not expired
+    const contact = await Contact.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: { $gt: Date.now() },
+    });
+
+    if (!contact) {
+      // Check if a contact exists with this token (to distinguish expired vs invalid)
+      const contactWithToken = await Contact.findOne({
+        emailVerificationToken: hashedToken,
+      });
+
+      if (contactWithToken) {
+        // Token exists but is expired
+        return res.status(400).json({
+          success: false,
+          message: "Verification link has expired. Please submit your message again.",
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification token.",
+      });
+    }
+
+    // Already verified — idempotent success
+    if (contact.emailVerified) {
+      return res.status(200).json({
+        success: true,
+        message: "Your email is already verified. Thank you!",
+        alreadyVerified: true,
+      });
+    }
+
+    // Mark as verified and clear the verification token fields
+    contact.emailVerified = true;
+    contact.emailVerificationToken = undefined;
+    contact.emailVerificationExpires = undefined;
+    await contact.save();
+
+    logger.info(`Contact email verified: ${contact.email}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Your email has been verified successfully. Thank you for contacting ToolSphere!",
+    });
+  } catch (error) {
+    logger.error("Contact email verification error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to verify email. Please try again later.",
+    });
   }
 }
 

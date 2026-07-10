@@ -128,3 +128,14 @@ export async function getUnreadContactCount() {
   const { data } = await adminApi.get("/admin/contact-messages/unread-count");
   return data;
 }
+
+/**
+ * Verify a guest contact email using the token from the verification link.
+ * @param {string} token - The raw verification token from the URL.
+ * @returns {Promise<Object>} - { success, message, alreadyVerified? }
+ */
+export async function verifyContact(token) {
+  return request(`/contact/verify-email/${encodeURIComponent(token)}`, {
+    method: "GET",
+  });
+}

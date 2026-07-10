@@ -187,7 +187,12 @@ export default function ContactPage() {
       }
 
       if (result.success) {
-        setSubmitStatus({ type: "success", message: result.message });
+        // Guests must verify their email before we process the request;
+        // authenticated users skip verification, so show a normal success.
+        const successMessage = loggedIn
+          ? (result.message || "Your message has been sent successfully.")
+          : "Please check your email and verify your address before we process your request.";
+        setSubmitStatus({ type: "success", message: successMessage });
         setForm({ name: "", email: loggedIn ? (getUser()?.email || "") : "", subject: "", message: "" });
         setErrors({});
       } else {

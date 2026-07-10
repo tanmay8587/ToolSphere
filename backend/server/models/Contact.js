@@ -40,6 +40,18 @@ const contactSchema = new mongoose.Schema(
       default: "unread",
       index: true,
     },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+      index: true,
+      sparse: true,
+    },
+    emailVerificationExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

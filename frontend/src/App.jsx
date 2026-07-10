@@ -39,6 +39,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const VerifyNewsletter = lazy(() => import("./pages/VerifyNewsletter"));
+const VerifyContact = lazy(() => import("./pages/VerifyContact"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
 const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
@@ -101,6 +102,7 @@ function App() {
 <Route path="/reset-password/:token" element={<ResetPassword />} />
 <Route path="/verify-email/:token" element={<VerifyEmail />} />
 <Route path="/verify-newsletter/:token" element={<VerifyNewsletter />} />
+<Route path="/verify-contact/:token" element={<VerifyContact />} />
 
           <Route
             path="/profile"
