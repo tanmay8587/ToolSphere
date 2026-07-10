@@ -533,6 +533,7 @@ export const likeBlog = async (req, res) => {
       success: true,
       message: "Blog liked successfully",
       likes: blog.likes,
+      isLiked: true,
     });
   } catch (err) {
     logger.error("[likeBlog] Error liking blog:", err);
@@ -567,6 +568,7 @@ export const unlikeBlog = async (req, res) => {
       success: true,
       message: "Blog unliked successfully",
       likes: blog.likes,
+      isLiked: false,
     });
   } catch (err) {
     logger.error("[unlikeBlog] Error unliking blog:", err);
