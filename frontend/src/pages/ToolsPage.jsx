@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import useDebounce from "../hooks/useDebounce";
 import { getTools, getCategories } from "../services/toolsService";
@@ -106,6 +106,13 @@ export default function ToolsPage() {
     setSearchParams(params);
   };
 
+  // Apply the "Featured Only" filter client-side alongside the backend
+  // (search / category / pricing) filters. When OFF, all tools are shown.
+  const displayedTools = useMemo(() => {
+    if (!featured) return tools;
+    return tools.filter((tool) => tool.featured === true);
+  }, [tools, featured]);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
 
@@ -198,7 +205,7 @@ export default function ToolsPage() {
             ))}
           </div>
 
-        ) : tools.length === 0 && !error ? (
+        ) : displayedTools.length === 0 && !error ? (
 
           <div className="col-span-full">
             <EmptyState 
@@ -210,7 +217,7 @@ export default function ToolsPage() {
 
         ) : (
 
-          tools.map((tool) => (
+          displayedTools.map((tool) => (
             <Link
               key={tool._id}
               to={`/tools/${tool.slug}`}
