@@ -43,6 +43,18 @@ const countWords = (html = "") => {
 
 const stripHtml = (html = "") => html.replace(/<[^>]*>/g, "");
 
+// Format a Date into a value usable by <input type="datetime-local">.
+// Uses the browser's local timezone so the default reflects the user's locale.
+const toLocalDateTimeInputValue = (date = new Date()) => {
+  const pad = (n) => String(n).padStart(2, "0");
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 /* =====================================
    QUIL MODULES
    ===================================== */
@@ -265,7 +277,7 @@ export default function BlogForm() {
           status: blog.status || "draft",
           featured: Boolean(blog.featured),
           publishedAt: blog.publishedAt
-            ? new Date(blog.publishedAt).toISOString().slice(0, 16)
+            ? toLocalDateTimeInputValue(new Date(blog.publishedAt))
             : "",
           seoTitle: blog.seoTitle || "",
           seoDescription: blog.seoDescription || "",
@@ -297,6 +309,17 @@ export default function BlogForm() {
       // Auto-generate slug from title
       if (name === "title") {
         updated.slug = createSlug(value);
+      }
+
+      // Auto-manage the publish date based on the selected status
+      if (name === "status") {
+        if (value === "published" && !prev.publishedAt) {
+          // Auto-set to the current local date and time when publishing
+          updated.publishedAt = toLocalDateTimeInputValue();
+        } else if (value === "draft") {
+          // Drafts don't require a publish date
+          updated.publishedAt = "";
+        }
       }
 
       return updated;
@@ -383,9 +406,6 @@ export default function BlogForm() {
         galleryImages: galleryUrls,
         status: form.status,
         featured: Boolean(form.featured),
-        publishedAt: form.publishedAt
-          ? new Date(form.publishedAt).toISOString()
-          : undefined,
         seoTitle: form.seoTitle?.trim() || "",
         seoDescription: form.seoDescription?.trim() || "",
         seoKeywords: form.seoKeywords,
@@ -394,14 +414,18 @@ export default function BlogForm() {
         notifyNewsletter: form.notifyNewsletter,
       };
 
-      // If status is scheduled and a publish date is set, use it
-      if (form.status === "scheduled" && form.publishedAt) {
+      // Determine publishedAt based on status and user input
+      if (form.status === "draft") {
+        // Draft posts: publish date is optional, leave empty
+        delete payload.publishedAt;
+      } else if (form.publishedAt) {
+        // Preserve the user-selected or existing publish date
         payload.publishedAt = new Date(form.publishedAt).toISOString();
+      } else if (form.status === "published") {
+        // Auto-set to the current local date and time
+        payload.publishedAt = new Date().toISOString();
       }
-      // If publishing now, let the backend set publishedAt
-      if (form.status === "published") {
-        delete payload.publishedAt; // Backend handles this
-      }
+      // For "scheduled" without a date, publishedAt remains undefined
 
       setLoading(true);
 

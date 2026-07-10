@@ -152,6 +152,20 @@ const blogSchema = new mongoose.Schema(
       min: 0,
     },
 
+    // Users who liked this blog (prevents duplicate likes)
+    likedBy: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      default: [],
+      index: true,
+    },
+
+    // Users who bookmarked/saved this blog
+    bookmarkedBy: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      default: [],
+      index: true,
+    },
+
     publishedAt: {
       type: Date,
       default: null,

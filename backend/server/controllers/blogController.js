@@ -214,10 +214,16 @@ export const createBlog = async (req, res) => {
     }
     payload.slug = slugCandidate;
 
-    // Set publishedAt if status is published
-    if (payload.status === "published") {
-      payload.publishedAt = new Date();
-    }
+      // Use a provided publish date if valid, otherwise default for published posts
+      if (req.body.publishedAt) {
+        const parsedDate = new Date(req.body.publishedAt);
+        if (!isNaN(parsedDate.getTime())) {
+          payload.publishedAt = parsedDate;
+        }
+      }
+      if (payload.status === "published" && !payload.publishedAt) {
+        payload.publishedAt = new Date();
+      }
 
     const blog = await Blog.create(payload);
 
@@ -347,10 +353,18 @@ export const updateBlog = async (req, res) => {
       payload.slug = slugCandidate;
     }
 
-    // Set publishedAt when transitioning to published
-    if (payload.status === "published" && !existing.publishedAt) {
-      payload.publishedAt = new Date();
-    }
+      // Use a provided publish date if valid
+      if (req.body.publishedAt) {
+        const parsedDate = new Date(req.body.publishedAt);
+        if (!isNaN(parsedDate.getTime())) {
+          payload.publishedAt = parsedDate;
+        }
+      }
+
+      // Set publishedAt when transitioning to published (only if not already set)
+      if (payload.status === "published" && !existing.publishedAt && !payload.publishedAt) {
+        payload.publishedAt = new Date();
+      }
 
     const blog = await Blog.findByIdAndUpdate(req.params.id, payload, {
       new: true,
@@ -461,12 +475,20 @@ export const updateStatus = async (req, res) => {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
-    blog.status = status;
+      blog.status = status;
 
-    // Set publishedAt when transitioning to published
-    if (status === "published" && !blog.publishedAt) {
-      blog.publishedAt = new Date();
-    }
+      // Use a provided publish date if valid
+      if (req.body.publishedAt) {
+        const parsedDate = new Date(req.body.publishedAt);
+        if (!isNaN(parsedDate.getTime())) {
+          blog.publishedAt = parsedDate;
+        }
+      }
+
+      // Set publishedAt when transitioning to published (only if not already set)
+      if (status === "published" && !blog.publishedAt) {
+        blog.publishedAt = new Date();
+      }
 
     await blog.save();
 

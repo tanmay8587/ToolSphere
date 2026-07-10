@@ -34,6 +34,7 @@ import blogRoutes from "./routes/blog.js";
 import { adminBlogRouter } from "./routes/blog.js";
 import blogCommentRoutes from "./routes/blogComment.js";
 import { adminBlogCommentRouter } from "./routes/blogComment.js";
+import blogInteractionRoutes from "./routes/blogInteraction.js";
 import logger from "./utils/logger.js";
 import validateEnvironment from "./utils/envValidation.js";
 import { checkMaintenanceMode } from "./middleware/maintenance.js";
@@ -363,6 +364,7 @@ app.use("/api/smtp", smtpRoutes);
 app.use("/api/statistics", statisticsRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/blogs", blogCommentRoutes);
+app.use("/api/blogs", blogInteractionRoutes);
 app.use("/api/admin", adminBlogRouter);
 app.use("/api/admin", adminBlogCommentRouter);
 

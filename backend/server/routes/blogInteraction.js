@@ -1,0 +1,47 @@
+import express from "express";
+import {
+  getInteractionState,
+  likeBlog,
+  unlikeBlog,
+  bookmarkBlog,
+  removeBookmark,
+} from "../controllers/blogInteractionController.js";
+import { verifyUser } from "../middleware/auth.js";
+
+/* ===========================
+   BLOG INTERACTION ROUTES  (/api/blogs/:slug/...)
+   All mutation routes require an authenticated user.
+   =================================== */
+const router = express.Router();
+
+/**
+ * GET /api/blogs/:slug/interaction
+ * - Public-safe: returns like/bookmark counts + current user's state
+ */
+router.get("/:slug/interaction", getInteractionState);
+
+/**
+ * POST /api/blogs/:slug/like
+ * - Like a blog (idempotent, prevents duplicates)
+ */
+router.post("/:slug/like", verifyUser, likeBlog);
+
+/**
+ * DELETE /api/blogs/:slug/like
+ * - Unlike a blog (idempotent)
+ */
+router.delete("/:slug/like", verifyUser, unlikeBlog);
+
+/**
+ * POST /api/blogs/:slug/bookmark
+ * - Bookmark/save a blog (idempotent)
+ */
+router.post("/:slug/bookmark", verifyUser, bookmarkBlog);
+
+/**
+ * DELETE /api/blogs/:slug/bookmark
+ * - Remove a bookmark (idempotent)
+ */
+router.delete("/:slug/bookmark", verifyUser, removeBookmark);
+
+export default router;

@@ -1,10 +1,19 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser, FiTag } from "react-icons/fi";
+import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark } from "react-icons/fi";
 import { getPublicBlogBySlug } from "../services/publicBlogService";
 import EmptyState from "../components/common/EmptyState";
 import BlogComments from "../components/blog/BlogComments";
+import {
+  getBlogInteraction,
+  likeBlog,
+  unlikeBlog,
+  bookmarkBlog,
+  removeBookmark,
+} from "../services/blogInteractionService";
+import { isLoggedIn } from "../utils/auth";
+import { useNavigate } from "react-router-dom";
 
 /* =====================================
    HELPERS
@@ -51,7 +60,13 @@ export default function BlogDetailPage() {
   const [readingProgress, setReadingProgress] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [likes, setLikes] = useState(0);
+  const [bookmarks, setBookmarks] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [interactionLoading, setInteractionLoading] = useState(false);
   const contentRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadBlog = async () => {
@@ -73,6 +88,23 @@ export default function BlogDetailPage() {
     };
     loadBlog();
     window.scrollTo(0, 0);
+  }, [slug]);
+
+  // Load like/bookmark state for the current user
+  useEffect(() => {
+    if (!slug) return;
+    getBlogInteraction(slug)
+      .then((data) => {
+        if (data.success) {
+          setLikes(data.likes || 0);
+          setBookmarks(data.bookmarks || 0);
+          setIsLiked(!!data.isLiked);
+          setIsBookmarked(!!data.isBookmarked);
+        }
+      })
+      .catch(() => {
+        // Non-blocking: counts simply stay at 0
+      });
   }, [slug]);
 
   // Reading progress
@@ -123,6 +155,51 @@ export default function BlogDetailPage() {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // ignore
+    }
+  };
+
+  // Redirect unauthenticated users to login before interacting
+  const requireAuth = () => {
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return false;
+    }
+    return true;
+  };
+
+  const handleLike = async () => {
+    if (!requireAuth()) return;
+    setInteractionLoading(true);
+    try {
+      const data = isLiked
+        ? await unlikeBlog(slug)
+        : await likeBlog(slug);
+      if (data.success) {
+        setLikes(data.likes || 0);
+        setIsLiked(!!data.isLiked);
+      }
+    } catch {
+      // ignore network errors; state unchanged
+    } finally {
+      setInteractionLoading(false);
+    }
+  };
+
+  const handleBookmark = async () => {
+    if (!requireAuth()) return;
+    setInteractionLoading(true);
+    try {
+      const data = isBookmarked
+        ? await removeBookmark(slug)
+        : await bookmarkBlog(slug);
+      if (data.success) {
+        setBookmarks(data.bookmarks || 0);
+        setIsBookmarked(!!data.isBookmarked);
+      }
+    } catch {
+      // ignore network errors; state unchanged
+    } finally {
+      setInteractionLoading(false);
     }
   };
 
@@ -274,6 +351,39 @@ export default function BlogDetailPage() {
                 <FiEye size={14} />
                 {blog.views || 0} views
               </span>
+
+              {/* Like / Bookmark */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleLike}
+                  disabled={interactionLoading}
+                  aria-pressed={isLiked}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition disabled:opacity-60 ${
+                    isLiked
+                      ? "border-rose-500/40 bg-rose-500/10 text-rose-300"
+                      : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                  }`}
+                  title={isLiked ? "Unlike" : "Like"}
+                >
+                  <FiHeart size={15} className={isLiked ? "fill-rose-400 text-rose-400" : ""} />
+                  <span>{likes}</span>
+                </button>
+
+                <button
+                  onClick={handleBookmark}
+                  disabled={interactionLoading}
+                  aria-pressed={isBookmarked}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition disabled:opacity-60 ${
+                    isBookmarked
+                      ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
+                      : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                  }`}
+                  title={isBookmarked ? "Remove bookmark" : "Save"}
+                >
+                  <FiBookmark size={15} className={isBookmarked ? "fill-cyan-400 text-cyan-400" : ""} />
+                  <span>{isBookmarked ? "Saved" : "Save"}</span>
+                </button>
+              </div>
             </div>
 
             {/* Title */}
