@@ -73,6 +73,10 @@ if (isProduction) {
 // HTTPS enforcement middleware for production only
 if (isProduction) {
   app.use((req, res, next) => {
+    // CHANGED: never redirect/short-circuit CORS preflight OPTIONS requests.
+    // A 302 redirect on an OPTIONS preflight carries no CORS headers and fails the preflight.
+    if (req.method === "OPTIONS") return next();
+
     // Check if the request is already HTTPS (via x-forwarded-proto header from proxy)
     const isHttps = req.header("x-forwarded-proto") === "https";
     
@@ -142,6 +146,7 @@ if (isProduction) {
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
+  skip: (req) => req.method === "OPTIONS", // CHANGED: never rate-limit CORS preflight requests (a 429 would carry no Access-Control-Allow-Origin header and break the preflight)
   message: {
     success: false,
     message: "Too many requests, please try again later"
@@ -214,6 +219,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// CHANGED: explicitly handle CORS preflight for ALL routes. This guarantees
+// OPTIONS requests are answered with the proper Access-Control-Allow-* headers
+// even if a later route-level handler or the 404 catch-all is reached first.
+app.options("*", cors(corsOptions));
 
 app.use(compression());
 
