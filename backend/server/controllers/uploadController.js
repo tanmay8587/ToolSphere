@@ -35,6 +35,8 @@ export const uploadImage = async (req, res) => {
           success: true,
           url: result.secure_url,
           publicId: result.public_id,
+          secure_url: result.secure_url,
+          public_id: result.public_id,
         });
       }
     );

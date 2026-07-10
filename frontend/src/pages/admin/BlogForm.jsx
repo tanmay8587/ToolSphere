@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "../../layout/AdminLayout";
-import { addBlog, getBlogById, updateBlog } from "../../services/adminApi";
+import { addBlog, getBlogById, updateBlog, deleteImage } from "../../services/adminApi";
 import SectionCard from "../../components/admin/form/SectionCard";
 import ImageUploader from "../../components/admin/form/ImageUploader";
+import GalleryUploader from "../../components/admin/form/GalleryUploader";
 import TagInput from "../../components/admin/form/TagInput";
 import { FiAlertCircle } from "react-icons/fi";
 
@@ -130,6 +131,7 @@ export default function BlogForm() {
     author: "",
     tags: [],
     coverImage: "",
+    galleryImages: [],
     status: "draft",
     featured: false,
     notifyNewsletter: false,
@@ -162,6 +164,13 @@ export default function BlogForm() {
           author: blog.author || "",
           tags: Array.isArray(blog.tags) ? blog.tags : [],
           coverImage: blog.coverImage || "",
+          galleryImages: Array.isArray(blog.galleryImages)
+            ? blog.galleryImages.map((url, index) => ({
+                id: `existing-${index}`,
+                url,
+                status: "uploaded",
+              }))
+            : [],
           status: blog.status || "draft",
           featured: Boolean(blog.featured),
           notifyNewsletter: false,
@@ -208,6 +217,22 @@ export default function BlogForm() {
     }));
   };
 
+  // Handle gallery changes (objects: { id, url, status })
+  // Remove deleted images from Cloudinary so storage stays clean.
+  const handleGalleryChange = (next) => {
+    setForm((prev) => {
+      const removed = prev.galleryImages.filter(
+        (img) => !next.some((n) => n.id === img.id)
+      );
+      removed.forEach((img) => {
+        if (img.url && !img.isLocal) {
+          deleteImage(img.url);
+        }
+      });
+      return { ...prev, galleryImages: next };
+    });
+  };
+
   // Validate form
   const validateForm = () => {
     const newErrors = {};
@@ -234,8 +259,12 @@ export default function BlogForm() {
     if (!validateForm()) return;
 
     try {
+      // Extract gallery URLs (keep existing + newly uploaded)
+      const galleryUrls = form.galleryImages.map((img) => img.url);
+
       const payload = {
         ...form,
+        galleryImages: galleryUrls,
         featured: Boolean(form.featured),
         notifyNewsletter: form.notifyNewsletter,
       };
@@ -259,6 +288,7 @@ export default function BlogForm() {
           author: "",
           tags: [],
           coverImage: "",
+          galleryImages: [],
           status: "draft",
           featured: false,
           notifyNewsletter: false,
@@ -386,7 +416,7 @@ export default function BlogForm() {
           {/* SECTION 3: Media & Tags */}
           <SectionCard
             title="Media & Tags"
-            description="Cover image and tags for the blog post"
+            description="Cover image, gallery, and tags for the blog post"
           >
             <div className="space-y-5">
               <ImageUploader
@@ -394,6 +424,13 @@ export default function BlogForm() {
                 value={form.coverImage}
                 onChange={(value) => handleArrayChange("coverImage", value)}
                 previewSize="medium"
+              />
+
+              <GalleryUploader
+                label="Gallery Images"
+                value={form.galleryImages}
+                onChange={handleGalleryChange}
+                maxImages={10}
               />
 
               <TagInput
@@ -417,7 +454,7 @@ export default function BlogForm() {
                 name="status"
                 value={form.status}
                 onChange={handleChange}
-                options={["draft", "published"]}
+                options={["draft", "published", "scheduled"]}
               />
 
               <Checkbox

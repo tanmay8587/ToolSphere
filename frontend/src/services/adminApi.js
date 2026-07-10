@@ -115,6 +115,47 @@ export const featureTool = (id) =>
   API.put(`/admin/tools/${id}/feature`);
 
 /* ===============================
+    Blogs
+ =============================== */
+export const getBlogById = (id) =>
+  API.get(`/admin/blogs/${id}`);
+
+export const addBlog = (data) =>
+  API.post("/admin/blogs", data);
+
+export const updateBlog = (id, data) =>
+  API.put(`/admin/blogs/${id}`, data);
+
+/* ===============================
+    Image Deletion (Cloudinary)
+    Extracts the public_id from a Cloudinary URL and
+    deletes the asset via the existing /upload endpoint.
+ =============================== */
+export const deleteImage = async (url) => {
+  if (!url) return;
+
+  try {
+    // Cloudinary URLs look like:
+    // https://res.cloudinary.com/<cloud>/image/upload/v123/folder/name.jpg
+    // The public_id is "folder/name" (without extension).
+    const marker = "/image/upload/";
+    const idx = url.indexOf(marker);
+    if (idx === -1) return;
+
+    const after = url.slice(idx + marker.length);
+    const withoutVersion = after.replace(/^v\d+\//, "");
+    const publicId = withoutVersion.replace(/\.[^./\\]+$/, "");
+
+    if (!publicId) return;
+
+    await API.delete("/upload/", { data: { publicId } });
+  } catch (err) {
+    // Non-blocking: deletion failures should not break the form flow.
+    console.error("Failed to delete image from Cloudinary:", err);
+  }
+};
+
+/* ===============================
    BACKUP / EXPORT
 =============================== */
 export const exportSettingsData = () =>
