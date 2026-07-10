@@ -30,6 +30,8 @@ import analyticsRoutes from "./routes/analytics.js";
 import maintenanceRoutes from "./routes/maintenance.js";
 import smtpRoutes from "./routes/smtp.js";
 import statisticsRoutes from "./routes/statistics.js";
+import blogRoutes from "./routes/blog.js";
+import { adminBlogRouter } from "./routes/blog.js";
 import logger from "./utils/logger.js";
 import validateEnvironment from "./utils/envValidation.js";
 import { checkMaintenanceMode } from "./middleware/maintenance.js";
@@ -357,6 +359,8 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
 app.use("/api/smtp", smtpRoutes);
 app.use("/api/statistics", statisticsRoutes);
+app.use("/api/blogs", blogRoutes);
+app.use("/api/admin", adminBlogRouter);
 
 /* ===========================
    404 HANDLER
