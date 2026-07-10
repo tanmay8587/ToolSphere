@@ -1,4 +1,5 @@
 import Visitor from "../models/Visitor.js";
+import logger from "../utils/logger.js";
 
 /* ===========================
    VISITOR TRACKING MIDDLEWARE
@@ -139,7 +140,7 @@ export const trackVisitor = async (req, res, next) => {
     next();
   } catch (err) {
     // Don't block the request if tracking fails
-    console.error("Visitor tracking error:", err);
+    logger.error("Visitor tracking error:", err);
     next();
   }
 };

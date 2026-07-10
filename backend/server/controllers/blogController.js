@@ -1,5 +1,6 @@
 import Blog from "../models/Blog.js";
 import { notifyNewBlog } from "../utils/newsletterEmail.js";
+import logger from "../utils/logger.js";
 
 /* =====================================
    PUBLIC - GET BLOGS
@@ -207,7 +208,7 @@ export const addBlog = async (req, res) => {
         newsletterResult = await notifyNewBlog(blog);
       } catch (err) {
         // Log but don't fail the request
-        console.error("Newsletter sending failed:", err);
+        logger.error("Newsletter sending failed:", err);
       }
     }
 
@@ -311,7 +312,7 @@ export const updateBlog = async (req, res) => {
         newsletterResult = await notifyNewBlog(blog);
       } catch (err) {
         // Log but don't fail the request
-        console.error("Newsletter sending failed:", err);
+        logger.error("Newsletter sending failed:", err);
       }
     }
 

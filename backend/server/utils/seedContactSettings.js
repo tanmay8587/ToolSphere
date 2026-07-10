@@ -1,11 +1,12 @@
 import ContactSetting from "../models/ContactSetting.js";
+import logger from "./logger.js";
 
 const seedContactSettings = async () => {
   try {
     const count = await ContactSetting.countDocuments();
 
     if (count === 0) {
-      console.log("🌱 Seeding contact settings...");
+      logger.info("🌱 Seeding contact settings...");
 
       const defaultSettings = [
         // Contact page settings
@@ -26,12 +27,12 @@ const seedContactSettings = async () => {
       ];
 
       await ContactSetting.insertMany(defaultSettings);
-      console.log(`✅ Seeded ${defaultSettings.length} contact settings`);
+      logger.info(`✅ Seeded ${defaultSettings.length} contact settings`);
     } else {
-      console.log("ℹ️ Contact settings already exist, skipping seed");
+      logger.info("ℹ️ Contact settings already exist, skipping seed");
     }
   } catch (err) {
-    console.error("⚠️ Contact settings seed failed (non-blocking):", err.message);
+    logger.error("⚠️ Contact settings seed failed (non-blocking):", err.message);
   }
 };
 

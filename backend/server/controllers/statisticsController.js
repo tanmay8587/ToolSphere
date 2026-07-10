@@ -2,6 +2,7 @@ import Tool from "../models/Tool.js";
 import Category from "../models/Category.js";
 import Newsletter from "../models/Newsletter.js";
 import Visitor from "../models/Visitor.js";
+import logger from "../utils/logger.js";
 
 /* =====================================
    GET STATISTICS
@@ -43,7 +44,7 @@ export const getStatistics = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Error fetching statistics:", err);
+    logger.error("Error fetching statistics:", err);
     res.status(500).json({
       success: false,
       message: "Failed to fetch statistics",
@@ -71,7 +72,7 @@ export const trackVisitor = async (req, res) => {
       message: "Visitor tracking handled by middleware",
     });
   } catch (err) {
-    console.error("Error tracking visitor:", err);
+    logger.error("Error tracking visitor:", err);
     res.status(500).json({
       success: false,
       message: "Failed to track visitor",

@@ -1,11 +1,12 @@
 import WebsiteBranding from "../models/WebsiteBranding.js";
+import logger from "./logger.js";
 
 const seedWebsiteBranding = async () => {
   try {
     const count = await WebsiteBranding.countDocuments();
 
     if (count === 0) {
-      console.log("🌱 Seeding website branding settings...");
+      logger.info("🌱 Seeding website branding settings...");
 
       const defaultSettings = [
         { key: "logo", value: "" },
@@ -15,12 +16,12 @@ const seedWebsiteBranding = async () => {
       ];
 
       await WebsiteBranding.insertMany(defaultSettings);
-      console.log(`✅ Seeded ${defaultSettings.length} website branding settings`);
+      logger.info(`✅ Seeded ${defaultSettings.length} website branding settings`);
     } else {
-      console.log("ℹ️ Website branding settings already exist, skipping seed");
+      logger.info("ℹ️ Website branding settings already exist, skipping seed");
     }
   } catch (err) {
-    console.error("⚠️ Website branding seed failed (non-blocking):", err.message);
+    logger.error("⚠️ Website branding seed failed (non-blocking):", err.message);
   }
 };
 

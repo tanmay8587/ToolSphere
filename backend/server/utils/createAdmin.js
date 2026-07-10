@@ -1,5 +1,6 @@
 ﻿import bcrypt from "bcryptjs";
 import Admin from "../models/Admin.js";
+import logger from "./logger.js";
 
 export const createDefaultAdmin = async () => {
   try {
@@ -7,7 +8,7 @@ export const createDefaultAdmin = async () => {
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     if (!adminEmail || !adminPassword) {
-      console.error("❌ ADMIN_EMAIL or ADMIN_PASSWORD missing in .env");
+      logger.error("❌ ADMIN_EMAIL or ADMIN_PASSWORD missing in .env");
       return;
     }
 
@@ -18,9 +19,9 @@ export const createDefaultAdmin = async () => {
       if (!matches) {
         exists.password = await bcrypt.hash(adminPassword, 10);
         await exists.save();
-        console.log("✅ Admin password synced with .env");
+        logger.info("✅ Admin password synced with .env");
       } else {
-        console.log("✅ Admin already exists and password matches .env");
+        logger.info("✅ Admin already exists and password matches .env");
       }
       return;
     }
@@ -33,8 +34,8 @@ export const createDefaultAdmin = async () => {
       password: hashedPassword,
     });
 
-    console.log("✅ Default Admin Created");
+    logger.info("✅ Default Admin Created");
   } catch (err) {
-    console.error("Create Admin Error:", err.message);
+    logger.error("Create Admin Error:", err.message);
   }
 };

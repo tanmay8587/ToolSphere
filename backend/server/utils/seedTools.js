@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Tool from "../models/Tool.js";
+import logger from "./logger.js";
 
 /* =========================
    DATA (MISSING FIX ADDED)
@@ -157,28 +158,20 @@ async function runSeed() {
     if (existingCategories === 0) {
       const categories = buildSeedCategories();
       await Category.insertMany(categories);
-      console.log(`✅ Seeded ${categories.length} categories`);
+      logger.info(`✅ Seeded ${categories.length} categories`);
     } else {
-      console.log("ℹ️ Categories already exist, skipping category seed");
+      logger.info("ℹ️ Categories already exist, skipping category seed");
     }
     
     // Then seed tools
     const tools = buildSeedTools();
     await Tool.deleteMany({});
     await Tool.insertMany(tools);
-    console.log(`✅ Seeded ${tools.length} tools`);
+    logger.info(`✅ Seeded ${tools.length} tools`);
     
     process.exit();
   } catch (err) {
-    console.error("Seed error:", err);
+    logger.error("Seed error:", err);
     process.exit(1);
   }
-}
-
-/* =========================
-   AUTO RUN
-========================= */
-
-if (process.argv[1] && process.argv[1].includes("seedTools.js")) {
-  runSeed();
 }

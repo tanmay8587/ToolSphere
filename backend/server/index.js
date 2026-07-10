@@ -67,7 +67,7 @@ const isProduction = process.env.NODE_ENV === "production";
 // This tells Express to trust the first proxy in the chain (e.g., load balancer, reverse proxy)
 if (isProduction) {
   app.set("trust proxy", 1);
-  console.log("🔒 Production mode: Proxy trust enabled");
+  logger.info("🔒 Production mode: Proxy trust enabled");
 }
 
 // HTTPS enforcement middleware for production only
@@ -78,14 +78,14 @@ if (isProduction) {
     
     // If not HTTPS, redirect to HTTPS
     if (!isHttps) {
-      console.log(`⚠️  Redirecting HTTP to HTTPS: ${req.url}`);
+      logger.warn(`⚠️  Redirecting HTTP to HTTPS: ${req.url}`);
       return res.redirect(`https://${req.hostname}${req.url}`);
     }
     
     next();
   });
   
-  console.log("🔒 Production mode: HTTPS enforcement enabled");
+  logger.info("🔒 Production mode: HTTPS enforcement enabled");
 }
 
 /* ===========================
@@ -152,9 +152,9 @@ const limiter = rateLimit({
 
 if (process.env.NODE_ENV === "production") {
   app.use(limiter);
-  console.log("🔒 Rate limiting enabled (Production)");
+  logger.info("🔒 Rate limiting enabled (Production)");
 } else {
-  console.log("🛠️ Rate limiting disabled (Development)");
+  logger.info("🛠️ Rate limiting disabled (Development)");
 }
 
 /* ===========================
@@ -195,7 +195,7 @@ const corsOptions = {
     // No CORS_ORIGIN configured
     if (isProduction) {
       // Production: Require explicit CORS_ORIGIN configuration
-      console.error("❌ CORS_ORIGIN must be set in production");
+      logger.error("❌ CORS_ORIGIN must be set in production");
       return callback(new Error("CORS not configured for production"), false);
     } else {
       // Development: Allow all localhost origins
@@ -408,13 +408,13 @@ app.use((err, req, res, next) => {
 const mongoUri = process.env.MONGO_URI;
 
 mongoose.connection.on("connected", () => {
-  console.log("\n==================================");
-  console.log("MongoDB Connected Successfully");
-  console.log("==================================\n");
+  logger.info("\n==================================");
+  logger.info("MongoDB Connected Successfully");
+  logger.info("==================================\n");
 });
 
 mongoose.connection.on("error", (err) => {
-  console.error("MongoDB Error:", err.message);
+  logger.error("MongoDB Error:", err.message);
 });
 
 /* ===========================
@@ -450,9 +450,9 @@ const startServer = () => {
   serverStarted = true;
 
   server = app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`🔗 Health Check: http://localhost:${PORT}/api/health`);
-    console.log(`🧰 Tools API: http://localhost:${PORT}/api/tools`);
+    logger.info(`🚀 Server running on http://localhost:${PORT}`);
+    logger.info(`🔗 Health Check: http://localhost:${PORT}/api/health`);
+    logger.info(`🧰 Tools API: http://localhost:${PORT}/api/tools`);
   });
 
   // ===========================
@@ -463,7 +463,7 @@ const startServer = () => {
   // This prevents slow-client attacks where clients send data very slowly
   server.requestTimeout = 10000;
   
-  console.log("⏱️  Timeout configuration: Request timeout set to 10 seconds");
+  logger.info("⏱️  Timeout configuration: Request timeout set to 10 seconds");
 };
 
 /* ===========================
@@ -477,17 +477,17 @@ const startServer = () => {
 const gracefulShutdown = async (signal) => {
   // Prevent multiple shutdown attempts
   if (isShuttingDown) {
-    console.log("⚠️  Shutdown already in progress...");
+    logger.warn("⚠️  Shutdown already in progress...");
     return;
   }
   isShuttingDown = true;
 
-  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  logger.info(`\n${signal} received. Starting graceful shutdown...`);
 
   // Set a timeout for forced shutdown (30 seconds)
   // This ensures the process exits even if graceful shutdown takes too long
   const shutdownTimeout = setTimeout(() => {
-    console.error("⚠️  Forced shutdown: Time limit exceeded");
+    logger.error("⚠️  Forced shutdown: Time limit exceeded");
     process.exit(1);
   }, 30000);
 
@@ -495,10 +495,10 @@ const gracefulShutdown = async (signal) => {
     // Step 1: Close HTTP server
     // This stops accepting new connections and waits for existing requests to complete
     if (server) {
-      console.log("🔒 Closing HTTP server (stopping new connections)...");
+      logger.info("🔒 Closing HTTP server (stopping new connections)...");
       await new Promise((resolve) => {
         server.close(() => {
-          console.log("✅ HTTP server closed");
+          logger.info("✅ HTTP server closed");
           resolve();
         });
       });
@@ -506,17 +506,17 @@ const gracefulShutdown = async (signal) => {
 
     // Step 2: Close MongoDB connection
     // This ensures all pending database operations complete and connections are properly closed
-    console.log("🔒 Closing MongoDB connection...");
+    logger.info("🔒 Closing MongoDB connection...");
     await mongoose.disconnect();
-    console.log("✅ MongoDB connection closed");
+    logger.info("✅ MongoDB connection closed");
 
     // Clear the timeout since shutdown completed successfully
     clearTimeout(shutdownTimeout);
     
-    console.log("👋 Graceful shutdown complete");
+    logger.info("👋 Graceful shutdown complete");
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error during shutdown:", error);
+    logger.error("❌ Error during shutdown:", error);
     clearTimeout(shutdownTimeout);
     process.exit(1);
   }
@@ -540,18 +540,18 @@ const seedDatabase = async () => {
     const categoryCount = await Category.countDocuments();
 
     if (categoryCount === 0) {
-      console.log("🌱 Seeding categories...");
+      logger.info("🌱 Seeding categories...");
       
       const categoryData = buildSeedCategories();
       
       if (!Array.isArray(categoryData) || categoryData.length === 0) {
-        console.log("⚠️ Category seed data empty, skipping...");
+        logger.warn("⚠️ Category seed data empty, skipping...");
       } else {
         await Category.insertMany(categoryData);
-        console.log(`✅ Seeded ${categoryData.length} categories`);
+        logger.info(`✅ Seeded ${categoryData.length} categories`);
       }
     } else {
-      console.log("ℹ️ Categories already exist, skipping category seed");
+      logger.info("ℹ️ Categories already exist, skipping category seed");
     }
 
     // Then seed tools
@@ -560,23 +560,23 @@ const seedDatabase = async () => {
       .countDocuments();
 
     if (toolCount === 0) {
-      console.log("🌱 Seeding tools...");
+      logger.info("🌱 Seeding tools...");
 
       const seedData = buildSeedTools();
 
       if (!Array.isArray(seedData) || seedData.length === 0) {
-        console.log("⚠️ Seed data empty, skipping...");
+        logger.warn("⚠️ Seed data empty, skipping...");
         return;
       }
 
       await mongoose.connection.collection("tools").insertMany(seedData);
 
-      console.log(`✅ Seeded ${seedData.length} tools`);
+      logger.info(`✅ Seeded ${seedData.length} tools`);
     } else {
-      console.log("ℹ️ Tools already exist, skipping tool seed");
+      logger.info("ℹ️ Tools already exist, skipping tool seed");
     }
   } catch (err) {
-    console.error("⚠️ Seed failed (non-blocking):", err.message);
+    logger.error("⚠️ Seed failed (non-blocking):", err.message);
 
   }
 };
@@ -585,13 +585,13 @@ const seedDatabase = async () => {
    START APP
    =========================== */
 
-console.log("🛡️  Graceful shutdown handlers registered (SIGINT, SIGTERM)");
+logger.info("🛡️  Graceful shutdown handlers registered (SIGINT, SIGTERM)");
 
 const connectAndStart = async () => {
   try {
-    console.log("\n==================================");
-    console.log("Connecting MongoDB...");
-    console.log("==================================");
+    logger.info("\n==================================");
+    logger.info("Connecting MongoDB...");
+    logger.info("==================================");
 
     await connectDatabase();
 
@@ -610,39 +610,9 @@ const connectAndStart = async () => {
     await seedSeoSettings();
     await seedSmtpSettings();
 
-    // Log all registered routes
-    console.log("\n==================================");
-    console.log("Registered Routes:");
-    console.log("==================================");
-    const registeredRoutes = [
-      "GET /api/tools",
-      "GET /api/admin/login",
-      "GET /api/admin/profile",
-      "GET /api/admin/dashboard",
-      "GET /api/admin/tools",
-      "GET /api/admin/categories",
-      "GET /api/admin/users",
-      "GET /api/admin/maintenance/toggle",
-      "GET /api/admin/maintenance/settings",
-      "GET /api/auth",
-      "GET /api/upload",
-      "GET /api/newsletter",
-      "GET /api/notifications",
-      "GET /api/contact",
-      "GET /api/contact-settings",
-      "GET /api/social",
-      "GET /api/website-branding",
-      "GET /api/seo",
-      "GET /api/analytics",
-      "GET /api/maintenance/status",
-      "GET /api/smtp",
-    ];
-    registeredRoutes.forEach(route => console.log(`  ${route}`));
-    console.log("==================================\n");
-
     startServer();
   } catch (error) {
-    console.error("❌ Fatal Error:", error);
+    logger.error("❌ Fatal Error:", error);
     process.exit(1);
   }
 };

@@ -11,6 +11,7 @@ import streamifier from "streamifier";
 import { createSlug } from "../utils/slug.js";
 import { normalizeTags, validateToolPayload } from "../utils/validation.js";
 import { notifyNewTool } from "../utils/newsletterEmail.js";
+import logger from "../utils/logger.js";
 
 /* =====================================
    PUBLIC - GET TOOLS
@@ -95,7 +96,7 @@ export const getTools = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("[getTools] Error fetching tools:", err);
+    logger.error("[getTools] Error fetching tools:", err);
     res.status(500).json({
       success: false,
       message: "Failed to fetch tools",
@@ -445,7 +446,7 @@ export const addTool = async (req, res) => {
         newsletterResult = await notifyNewTool(tool);
       } catch (err) {
         // Log but don't fail the request
-        console.error("Newsletter sending failed:", err);
+        logger.error("Newsletter sending failed:", err);
       }
     }
 
@@ -609,7 +610,7 @@ export const updateTool = async (req, res) => {
         newsletterResult = await notifyNewTool(tool);
       } catch (err) {
         // Log but don't fail the request
-        console.error("Newsletter sending failed:", err);
+        logger.error("Newsletter sending failed:", err);
       }
     }
 

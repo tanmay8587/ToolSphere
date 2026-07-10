@@ -5,6 +5,8 @@
  * Fails fast with clear error messages if any required variable is missing or invalid.
  */
 
+import logger from "./logger.js";
+
 /**
  * Validates that a value is not empty
  * @param {string} value - The value to validate
@@ -13,7 +15,7 @@
  */
 const validateNotEmpty = (value, varName) => {
   if (!value || value.trim() === "") {
-    console.error(`❌ ${varName} is missing or empty in .env file`);
+    logger.error(`❌ ${varName} is missing or empty in .env file`);
     return false;
   }
   return true;
@@ -28,8 +30,8 @@ const validateNotEmpty = (value, varName) => {
  */
 const validateMinLength = (value, varName, minLength) => {
   if (value.length < minLength) {
-    console.error(`❌ ${varName} must be at least ${minLength} characters long`);
-    console.error(`   Current length: ${value.length} characters`);
+    logger.error(`❌ ${varName} must be at least ${minLength} characters long`);
+    logger.error(`   Current length: ${value.length} characters`);
     return false;
   }
   return true;
@@ -43,8 +45,8 @@ const validateMinLength = (value, varName, minLength) => {
 const validateMongoUri = (uri) => {
   const mongoUriPattern = /^mongodb(\+srv)?:\/\/.+/;
   if (!mongoUriPattern.test(uri)) {
-    console.error("❌ MONGO_URI format is invalid");
-    console.error("   Expected format: mongodb://localhost:27017/database or mongodb+srv://...");
+    logger.error("❌ MONGO_URI format is invalid");
+    logger.error("   Expected format: mongodb://localhost:27017/database or mongodb+srv://...");
     return false;
   }
   return true;
@@ -58,9 +60,9 @@ const validateMongoUri = (uri) => {
 const validateEmail = (email) => {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(email)) {
-    console.error("❌ ADMIN_EMAIL format is invalid");
-    console.error(`   Current value: ${email}`);
-    console.error("   Expected format: user@example.com");
+    logger.error("❌ ADMIN_EMAIL format is invalid");
+    logger.error("   Please check the configured email format");
+    logger.error("   Expected format: user@example.com");
     return false;
   }
   return true;
@@ -96,9 +98,9 @@ const validateCloudinary = (cloudName, apiKey, apiSecret) => {
  * @returns {boolean} - True if all validations pass
  */
 const validateEnvironment = () => {
-  console.log("\n==================================");
-  console.log("Validating Environment Variables");
-  console.log("==================================\n");
+  logger.info("\n==================================");
+  logger.info("Validating Environment Variables");
+  logger.info("==================================\n");
 
   let isValid = true;
 
@@ -121,14 +123,14 @@ const validateEnvironment = () => {
   }
 
   if (!isValid) {
-    console.error("\n❌ Environment validation failed. Please check your .env file.");
-    console.error("   Refer to .env.example for required variables.\n");
+    logger.error("\n❌ Environment validation failed. Please check your .env file.");
+    logger.error("   Refer to .env.example for required variables.\n");
     return false;
   }
 
   // Validate JWT_SECRET length (security requirement)
   if (!validateMinLength(process.env.JWT_SECRET, "JWT_SECRET", 32)) {
-    console.error("   Generate a strong secret using: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
+    logger.error("   Generate a strong secret using: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
     isValid = false;
   }
 
@@ -144,7 +146,7 @@ const validateEnvironment = () => {
 
   // Validate ADMIN_PASSWORD length
   if (!validateMinLength(process.env.ADMIN_PASSWORD, "ADMIN_PASSWORD", 8)) {
-    console.error("   Use a strong password with at least 8 characters");
+    logger.error("   Use a strong password with at least 8 characters");
     isValid = false;
   }
 
@@ -162,23 +164,23 @@ const validateEnvironment = () => {
   if (isProduction) {
     const corsOrigin = process.env.CORS_ORIGIN;
     if (!corsOrigin || corsOrigin.trim() === "") {
-      console.error("❌ CORS_ORIGIN must be set in production");
-      console.error("   Example: CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com");
+      logger.error("❌ CORS_ORIGIN must be set in production");
+      logger.error("   Example: CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com");
       isValid = false;
     }
   }
 
   if (isValid) {
-    console.log("✅ All required environment variables are valid");
-    console.log("✅ JWT_SECRET meets minimum length requirement (32 characters)");
-    console.log("✅ MONGO_URI format is valid");
-    console.log("✅ ADMIN_EMAIL format is valid");
-    console.log("✅ ADMIN_PASSWORD meets minimum length requirement (8 characters)");
-    console.log("✅ Cloudinary credentials are configured");
+    logger.info("✅ All required environment variables are valid");
+    logger.info("✅ JWT_SECRET meets minimum length requirement (32 characters)");
+    logger.info("✅ MONGO_URI format is valid");
+    logger.info("✅ ADMIN_EMAIL format is valid");
+    logger.info("✅ ADMIN_PASSWORD meets minimum length requirement (8 characters)");
+    logger.info("✅ Cloudinary credentials are configured");
     if (isProduction) {
-      console.log("✅ CORS_ORIGIN is configured for production");
+      logger.info("✅ CORS_ORIGIN is configured for production");
     }
-    console.log("\n==================================\n");
+    logger.info("\n==================================\n");
   }
 
   return isValid;

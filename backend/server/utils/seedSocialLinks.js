@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import SocialLink from "../models/SocialLink.js";
+import logger from "./logger.js";
 
 const seedSocialLinks = async () => {
   try {
@@ -7,7 +8,7 @@ const seedSocialLinks = async () => {
     const count = await SocialLink.countDocuments();
     
     if (count > 0) {
-      console.log("ℹ️ Social links already exist, skipping seed");
+      logger.info("ℹ️ Social links already exist, skipping seed");
       return;
     }
 
@@ -29,9 +30,9 @@ const seedSocialLinks = async () => {
     }));
 
     await SocialLink.insertMany(socialLinks);
-    console.log(`✅ Seeded ${socialLinks.length} social link platforms`);
+    logger.info(`✅ Seeded ${socialLinks.length} social link platforms`);
   } catch (err) {
-    console.error("⚠️ Social links seed failed:", err.message);
+    logger.error("⚠️ Social links seed failed:", err.message);
   }
 };
 

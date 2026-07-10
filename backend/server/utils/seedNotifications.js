@@ -1,5 +1,6 @@
 import Notification from "../models/Notification.js";
 import Admin from "../models/Admin.js";
+import logger from "./logger.js";
 
 /**
  * Seed sample notifications for testing
@@ -10,14 +11,14 @@ const seedNotifications = async () => {
     // Get the first admin user
     const admin = await Admin.findOne();
     if (!admin) {
-      console.log("❌ No admin found. Create an admin first.");
+      logger.error("❌ No admin found. Create an admin first.");
       process.exit(1);
     }
 
     const existingCount = await Notification.countDocuments({ user: admin._id });
     if (existingCount > 0) {
-      console.log(`ℹ️ ${existingCount} notifications already exist. Skipping seed.`);
-      console.log("   To re-seed, delete existing notifications first.");
+      logger.info(`ℹ️ ${existingCount} notifications already exist. Skipping seed.`);
+      logger.info("   To re-seed, delete existing notifications first.");
       process.exit(0);
     }
 
@@ -81,12 +82,12 @@ const seedNotifications = async () => {
     ];
 
     await Notification.insertMany(notifications);
-    console.log(`✅ Seeded ${notifications.length} notifications for admin: ${admin.email}`);
-    console.log("   Types seeded:");
-    notifications.forEach((n) => console.log(`   - ${n.type}: ${n.title}`));
+    logger.info(`✅ Seeded ${notifications.length} notifications for admin: ${admin.email}`);
+    logger.info("   Types seeded:");
+    notifications.forEach((n) => logger.info(`   - ${n.type}: ${n.title}`));
     process.exit(0);
   } catch (err) {
-    console.error("❌ Seed failed:", err.message);
+    logger.error("❌ Seed failed:", err.message);
     process.exit(1);
   }
 };

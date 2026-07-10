@@ -1,11 +1,12 @@
 import SeoSetting from "../models/SeoSetting.js";
+import logger from "./logger.js";
 
 const seedSeoSettings = async () => {
   try {
     const count = await SeoSetting.countDocuments();
 
     if (count === 0) {
-      console.log("🌱 Seeding SEO settings...");
+      logger.info("🌱 Seeding SEO settings...");
 
       const defaultSettings = [
         { key: "default_meta_title", value: "AI Tools Directory" },
@@ -17,12 +18,12 @@ const seedSeoSettings = async () => {
       ];
 
       await SeoSetting.insertMany(defaultSettings);
-      console.log(`✅ Seeded ${defaultSettings.length} SEO settings`);
+      logger.info(`✅ Seeded ${defaultSettings.length} SEO settings`);
     } else {
-      console.log("ℹ️ SEO settings already exist, skipping seed");
+      logger.info("ℹ️ SEO settings already exist, skipping seed");
     }
   } catch (err) {
-    console.error("⚠️ SEO settings seed failed (non-blocking):", err.message);
+    logger.error("⚠️ SEO settings seed failed (non-blocking):", err.message);
   }
 };
 

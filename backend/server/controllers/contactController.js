@@ -2,6 +2,7 @@ import Contact from "../models/Contact.js";
 import Notification from "../models/Notification.js";
 import logger from "../utils/logger.js";
 import { validateEmail } from "../utils/validation.js";
+import { sendEmail } from "./smtpController.js";
 
 /* ===========================
    SUBMIT CONTACT FORM (PUBLIC)
@@ -45,6 +46,64 @@ export async function submitContact(req, res) {
       type: "contact",
       isRead: false,
     });
+
+    // Send email notification to admin
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (adminEmail) {
+        const subject = contact.subject || "No subject";
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #06b6d4;">New Contact Message</h2>
+            <p><strong>Name:</strong> ${contact.name}</p>
+            <p><strong>Email:</strong> ${contact.email}</p>
+            <p><strong>Subject:</strong> ${subject}</p>
+            <p><strong>Message:</strong></p>
+            <div style="background: #f3f4f6; padding: 15px; border-radius: 5px; margin: 10px 0;">
+              <p style="margin: 0; white-space: pre-wrap;">${contact.message}</p>
+            </div>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+            <p style="color: #6b7280; font-size: 12px;">
+              Received: ${new Date(contact.createdAt).toLocaleString()}
+            </p>
+          </div>
+        `;
+
+        await sendEmail(adminEmail, `New Contact Message - ToolSphere`, html);
+        logger.info(`Contact notification email sent to ${adminEmail}`);
+      }
+    } catch (emailError) {
+      logger.error("Failed to send contact notification email:", emailError);
+      // Don't fail the request if email fails
+    }
+
+    // Send confirmation email to user
+    try {
+      const userConfirmationHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #06b6d4;">Thank You for Contacting ToolSphere!</h2>
+          <p>Dear ${contact.name},</p>
+          <p>Thank you for reaching out to us. We have successfully received your message and appreciate you taking the time to contact us.</p>
+          <p><strong>Your message has been received and our team will get back to you as soon as possible.</strong></p>
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h3 style="color: #0e7490; margin-top: 0;">What happens next?</h3>
+            <p>Our team typically responds within 24-48 hours. We'll review your message and get back to you with a helpful response.</p>
+          </div>
+          <p>In the meantime, feel free to explore our platform and discover amazing AI tools at <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}" style="color: #06b6d4;">ToolSphere</a>.</p>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+          <p style="color: #6b7280; font-size: 12px;">
+            <strong>ToolSphere</strong><br />
+            Empowering your workflow with AI
+          </p>
+        </div>
+      `;
+
+      await sendEmail(contact.email, "Thanks for contacting ToolSphere", userConfirmationHtml);
+      logger.info(`Contact confirmation email sent to ${contact.email}`);
+    } catch (userEmailError) {
+      logger.error("Failed to send contact confirmation email to user:", userEmailError);
+      // Don't fail the request if user email fails
+    }
 
     logger.info(`Contact form submitted by ${contact.email}`);
 
@@ -101,6 +160,64 @@ export async function submitContactAuth(req, res) {
       type: "contact",
       isRead: false,
     });
+
+    // Send email notification to admin
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (adminEmail) {
+        const subject = contact.subject || "No subject";
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #06b6d4;">New Contact Message</h2>
+            <p><strong>Name:</strong> ${contact.name}</p>
+            <p><strong>Email:</strong> ${contact.email}</p>
+            <p><strong>Subject:</strong> ${subject}</p>
+            <p><strong>Message:</strong></p>
+            <div style="background: #f3f4f6; padding: 15px; border-radius: 5px; margin: 10px 0;">
+              <p style="margin: 0; white-space: pre-wrap;">${contact.message}</p>
+            </div>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+            <p style="color: #6b7280; font-size: 12px;">
+              Received: ${new Date(contact.createdAt).toLocaleString()}
+            </p>
+          </div>
+        `;
+
+        await sendEmail(adminEmail, `New Contact Message - ToolSphere`, html);
+        logger.info(`Contact notification email sent to ${adminEmail}`);
+      }
+    } catch (emailError) {
+      logger.error("Failed to send contact notification email:", emailError);
+      // Don't fail the request if email fails
+    }
+
+    // Send confirmation email to user
+    try {
+      const userConfirmationHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #06b6d4;">Thank You for Contacting ToolSphere!</h2>
+          <p>Dear ${contact.name},</p>
+          <p>Thank you for reaching out to us. We have successfully received your message and appreciate you taking the time to contact us.</p>
+          <p><strong>Your message has been received and our team will get back to you as soon as possible.</strong></p>
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h3 style="color: #0e7490; margin-top: 0;">What happens next?</h3>
+            <p>Our team typically responds within 24-48 hours. We'll review your message and get back to you with a helpful response.</p>
+          </div>
+          <p>In the meantime, feel free to explore our platform and discover amazing AI tools at <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}" style="color: #06b6d4;">ToolSphere</a>.</p>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+          <p style="color: #6b7280; font-size: 12px;">
+            <strong>ToolSphere</strong><br />
+            Empowering your workflow with AI
+          </p>
+        </div>
+      `;
+
+      await sendEmail(contact.email, "Thanks for contacting ToolSphere", userConfirmationHtml);
+      logger.info(`Contact confirmation email sent to ${contact.email}`);
+    } catch (userEmailError) {
+      logger.error("Failed to send contact confirmation email to user:", userEmailError);
+      // Don't fail the request if user email fails
+    }
 
     logger.info(`Contact form submitted by authenticated user ${contact.email}`);
 

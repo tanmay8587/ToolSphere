@@ -1,11 +1,12 @@
 import AnalyticsSetting from "../models/AnalyticsSetting.js";
+import logger from "./logger.js";
 
 const seedAnalyticsSettings = async () => {
   try {
     const count = await AnalyticsSetting.countDocuments();
 
     if (count === 0) {
-      console.log("🌱 Seeding analytics settings...");
+      logger.info("🌱 Seeding analytics settings...");
 
       const defaultSettings = [
         { key: "google_analytics_id", value: "" },
@@ -14,12 +15,12 @@ const seedAnalyticsSettings = async () => {
       ];
 
       await AnalyticsSetting.insertMany(defaultSettings);
-      console.log(`✅ Seeded ${defaultSettings.length} analytics settings`);
+      logger.info(`✅ Seeded ${defaultSettings.length} analytics settings`);
     } else {
-      console.log("ℹ️ Analytics settings already exist, skipping seed");
+      logger.info("ℹ️ Analytics settings already exist, skipping seed");
     }
   } catch (err) {
-    console.error("⚠️ Analytics settings seed failed (non-blocking):", err.message);
+    logger.error("⚠️ Analytics settings seed failed (non-blocking):", err.message);
   }
 };
 
