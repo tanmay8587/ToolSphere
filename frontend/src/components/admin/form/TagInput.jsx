@@ -51,6 +51,57 @@ export default function TagInput({
     }
   };
 
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData("text");
+    
+    // Split by comma, newline, or semicolon
+    const newTags = pastedText
+      .split(/[,;\n]+/)
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+    
+    if (newTags.length === 0) return;
+    
+    // Check max tags limit
+    const availableSlots = maxTags - tags.length;
+    if (availableSlots <= 0) {
+      setError(`Maximum ${maxTags} tags allowed`);
+      return;
+    }
+    
+    // Add tags, checking for duplicates (case-insensitive)
+    const tagsLower = tags.map((t) => t.toLowerCase());
+    const uniqueNewTags = [];
+    
+    for (const tag of newTags) {
+      if (uniqueNewTags.length >= availableSlots) break;
+      
+      const lowerTag = tag.toLowerCase();
+      if (!tagsLower.includes(lowerTag) && !uniqueNewTags.some((t) => t.toLowerCase() === lowerTag)) {
+        uniqueNewTags.push(tag);
+      }
+    }
+    
+    if (uniqueNewTags.length > 0) {
+      onChange([...tags, ...uniqueNewTags]);
+      setInputValue("");
+      setError("");
+      
+      // Show feedback if some tags were duplicates
+      if (uniqueNewTags.length < newTags.length) {
+        const duplicateCount = newTags.length - uniqueNewTags.length;
+        if (uniqueNewTags.length === 0) {
+          setError("All tags already exist");
+        } else {
+          setError(`Added ${uniqueNewTags.length} tags (${duplicateCount} duplicate${duplicateCount > 1 ? 's' : ''} skipped)`);
+        }
+      }
+    } else {
+      setError("All tags already exist");
+    }
+  };
+
   const handleBlur = () => {
     if (inputValue.trim()) {
       addTag();
@@ -88,7 +139,7 @@ export default function TagInput({
           </div>
         ))}
         
-        <input
+         <input
           ref={inputRef}
           type="text"
           value={inputValue}
@@ -97,6 +148,7 @@ export default function TagInput({
             if (error) setError("");
           }}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           onBlur={handleBlur}
           placeholder={tags.length === 0 ? placeholder : ""}
           disabled={tags.length >= maxTags}
@@ -113,7 +165,7 @@ export default function TagInput({
 
       {tags.length === 0 && !error && (
         <p className="text-xs text-slate-500">
-          Type and press Enter or comma to add tags.
+          Type and press Enter or comma to add tags. You can also paste multiple tags separated by commas, semicolons, or newlines.
         </p>
       )}
     </div>
