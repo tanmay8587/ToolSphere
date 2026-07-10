@@ -1,7 +1,9 @@
 import SmtpSetting from "../models/SmtpSetting.js";
 import logger from "../utils/logger.js";
-import nodemailer from "nodemailer";
-import dns from "node:dns";
+import { Resend } from "resend";
+
+// Initialize Resend client
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Helper to sanitize SMTP host value
 const sanitizeSmtpHost = (value) => {
@@ -235,50 +237,18 @@ export const testEmail = async (req, res) => {
     // Get SMTP configuration
     const config = await getSmtpConfig();
 
-    if (!config || !config.host || !config.auth.user || !config.auth.pass) {
+    if (!config || !config.senderEmail) {
       return res.status(400).json({
         success: false,
         message: "SMTP settings are not configured. Please set up SMTP settings first.",
       });
     }
 
-    // Create transporter
-    logger.info("Creating SMTP transporter", { host: config.host, port: config.port });
-    const transporter = nodemailer.createTransport({
-      host: config.host,
-      port: config.port,
-      secure: config.port === 465, // true for 465, false for other ports
-      requireTLS: config.port === 587, // require TLS for port 587
-      auth: {
-        user: config.auth.user,
-        pass: config.auth.pass,
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-      lookup: (hostname, options, callback) => {
-        // Force IPv4 to avoid IPv6 unreachable errors in environments without IPv6 connectivity
-        logger.info("Custom lookup callback invoked", { hostname, options });
-        dns.lookup(hostname, { family: 4, all: false }, (err, address) => {
-          logger.info("DNS lookup result", { 
-            hostname, 
-            err: err ? err.message : null, 
-            address, 
-            family: address?.family 
-          });
-          callback(err, address);
-        });
-      },
-    });
-
-    // Verify connection
-    logger.info("Calling transporter.verify()");
-    await transporter.verify();
-    logger.info("transporter.verify() succeeded");
-
-    // Send test email
-    const info = await transporter.sendMail({
-      from: `"${config.senderName}" <${config.senderEmail || config.auth.user}>`,
+    // Send test email using Resend
+    const fromAddress = process.env.SMTP_FROM || config.senderEmail;
+    
+    const data = await resend.emails.send({
+      from: fromAddress,
       to: testEmailAddress,
       subject: "SMTP Test Email - ToolSphere",
       html: `
@@ -296,7 +266,7 @@ export const testEmail = async (req, res) => {
 
     logger.info("Test email sent successfully", { 
       to: testEmailAddress, 
-      messageId: info.messageId 
+      messageId: data.id 
     });
 
     res.json({
@@ -345,36 +315,20 @@ export const sendEmail = async (to, subject, html) => {
   try {
     const config = await getSmtpConfig();
 
-    if (!config || !config.host || !config.auth.user || !config.auth.pass) {
+    if (!config || !config.senderEmail) {
       throw new Error("SMTP settings are not configured");
     }
 
-    const transporter = nodemailer.createTransport({
-      host: config.host,
-      port: config.port,
-      secure: config.port === 465,
-      requireTLS: config.port === 587, // require TLS for port 587
-      auth: {
-        user: config.auth.user,
-        pass: config.auth.pass,
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-      lookup: (hostname, options, callback) => {
-        // Force IPv4 to avoid IPv6 unreachable errors in environments without IPv6 connectivity
-        dns.lookup(hostname, { family: 4, all: false }, callback);
-      },
-    });
+    const fromAddress = process.env.SMTP_FROM || config.senderEmail;
 
-    const info = await transporter.sendMail({
-      from: `"${config.senderName}" <${config.senderEmail || config.auth.user}>`,
+    const data = await resend.emails.send({
+      from: fromAddress,
       to,
       subject,
       html,
     });
 
-    return { success: true, messageId: info.messageId };
+    return { success: true, messageId: data.id };
   } catch (err) {
     logger.error("Failed to send email", { error: err.message });
     throw err;
