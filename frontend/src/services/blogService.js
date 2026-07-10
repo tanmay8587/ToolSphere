@@ -78,3 +78,34 @@ export async function deleteBlog(id) {
     token: getAdminToken(),
   });
 }
+
+/* ===========================
+   GET BLOG BY ID (ADMIN)
+   =========================== */
+export async function getBlogById(id) {
+  return request(`/admin/blogs/${id}`, {
+    token: getAdminToken(),
+  });
+}
+
+/* ===========================
+   CREATE BLOG (ADMIN)
+   =========================== */
+export async function addBlog(data) {
+  return request(`/admin/blogs`, {
+    method: "POST",
+    token: getAdminToken(),
+    body: JSON.stringify(data),
+  });
+}
+
+/* ===========================
+   UPDATE BLOG (ADMIN)
+   =========================== */
+export async function updateBlog(id, data) {
+  return request(`/admin/blogs/${id}`, {
+    method: "PUT",
+    token: getAdminToken(),
+    body: JSON.stringify(data),
+  });
+}

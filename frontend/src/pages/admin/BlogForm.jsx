@@ -1,24 +1,87 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate, useParams, useBlocker } from "react-router-dom";
 import AdminLayout from "../../layout/AdminLayout";
-import { addBlog, getBlogById, updateBlog, deleteImage } from "../../services/adminApi";
+import { getBlogById, addBlog, updateBlog } from "../../services/blogService";
+import { deleteImage } from "../../services/adminApi";
 import SectionCard from "../../components/admin/form/SectionCard";
 import ImageUploader from "../../components/admin/form/ImageUploader";
 import GalleryUploader from "../../components/admin/form/GalleryUploader";
 import TagInput from "../../components/admin/form/TagInput";
-import { FiAlertCircle } from "react-icons/fi";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
+import { FiAlertCircle, FiEye, FiCalendar } from "react-icons/fi";
 
-// Slug generation utility
-const createSlug = (text) => {
-  return text
+/* =====================================
+   CONSTANTS
+   ===================================== */
+const MAX_TITLE = 200;
+const MAX_EXCERPT = 500;
+const WORDS_PER_MINUTE = 200;
+
+/* =====================================
+   HELPERS
+   ===================================== */
+const createSlug = (text) =>
+  text
     .toString()
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-");
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+const calculateReadingTime = (html = "") => {
+  const text = html.replace(/<[^>]*>/g, "");
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
 };
 
-// Form input components
+const countWords = (html = "") => {
+  const text = html.replace(/<[^>]*>/g, "");
+  return text.trim().split(/\s+/).filter(Boolean).length;
+};
+
+const stripHtml = (html = "") => html.replace(/<[^>]*>/g, "");
+
+/* =====================================
+   QUIL MODULES
+   ===================================== */
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, 4, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    [{ align: [] }],
+    ["blockquote", "code-block"],
+    [{ color: [] }, { background: [] }],
+    ["link"],
+    [{ table: [] }],
+    ["clean"],
+  ],
+};
+
+const quillFormats = [
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "list",
+  "bullet",
+  "indent",
+  "align",
+  "blockquote",
+  "code-block",
+  "color",
+  "background",
+  "link",
+  "table",
+];
+
+/* =====================================
+   FORM INPUT COMPONENTS
+   ===================================== */
 const Input = ({ label, error, required, charCount, ...props }) => (
   <label className="block">
     <div className="flex items-center justify-between mb-1">
@@ -34,11 +97,9 @@ const Input = ({ label, error, required, charCount, ...props }) => (
     </div>
     <input
       {...props}
-      className={`
-        mt-1 w-full rounded-xl border px-4 py-3 text-white placeholder:text-slate-500 outline-none transition
-        ${error ? "border-red-500 focus:border-red-500" : "border-slate-700 focus:border-cyan-500"}
-        bg-slate-900
-      `}
+      className={`mt-1 w-full rounded-xl border px-4 py-3 text-white placeholder:text-slate-500 outline-none transition ${
+        error ? "border-red-500 focus:border-red-500" : "border-slate-700 focus:border-cyan-500"
+      } bg-slate-900`}
     />
     {error && (
       <p className="mt-1.5 flex items-center gap-1.5 text-xs text-red-400">
@@ -64,12 +125,9 @@ const TextArea = ({ label, error, required, charCount, ...props }) => (
     </div>
     <textarea
       {...props}
-      rows={6}
-      className={`
-        mt-1 w-full rounded-xl border px-4 py-3 text-white placeholder:text-slate-500 outline-none transition
-        ${error ? "border-red-500 focus:border-red-500" : "border-slate-700 focus:border-cyan-500"}
-        bg-slate-900
-      `}
+      className={`mt-1 w-full rounded-xl border px-4 py-3 text-white placeholder:text-slate-500 outline-none transition ${
+        error ? "border-red-500 focus:border-red-500" : "border-slate-700 focus:border-cyan-500"
+      } bg-slate-900`}
     />
     {error && (
       <p className="mt-1.5 flex items-center gap-1.5 text-xs text-red-400">
@@ -88,11 +146,9 @@ const Select = ({ label, error, required, options, ...props }) => (
     </span>
     <select
       {...props}
-      className={`
-        mt-1 w-full rounded-xl border px-4 py-3 text-white outline-none transition
-        ${error ? "border-red-500 focus:border-red-500" : "border-slate-700 focus:border-cyan-500"}
-        bg-slate-900
-      `}
+      className={`mt-1 w-full rounded-xl border px-4 py-3 text-white outline-none transition ${
+        error ? "border-red-500 focus:border-red-500" : "border-slate-700 focus:border-cyan-500"
+      } bg-slate-900`}
     >
       {options.map((opt) => (
         <option key={opt} value={opt}>
@@ -111,15 +167,27 @@ const Select = ({ label, error, required, options, ...props }) => (
 
 const Checkbox = ({ label, ...props }) => (
   <label className="flex items-center gap-3 text-slate-300 mt-6">
-    <input type="checkbox" {...props} className="h-5 w-5 rounded border-slate-600 bg-slate-800" />
+    <input
+      type="checkbox"
+      {...props}
+      className="h-5 w-5 rounded border-slate-600 bg-slate-800"
+    />
     {label}
   </label>
 );
 
+/* =====================================
+   PAGE
+   ===================================== */
 export default function BlogForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = Boolean(id);
+  const [dirty, setDirty] = useState(false);
+  const formRef = useRef(null);
+
+  // Block navigation when form is dirty
+  const blocker = useBlocker(dirty);
 
   // Form state
   const [form, setForm] = useState({
@@ -134,6 +202,12 @@ export default function BlogForm() {
     galleryImages: [],
     status: "draft",
     featured: false,
+    publishedAt: "",
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: [],
+    canonicalUrl: "",
+    ogImage: "",
     notifyNewsletter: false,
   });
 
@@ -141,19 +215,28 @@ export default function BlogForm() {
   const [errors, setErrors] = useState({});
 
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [newsletterCount, setNewsletterCount] = useState(null);
 
+  // Computed values
+  const readingTime = calculateReadingTime(form.content);
+  const wordCount = countWords(form.content);
+  const charCount = stripHtml(form.content).length;
+
   // Load blog for edit mode
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setFetching(false);
+      return;
+    }
 
     const loadBlog = async () => {
       try {
-        setLoading(true);
-        const { data } = await getBlogById(id);
-        const blog = data.blog;
+        setFetching(true);
+        const result = await getBlogById(id);
+        const blog = result.blog || result.data?.blog;
 
         setForm({
           title: blog.title || "",
@@ -173,12 +256,20 @@ export default function BlogForm() {
             : [],
           status: blog.status || "draft",
           featured: Boolean(blog.featured),
+          publishedAt: blog.publishedAt
+            ? new Date(blog.publishedAt).toISOString().slice(0, 16)
+            : "",
+          seoTitle: blog.seoTitle || "",
+          seoDescription: blog.seoDescription || "",
+          seoKeywords: Array.isArray(blog.seoKeywords) ? blog.seoKeywords : [],
+          canonicalUrl: blog.canonicalUrl || "",
+          ogImage: blog.ogImage || "",
           notifyNewsletter: false,
         });
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load blog");
       } finally {
-        setLoading(false);
+        setFetching(false);
       }
     };
 
@@ -203,45 +294,56 @@ export default function BlogForm() {
       return updated;
     });
 
+    setDirty(true);
+
     // Clear error when user types
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  // Handle array field changes
-  const handleArrayChange = (field, value) => {
-    setForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  // Handle rich text content change
+  const handleContentChange = (value) => {
+    setForm((prev) => ({ ...prev, content: value }));
+    setDirty(true);
+    if (errors.content) {
+      setErrors((prev) => ({ ...prev, content: "" }));
+    }
   };
 
-  // Handle gallery changes (objects: { id, url, status })
-  // Remove deleted images from Cloudinary so storage stays clean.
+  // Handle array field changes
+  const handleArrayChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setDirty(true);
+  };
+
+  // Handle gallery changes
   const handleGalleryChange = (next) => {
     setForm((prev) => {
       const removed = prev.galleryImages.filter(
         (img) => !next.some((n) => n.id === img.id)
       );
       removed.forEach((img) => {
-        if (img.url && !img.isLocal) {
-          deleteImage(img.url);
-        }
+        if (img.url && !img.isLocal) deleteImage(img.url);
       });
       return { ...prev, galleryImages: next };
     });
+    setDirty(true);
   };
 
   // Validate form
   const validateForm = () => {
     const newErrors = {};
 
-    if (form.title.trim().length < 5) {
+    if (!form.title?.trim() || form.title.trim().length < 5) {
       newErrors.title = "Blog title must be at least 5 characters.";
     }
 
-    if (!form.content.trim() || form.content.trim().length < 50) {
+    if (!form.slug?.trim()) {
+      newErrors.slug = "Slug is required.";
+    }
+
+    if (!form.content?.trim() || stripHtml(form.content).trim().length < 50) {
       newErrors.content = "Content must be at least 50 characters.";
     }
 
@@ -259,26 +361,51 @@ export default function BlogForm() {
     if (!validateForm()) return;
 
     try {
-      // Extract gallery URLs (keep existing + newly uploaded)
       const galleryUrls = form.galleryImages.map((img) => img.url);
 
       const payload = {
-        ...form,
+        title: form.title.trim(),
+        slug: form.slug.trim(),
+        excerpt: form.excerpt?.trim() || "",
+        content: form.content,
+        category: form.category?.trim() || "",
+        author: form.author?.trim() || "",
+        tags: form.tags,
+        coverImage: form.coverImage || "",
         galleryImages: galleryUrls,
+        status: form.status,
         featured: Boolean(form.featured),
+        publishedAt: form.publishedAt
+          ? new Date(form.publishedAt).toISOString()
+          : undefined,
+        seoTitle: form.seoTitle?.trim() || "",
+        seoDescription: form.seoDescription?.trim() || "",
+        seoKeywords: form.seoKeywords,
+        canonicalUrl: form.canonicalUrl?.trim() || "",
+        ogImage: form.ogImage || "",
         notifyNewsletter: form.notifyNewsletter,
       };
 
+      // If status is scheduled and a publish date is set, use it
+      if (form.status === "scheduled" && form.publishedAt) {
+        payload.publishedAt = new Date(form.publishedAt).toISOString();
+      }
+      // If publishing now, let the backend set publishedAt
+      if (form.status === "published") {
+        delete payload.publishedAt; // Backend handles this
+      }
+
       setLoading(true);
 
-      let response;
+      let result;
       if (isEditMode) {
-        response = await updateBlog(id, payload);
+        result = await updateBlog(id, payload);
         setMessage("Blog updated successfully");
       } else {
-        response = await addBlog(payload);
+        result = await addBlog(payload);
         setMessage("Blog created successfully");
-        // Reset form
+        setDirty(false);
+        // Reset form after create
         setForm({
           title: "",
           slug: "",
@@ -291,17 +418,29 @@ export default function BlogForm() {
           galleryImages: [],
           status: "draft",
           featured: false,
+          publishedAt: "",
+          seoTitle: "",
+          seoDescription: "",
+          seoKeywords: [],
+          canonicalUrl: "",
+          ogImage: "",
           notifyNewsletter: false,
         });
       }
 
       // Check if newsletter was sent
-      if (response?.data?.newsletter) {
-        setNewsletterCount(response.data.newsletter.count || 0);
-        if (response.data.newsletter.count > 0) {
-          setMessage(response.data.message || `Blog ${isEditMode ? 'updated' : 'published'} successfully. Newsletter sent to ${response.data.newsletter.count} subscribers.`);
+      if (result?.newsletter) {
+        setNewsletterCount(result.newsletter.count || 0);
+        if (result.newsletter.count > 0) {
+          setMessage(
+            result.message ||
+              `Blog ${isEditMode ? "updated" : "published"} successfully. Newsletter sent to ${result.newsletter.count} subscribers.`
+          );
         } else {
-          setMessage(response.data.message || `Blog ${isEditMode ? 'updated' : 'published'} successfully. No active newsletter subscribers to notify.`);
+          setMessage(
+            result.message ||
+              `Blog ${isEditMode ? "updated" : "published"} successfully. No active newsletter subscribers to notify.`
+          );
         }
       }
     } catch (err) {
@@ -311,17 +450,52 @@ export default function BlogForm() {
     }
   };
 
+  if (fetching) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-500 mx-auto"></div>
+            <p className="text-slate-400">Loading blog...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white">
             {isEditMode ? "Edit Blog" : "Add New Blog"}
           </h1>
           <p className="text-slate-400 mt-2">
-            Create and publish blog posts to engage with your audience.
+            Create and publish professional blog posts with rich media and SEO
           </p>
         </div>
+
+        {/* Unsaved Changes Warning */}
+        {blocker.state === "blocked" && (
+          <div className="mb-6 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-amber-200">
+            <p className="text-sm">You have unsaved changes. Are you sure you want to leave?</p>
+            <div className="mt-3 flex gap-3">
+              <button
+                onClick={() => blocker.proceed?.()}
+                className="rounded-lg bg-red-500/90 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500"
+              >
+                Leave without saving
+              </button>
+              <button
+                onClick={() => blocker.reset?.()}
+                className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-600"
+              >
+                Stay
+              </button>
+            </div>
+          </div>
+        )}
 
         {message && (
           <div className="mb-6 rounded-xl bg-emerald-500/10 px-4 py-3 text-emerald-200">
@@ -340,7 +514,7 @@ export default function BlogForm() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
           {/* SECTION 1: Basic Information */}
           <SectionCard
             title="Basic Information"
@@ -355,26 +529,26 @@ export default function BlogForm() {
                 placeholder="Enter blog title"
                 required
                 error={errors.title}
-                charCount={200}
-              />
-
-              <Input
-                label="Slug"
-                name="slug"
-                value={form.slug}
-                onChange={handleChange}
-                placeholder="auto-generated-from-title"
-                error={errors.slug}
+                maxLength={MAX_TITLE}
+                charCount={MAX_TITLE}
               />
 
               <div className="grid gap-5 sm:grid-cols-2">
-                <Input
-                  label="Category"
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  placeholder="e.g. Technology, AI, Tutorial"
-                />
+                <div>
+                  <Input
+                    label="Slug"
+                    name="slug"
+                    value={form.slug}
+                    onChange={handleChange}
+                    placeholder="auto-generated-from-title"
+                    error={errors.slug}
+                  />
+                  {form.slug && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      URL: /blog/<span className="text-cyan-400">{form.slug}</span>
+                    </p>
+                  )}
+                </div>
 
                 <Input
                   label="Author"
@@ -385,32 +559,67 @@ export default function BlogForm() {
                 />
               </div>
 
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Input
+                  label="Category"
+                  name="category"
+                  value={form.category}
+                  onChange={handleChange}
+                  placeholder="e.g. Technology, AI, Tutorial"
+                />
+              </div>
+
               <TextArea
                 label="Excerpt"
                 name="excerpt"
                 value={form.excerpt}
                 onChange={handleChange}
                 placeholder="Brief summary of the blog post (max 500 characters)"
-                charCount={500}
+                maxLength={MAX_EXCERPT}
+                charCount={MAX_EXCERPT}
+                rows={3}
               />
             </div>
           </SectionCard>
 
-          {/* SECTION 2: Content */}
+          {/* SECTION 2: Content - Rich Text Editor */}
           <SectionCard
             title="Content"
-            description="Write your blog post content"
+            description="Write your blog post content with the rich text editor"
           >
-            <TextArea
-              label="Blog Content"
-              name="content"
-              value={form.content}
-              onChange={handleChange}
-              placeholder="Write your blog post content here... (supports HTML)"
-              required
-              error={errors.content}
-              charCount={10000}
-            />
+            <div className="space-y-3">
+              <div className={errors.content ? "border border-red-500 rounded-xl overflow-hidden" : ""}>
+                <ReactQuill
+                  value={form.content}
+                  onChange={handleContentChange}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  placeholder="Write your blog content here..."
+                  theme="snow"
+                  className="blog-editor bg-slate-900 text-white rounded-xl"
+                />
+              </div>
+              {errors.content && (
+                <p className="flex items-center gap-1.5 text-xs text-red-400">
+                  <FiAlertCircle size={14} />
+                  {errors.content}
+                </p>
+              )}
+
+              {/* Content Stats */}
+              <div className="flex flex-wrap gap-4 text-xs text-slate-400">
+                <span>
+                  Words: <strong className="text-white">{wordCount}</strong>
+                </span>
+                <span>
+                  Characters: <strong className="text-white">{charCount}</strong>
+                </span>
+                <span>
+                  Reading Time:{" "}
+                  <strong className="text-cyan-400">{readingTime} min</strong>
+                </span>
+              </div>
+            </div>
           </SectionCard>
 
           {/* SECTION 3: Media & Tags */}
@@ -443,7 +652,81 @@ export default function BlogForm() {
             </div>
           </SectionCard>
 
-          {/* SECTION 4: Publishing */}
+          {/* SECTION 4: SEO */}
+          <SectionCard
+            title="SEO"
+            description="Search engine optimization settings for this blog post"
+          >
+            <div className="space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Input
+                  label="SEO Title"
+                  name="seoTitle"
+                  value={form.seoTitle}
+                  onChange={handleChange}
+                  placeholder="SEO title (max 70 characters)"
+                  maxLength={70}
+                  charCount={70}
+                />
+
+                <Input
+                  label="Canonical URL"
+                  name="canonicalUrl"
+                  value={form.canonicalUrl}
+                  onChange={handleChange}
+                  placeholder="https://example.com/blog/my-post"
+                />
+              </div>
+
+              <TextArea
+                label="SEO Description"
+                name="seoDescription"
+                value={form.seoDescription}
+                onChange={handleChange}
+                placeholder="SEO meta description (max 160 characters)"
+                maxLength={160}
+                charCount={160}
+                rows={2}
+              />
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <TagInput
+                  label="SEO Keywords"
+                  placeholder="Type and press Enter..."
+                  value={form.seoKeywords}
+                  onChange={(value) => handleArrayChange("seoKeywords", value)}
+                  maxTags={15}
+                />
+
+                <ImageUploader
+                  label="OG Image"
+                  value={form.ogImage}
+                  onChange={(value) => handleArrayChange("ogImage", value)}
+                  previewSize="small"
+                />
+              </div>
+
+              {/* Live SEO Preview */}
+              {(form.seoTitle || form.seoDescription || form.slug) && (
+                <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
+                  <p className="text-xs font-medium text-slate-500 mb-2">LIVE SEO PREVIEW</p>
+                  <div className="space-y-1">
+                    <p className="text-sm text-blue-400 hover:underline truncate">
+                      {form.seoTitle || form.title || "SEO Title"} - ToolSphere
+                    </p>
+                    <p className="text-xs text-emerald-600 truncate">
+                      {window.location.origin}/blog/{form.slug || "slug"}
+                    </p>
+                    <p className="text-xs text-slate-400 line-clamp-2">
+                      {form.seoDescription || form.excerpt || "SEO description goes here..."}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </SectionCard>
+
+          {/* SECTION 5: Publishing */}
           <SectionCard
             title="Publishing"
             description="Control the blog's visibility and status"
@@ -457,32 +740,67 @@ export default function BlogForm() {
                 options={["draft", "published", "scheduled"]}
               />
 
+              <div className="space-y-2">
+                <label className="block text-sm text-slate-300">
+                  Publish Date
+                  {form.publishedAt && (
+                    <span className="ml-2 text-xs text-slate-500">
+                      <FiCalendar className="inline mr-1" />
+                      {new Date(form.publishedAt).toLocaleString()}
+                    </span>
+                  )}
+                </label>
+                <input
+                  type="datetime-local"
+                  name="publishedAt"
+                  value={form.publishedAt}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-cyan-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2 mt-5">
               <Checkbox
                 label="Featured Post"
                 name="featured"
                 checked={form.featured}
                 onChange={handleChange}
               />
-            </div>
 
-            <div className="mt-6">
               <Checkbox
                 label="Notify Newsletter Subscribers"
                 name="notifyNewsletter"
                 checked={form.notifyNewsletter}
                 onChange={handleChange}
               />
-              <p className="text-xs text-slate-500 mt-2">
-                Send an email notification to all active newsletter subscribers about this blog post.
-              </p>
             </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Send an email notification to all active newsletter subscribers about this blog post.
+            </p>
           </SectionCard>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-4 pt-6 border-t border-slate-800">
+          <div className="flex flex-wrap justify-end gap-4 pt-6 border-t border-slate-800">
+            {/* Preview Button */}
             <button
               type="button"
-              onClick={() => navigate("/admin/blogs")}
+              onClick={() =>
+                window.open(
+                  `${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/blog/${form.slug || "preview"}`,
+                  "_blank"
+                )
+              }
+              disabled={!form.slug}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:border-cyan-500 transition disabled:opacity-50"
+            >
+              <FiEye size={16} />
+              Preview
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate(isEditMode ? "/admin/blogs" : "/admin/blogs")}
               className="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:border-cyan-500 transition"
             >
               Cancel
@@ -491,9 +809,18 @@ export default function BlogForm() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 rounded-xl bg-cyan-500 text-white font-semibold hover:bg-cyan-600 disabled:opacity-50 transition"
+              className="px-8 py-3 rounded-xl bg-cyan-500 text-white font-semibold hover:bg-cyan-600 disabled:opacity-50 transition"
             >
-              {loading ? "Saving..." : isEditMode ? "Update Blog" : "Publish Blog"}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Saving...
+                </span>
+              ) : isEditMode ? (
+                "Update Blog"
+              ) : (
+                "Publish Blog"
+              )}
             </button>
           </div>
         </form>

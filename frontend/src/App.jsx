@@ -55,6 +55,8 @@ const ContactMessages = lazy(() => import("./pages/admin/ContactMessages"));
 const ContactMessageDetail = lazy(() => import("./pages/admin/ContactMessageDetail"));
   const NewsletterSubscribers = lazy(() => import("./pages/admin/NewsletterSubscribers"));
   const Reviews = lazy(() => import("./pages/admin/Reviews"));
+  const Blogs = lazy(() => import("./pages/admin/Blogs"));
+  const BlogForm = lazy(() => import("./pages/admin/BlogForm"));
 
 function App() {
 
@@ -214,6 +216,33 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <NewsletterSubscribers />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/blogs"
+            element={
+              <ProtectedRoute role="admin">
+                <Blogs />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/blogs/add"
+            element={
+              <ProtectedRoute role="admin">
+                <BlogForm />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/blogs/:id/edit"
+            element={
+              <ProtectedRoute role="admin">
+                <BlogForm />
               </ProtectedRoute>
             }
           />
