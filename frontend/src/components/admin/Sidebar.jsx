@@ -91,11 +91,6 @@ export default function Sidebar() {
       path: "/admin/blogs",
     },
     {
-      name: "Add Blog",
-      icon: <FiPlusCircle size={20} />,
-      path: "/admin/blogs/new",
-    },
-    {
       name: "Users",
       icon: <FiUsers size={20} />,
       path: "/admin/users",
@@ -121,6 +116,9 @@ export default function Sidebar() {
       icon: <FiSettings size={20} />,
       path: "/admin/settings",
     },
+  ];
+
+  const bottomItems = [
     {
       name: "My Profile",
       icon: <FiUser size={20} />,
@@ -166,8 +164,8 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* NAV */}
-      <nav className="flex-1 space-y-2 px-4 py-6 overflow-y-auto">
+      {/* NAV - Scrollable */}
+      <nav className="flex-1 space-y-2 px-4 py-6 overflow-y-auto overflow-x-hidden scrollbar-thin">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
@@ -204,8 +202,31 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* FOOTER / LOGOUT */}
-      <div className="border-t border-white/10 p-4">
+      {/* BOTTOM SECTION - Always visible */}
+      <div className="border-t border-white/10 px-4 py-3 space-y-2">
+        {bottomItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 relative ${
+                isActive
+                  ? "bg-cyan-500/10 text-cyan-300 border border-cyan-500/20"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              } ${collapsed ? "justify-center px-3" : ""}`
+            }
+          >
+            <span className="flex-shrink-0 transition-colors text-slate-400 group-hover:text-cyan-300">
+              {item.icon}
+            </span>
+            {!collapsed && <span>{item.name}</span>}
+            {collapsed && (
+              <span className="absolute left-full ml-2 hidden rounded-md bg-slate-800 px-2 py-1 text-xs text-white group-hover:block whitespace-nowrap">
+                {item.name}
+              </span>
+            )}
+          </NavLink>
+        ))}
         <button
           onClick={handleLogout}
           className={`
