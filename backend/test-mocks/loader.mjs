@@ -5,6 +5,7 @@ const redirects = {
   "server/models/Newsletter.js": "newsletterMock.js",
   "server/models/User.js": "userMock.js",
   "server/models/Admin.js": "adminMock.js",
+  "server/models/Notification.js": "notificationMock.js",
 };
 
 export async function resolve(specifier, context, next) {

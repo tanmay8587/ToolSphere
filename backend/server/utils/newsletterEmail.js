@@ -41,6 +41,54 @@ const getNewToolEmailTemplate = (tool) => {
   };
 };
 
+/**
+ * Build the newsletter subscription verification email template.
+ * @param {string} token - The raw (unhashed) verification token to embed in the link.
+ * @returns {{ subject: string, html: string }}
+ */
+export const getNewsletterVerificationTemplate = (token) => {
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const verificationUrl = `${frontendUrl}/verify-newsletter/${token}`;
+
+  return {
+    subject: "Confirm your ToolSphere Newsletter Subscription",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #06b6d4; margin: 0; font-size: 28px;">ToolSphere</h1>
+          <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Your AI Tools Discovery Platform</p>
+        </div>
+
+        <div style="background: #f0f9ff; padding: 24px; border-radius: 10px;">
+          <h2 style="color: #0e7490; margin-top: 0;">Confirm Your Subscription</h2>
+          <p style="color: #334155;">
+            Thanks for subscribing to the ToolSphere newsletter! We're excited to keep you
+            updated with the latest AI tools, blog posts, and platform news.
+          </p>
+          <p style="margin: 24px 0; text-align: center;">
+            <a href="${verificationUrl}"
+               style="display: inline-block; background: #06b6d4; color: white; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+              Confirm Subscription
+            </a>
+          </p>
+          <p style="color: #64748b; font-size: 14px;">
+            This confirmation link will expire in 24 hours.
+          </p>
+        </div>
+
+        <p style="color: #64748b; font-size: 14px; margin-top: 24px;">
+          If you did not request this subscription, ignore this email and you won't be subscribed.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <p style="color: #6b7280; font-size: 12px; text-align: center;">
+          &copy; ToolSphere. All rights reserved.
+        </p>
+      </div>
+    `,
+  };
+};
+
 const getNewBlogEmailTemplate = (blog) => {
   return {
     subject: `📝 New Blog Post: ${blog.title}`,
@@ -90,14 +138,15 @@ export const notifyNewTool = async (tool) => {
       return { success: false, message: "Invalid tool data" };
     }
 
-    // Get all active subscribers
+    // Get all active, verified subscribers
     const subscribers = await Newsletter.find({
       status: "active",
+      isVerified: true,
       email: { $exists: true, $ne: "" }
     }).select("email");
 
     if (subscribers.length === 0) {
-      logger.info("No active subscribers to notify for new tool");
+      logger.info("No active, verified subscribers to notify for new tool");
       return { success: true, message: "No subscribers to notify", count: 0 };
     }
 
@@ -105,11 +154,7 @@ export const notifyNewTool = async (tool) => {
 
     // Send emails to all active subscribers
     const emailPromises = subscribers.map(subscriber =>
-      sendEmail({
-        to: subscriber.email,
-        subject: emailTemplate.subject,
-        html: emailTemplate.html,
-      }).catch(err => {
+      sendEmail(subscriber.email, emailTemplate.subject, emailTemplate.html).catch(err => {
         logger.error(`Failed to send newsletter to ${subscriber.email}: ${err.message}`);
         return null;
       })
@@ -145,14 +190,15 @@ export const notifyNewBlog = async (blog) => {
       return { success: false, message: "Invalid blog data" };
     }
 
-    // Get all active subscribers
+    // Get all active, verified subscribers
     const subscribers = await Newsletter.find({
       status: "active",
+      isVerified: true,
       email: { $exists: true, $ne: "" }
     }).select("email");
 
     if (subscribers.length === 0) {
-      logger.info("No active subscribers to notify for new blog post");
+      logger.info("No active, verified subscribers to notify for new blog post");
       return { success: true, message: "No subscribers to notify", count: 0 };
     }
 
@@ -160,11 +206,7 @@ export const notifyNewBlog = async (blog) => {
 
     // Send emails to all active subscribers
     const emailPromises = subscribers.map(subscriber =>
-      sendEmail({
-        to: subscriber.email,
-        subject: emailTemplate.subject,
-        html: emailTemplate.html,
-      }).catch(err => {
+      sendEmail(subscriber.email, emailTemplate.subject, emailTemplate.html).catch(err => {
         logger.error(`Failed to send newsletter to ${subscriber.email}: ${err.message}`);
         return null;
       })

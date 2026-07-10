@@ -58,6 +58,8 @@ import {
 import {
   getSubscribers,
   deleteSubscriber,
+  resendVerification,
+  getNewsletterStats,
 } from "../controllers/newsletterController.js";
 
 import { getAdminNotifications } from "../controllers/notificationController.js";
@@ -140,7 +142,9 @@ router.get("/export/users", verifyAdmin, exportUsers);
     NEWSLETTER SUBSCRIBERS (ADMIN)
 =========================== */
 router.get("/newsletter/subscribers", verifyAdmin, getSubscribers);
+router.get("/newsletter/stats", verifyAdmin, getNewsletterStats);
 router.delete("/newsletter/subscribers/:id", verifyAdmin, deleteSubscriber);
+router.post("/newsletter/subscribers/:id/resend-verification", verifyAdmin, resendVerification);
 
 /* ===========================
     NOTIFICATIONS (ADMIN-WIDE)

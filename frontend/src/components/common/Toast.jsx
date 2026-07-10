@@ -46,7 +46,7 @@ export default function Toast({ message, type = "info", duration = 4000, onClose
       `}
     >
       <Icon className={`h-5 w-5 ${config.iconClassName}`} />
-      <span className="text-sm font-medium">{message}</span>
+      <span className="whitespace-pre-line text-sm font-medium leading-snug">{message}</span>
       <button
         onClick={() => {
           setVisible(false);

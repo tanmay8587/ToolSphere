@@ -89,9 +89,24 @@ export default function HomePage() {
 
       if (result.success) {
         if (result.alreadySubscribed) {
-          addToast(result.message, "info");
+          // Already verified subscriber
+          addToast(
+            "You are already subscribed to ToolSphere newsletter.",
+            "info"
+          );
+        } else if (result.pendingVerification) {
+          // Existing subscriber who is still pending verification
+          addToast(
+            "Please check your email and verify your subscription.",
+            "info"
+          );
         } else {
-          addToast(result.message, "success");
+          // New (or re-verification) subscription — verification still pending
+          addToast(
+            "Check your email 📩\n\nWe sent a confirmation link to your email.\nPlease verify your subscription to receive ToolSphere AI updates.",
+            "success",
+            6000
+          );
           if (!isLoggedIn()) {
             setNewsletterEmail(""); // Clear input on success for guests
           }

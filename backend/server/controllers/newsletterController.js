@@ -2,7 +2,10 @@ import Newsletter from "../models/Newsletter.js";
 import User from "../models/User.js";
 import Notification from "../models/Notification.js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { validateEmail, sanitizeInput } from "../utils/validation.js";
+import { sendEmail } from "./smtpController.js";
+import { getNewsletterVerificationTemplate } from "../utils/newsletterEmail.js";
 import logger from "../utils/logger.js";
 
 /* =====================================
@@ -66,32 +69,64 @@ export const subscribe = async (req, res) => {
     const existingSubscriber = await Newsletter.findOne({ email: email });
 
     if (existingSubscriber) {
-      if (existingSubscriber.status === "active") {
+      if (existingSubscriber.status === "active" && existingSubscriber.isVerified) {
         return res.status(200).json({
           success: true,
-          message: "You are already subscribed.",
+          message: "You are already subscribed to ToolSphere newsletter.",
           alreadySubscribed: true,
         });
       }
-      
-      // Reactivate unsubscribed user
+
+      // Reactivate / re-verify existing (unsubscribed or unverified) subscriber.
+      // Generate a fresh verification token and send a new verification email.
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      const hashedVerificationToken = crypto
+        .createHash("sha256")
+        .update(verificationToken)
+        .digest("hex");
+
       existingSubscriber.status = "active";
       existingSubscriber.unsubscribedAt = null;
       existingSubscriber.source = source || "website";
+      existingSubscriber.isVerified = false;
+      existingSubscriber.verificationToken = hashedVerificationToken;
+      existingSubscriber.verificationTokenExpiry = verificationTokenExpiry;
       await existingSubscriber.save();
 
-      logger.info(`Newsletter subscription reactivated: ${email}`);
+      // Send verification email
+      try {
+        const { subject, html } = getNewsletterVerificationTemplate(verificationToken);
+        await sendEmail(existingSubscriber.email, subject, html);
+      } catch (emailError) {
+        logger.error(`Failed to send newsletter verification email: ${emailError.message}`);
+      }
+
+      logger.info(`Newsletter subscription re-verification initiated: ${email}`);
 
       return res.status(200).json({
         success: true,
-        message: "Welcome back! You have been re-subscribed to our newsletter.",
+        message:
+          "Please check your email to confirm your newsletter subscription.",
+        pendingVerification: true,
       });
     }
 
-    // Create new subscriber
+    // Generate secure random token and hash it before storing
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const hashedVerificationToken = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+
+    // Create new subscriber (unverified until they confirm via email)
     const subscriber = await Newsletter.create({
       email: email,
       source: source || "website",
+      isVerified: false,
+      verificationToken: hashedVerificationToken,
+      verificationTokenExpiry: verificationTokenExpiry,
     });
 
     await Notification.create({
@@ -101,11 +136,21 @@ export const subscribe = async (req, res) => {
       isRead: false,
     });
 
-    logger.info(`New newsletter subscription: ${email}`);
+    // Send verification email
+    try {
+      const { subject, html } = getNewsletterVerificationTemplate(verificationToken);
+      await sendEmail(subscriber.email, subject, html);
+    } catch (emailError) {
+      logger.error(`Failed to send newsletter verification email: ${emailError.message}`);
+      // Don't fail subscription if email fails — subscriber can request resend later
+    }
+
+    logger.info(`New newsletter subscription (pending verification): ${email}`);
 
     return res.status(201).json({
       success: true,
-      message: "You have successfully subscribed to our newsletter.",
+      message:
+        "Please check your email to confirm your newsletter subscription.",
       subscriber: {
         email: subscriber.email,
         status: subscriber.status,
@@ -119,7 +164,7 @@ export const subscribe = async (req, res) => {
     if (err.code === 11000) {
       return res.status(200).json({
         success: true,
-        message: "You are already subscribed.",
+        message: "You are already subscribed to ToolSphere newsletter.",
         alreadySubscribed: true,
       });
     }
@@ -127,6 +172,73 @@ export const subscribe = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to subscribe. Please try again later.",
+    });
+  }
+};
+
+/* =====================================
+   VERIFY NEWSLETTER SUBSCRIPTION
+   ===================================== */
+export const verifyNewsletter = async (req, res) => {
+  try {
+    // Decode the token in case it was URL-encoded
+    const { token } = req.params;
+    const decodedToken = decodeURIComponent(token);
+
+    if (!decodedToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification token is required.",
+      });
+    }
+
+    // Hash the incoming token to compare with the stored hashed token
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(decodedToken)
+      .digest("hex");
+
+    // Find subscriber with a matching token that has not expired
+    const subscriber = await Newsletter.findOne({
+      verificationToken: hashedToken,
+      verificationTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!subscriber) {
+      // Check if the token exists but is expired (for a clearer log)
+      const subscriberWithToken = await Newsletter.findOne({
+        verificationToken: hashedToken,
+      });
+      if (subscriberWithToken) {
+        logger.warn("Newsletter verification token expired", {
+          email: subscriberWithToken.email,
+          expiredAt: subscriberWithToken.verificationTokenExpiry,
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification token.",
+      });
+    }
+
+    // Mark as verified and remove the verification token fields
+    subscriber.isVerified = true;
+    subscriber.verificationToken = undefined;
+    subscriber.verificationTokenExpiry = undefined;
+    await subscriber.save();
+
+    logger.info(`Newsletter subscription verified: ${subscriber.email}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Your subscription has been confirmed. Thank you for subscribing!",
+    });
+
+  } catch (err) {
+    logger.error(`Newsletter verification error: ${err.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to verify subscription. Please try again later.",
     });
   }
 };
@@ -185,45 +297,74 @@ export const unsubscribe = async (req, res) => {
 };
 
 /* =====================================
-   GET ALL SUBSCRIBERS (ADMIN)
-===================================== */
+    GET ALL SUBSCRIBERS (ADMIN)
+    Supports: search, page, limit, sort, filter
+ ===================================== */
 export const getSubscribers = async (req, res) => {
   try {
-    const { status = "active", page = "1", limit = "50" } = req.query;
+    const {
+      search = "",
+      page = "1",
+      limit = "20",
+      sort = "newest",
+      filter = "all",
+    } = req.query;
 
+    // Build query filters
     const filters = {};
-    if (status && status !== "all") {
-      filters.status = status;
+
+    // Search by email (case-insensitive)
+    if (search && search.trim()) {
+      filters.email = { $regex: search.trim(), $options: "i" };
     }
 
-    const pageNumber = Math.max(1, parseInt(page));
-    const limitNumber = Math.max(1, parseInt(limit));
+    // Filter by verification / subscription state
+    switch (filter) {
+      case "verified":
+        filters.isVerified = true;
+        break;
+      case "pending":
+        filters.isVerified = false;
+        break;
+      case "unsubscribed":
+        filters.status = "unsubscribed";
+        break;
+      case "all":
+      default:
+        // No additional filter
+        break;
+    }
+
+    const pageNumber = Math.max(1, parseInt(page) || 1);
+    const limitNumber = Math.max(1, parseInt(limit) || 20);
     const skip = (pageNumber - 1) * limitNumber;
+
+    // Sort by subscription date
+    const sortOption = sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
 
     const [total, subscribers] = await Promise.all([
       Newsletter.countDocuments(filters),
       Newsletter.find(filters)
-        .sort({ createdAt: -1 })
+        .select(
+          "email status subscribedAt unsubscribedAt source isVerified createdAt"
+        )
+        .sort(sortOption)
         .skip(skip)
-        .limit(limitNumber)
-        .select("email status subscribedAt unsubscribedAt source createdAt"),
+        .limit(limitNumber),
     ]);
+
+    const totalPages = Math.ceil(total / limitNumber);
 
     return res.json({
       success: true,
       total,
+      currentPage: pageNumber,
+      totalPages,
       subscribers,
-      pagination: {
-        total,
-        page: pageNumber,
-        limit: limitNumber,
-        pages: Math.ceil(total / limitNumber),
-      },
     });
-
   } catch (err) {
     logger.error(`Get subscribers error: ${err.message}`);
-    
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch subscribers",
@@ -232,8 +373,112 @@ export const getSubscribers = async (req, res) => {
 };
 
 /* =====================================
-   DELETE SUBSCRIBER (ADMIN)
-===================================== */
+    NEWSLETTER STATISTICS (ADMIN)
+ ===================================== */
+export const getNewsletterStats = async (req, res) => {
+  try {
+    const [total, verified, pending, unsubscribed, newest] = await Promise.all([
+      Newsletter.countDocuments({}),
+      Newsletter.countDocuments({ isVerified: true }),
+      Newsletter.countDocuments({ isVerified: false }),
+      Newsletter.countDocuments({ status: "unsubscribed" }),
+      Newsletter.findOne({})
+        .sort({ createdAt: -1 })
+        .select("email subscribedAt"),
+    ]);
+
+    return res.json({
+      success: true,
+      stats: {
+        totalSubscribers: total,
+        verifiedSubscribers: verified,
+        pendingVerification: pending,
+        unsubscribed,
+        newestSubscriber: newest
+          ? {
+              email: newest.email,
+              subscribedAt: newest.subscribedAt,
+            }
+          : null,
+      },
+    });
+  } catch (err) {
+    logger.error(`Get newsletter stats error: ${err.message}`);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch newsletter statistics",
+    });
+  }
+};
+
+/* =====================================
+    RESEND VERIFICATION EMAIL (ADMIN)
+ ===================================== */
+export const resendVerification = async (req, res) => {
+  try {
+    const subscriber = await Newsletter.findById(req.params.id);
+
+    if (!subscriber) {
+      return res.status(404).json({
+        success: false,
+        message: "Subscriber not found",
+      });
+    }
+
+    // Only resend if the subscriber is NOT verified
+    if (subscriber.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Subscriber is already verified",
+      });
+    }
+
+    // Generate a fresh verification token and replace the old one
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const hashedVerificationToken = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+
+    subscriber.verificationToken = hashedVerificationToken;
+    subscriber.verificationTokenExpiry = verificationTokenExpiry;
+    await subscriber.save();
+
+    // Send the new verification email using the existing Resend utility
+    try {
+      const { subject, html } = getNewsletterVerificationTemplate(verificationToken);
+      await sendEmail(subscriber.email, subject, html);
+    } catch (emailError) {
+      logger.error(
+        `Failed to resend newsletter verification email: ${emailError.message}`
+      );
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send verification email. Please try again later.",
+      });
+    }
+
+    logger.info(`Newsletter verification re-sent: ${subscriber.email}`);
+
+    return res.json({
+      success: true,
+      message: "Verification email sent successfully",
+    });
+  } catch (err) {
+    logger.error(`Resend verification error: ${err.message}`);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to resend verification email",
+    });
+  }
+};
+
+/* =====================================
+    DELETE SUBSCRIBER (ADMIN)
+ ===================================== */
 export const deleteSubscriber = async (req, res) => {
   try {
     const subscriber = await Newsletter.findByIdAndDelete(req.params.id);
@@ -251,10 +496,9 @@ export const deleteSubscriber = async (req, res) => {
       success: true,
       message: "Subscriber deleted successfully",
     });
-
   } catch (err) {
     logger.error(`Delete subscriber error: ${err.message}`);
-    
+
     return res.status(500).json({
       success: false,
       message: "Failed to delete subscriber",

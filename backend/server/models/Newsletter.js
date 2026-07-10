@@ -29,6 +29,16 @@ const newsletterSchema = new mongoose.Schema(
       default: "website",
       trim: true,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+    },
+    verificationTokenExpiry: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

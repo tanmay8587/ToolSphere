@@ -49,12 +49,21 @@ export async function subscribeToNewsletter(email, source = "website") {
 }
 
 /* ===========================
-   UNSUBSCRIBE FROM NEWSLETTER
+    UNSUBSCRIBE FROM NEWSLETTER
 =========================== */
 export async function unsubscribeFromNewsletter(email) {
   return request("/newsletter/unsubscribe", {
     method: "POST",
     body: JSON.stringify({ email }),
+  });
+}
+
+/* ===========================
+    VERIFY NEWSLETTER SUBSCRIPTION
+=========================== */
+export async function verifyNewsletter(token) {
+  return request(`/newsletter/verify/${token}`, {
+    method: "GET",
   });
 }
 
@@ -69,11 +78,30 @@ export async function getSubscribers(params = {}) {
 }
 
 /* ===========================
-   DELETE SUBSCRIBER (ADMIN)
-   =========================== */
+    DELETE SUBSCRIBER (ADMIN)
+    =========================== */
 export async function deleteSubscriber(id) {
   return request(`/newsletter/subscribers/${id}`, {
     method: "DELETE",
+    token: getAdminToken(),
+  });
+}
+
+/* ===========================
+    RESEND VERIFICATION (ADMIN)
+    =========================== */
+export async function resendVerification(id) {
+  return request(`/newsletter/subscribers/${id}/resend-verification`, {
+    method: "POST",
+    token: getAdminToken(),
+  });
+}
+
+/* ===========================
+    GET NEWSLETTER STATS (ADMIN)
+    =========================== */
+export async function getNewsletterStats() {
+  return request(`/newsletter/stats`, {
     token: getAdminToken(),
   });
 }
