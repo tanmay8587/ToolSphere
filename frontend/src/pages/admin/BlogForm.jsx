@@ -55,7 +55,7 @@ const quillModules = {
     [{ align: [] }],
     ["blockquote", "code-block"],
     [{ color: [] }, { background: [] }],
-    ["link"],
+    ["link", "image"],
     [{ table: [] }],
     ["clean"],
   ],
@@ -68,7 +68,6 @@ const quillFormats = [
   "underline",
   "strike",
   "list",
-  "bullet",
   "indent",
   "align",
   "blockquote",
@@ -76,6 +75,7 @@ const quillFormats = [
   "color",
   "background",
   "link",
+  "image",
   "table",
 ];
 
