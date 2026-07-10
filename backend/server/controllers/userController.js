@@ -52,13 +52,6 @@ export const registerUser = async (req, res) => {
     // Hash token before saving
     const hashedVerificationToken = crypto.createHash("sha256").update(verificationToken).digest("hex");
 
-    // DEBUG LOGGING - Registration
-    console.log("=== REGISTRATION DEBUG ===");
-    console.log("Generated verification token (plain):", verificationToken);
-    console.log("Hashed verification token:", hashedVerificationToken);
-    console.log("Token expiration time:", verificationTokenExpire);
-    console.log("Token expiration date:", new Date(verificationTokenExpire).toISOString());
-
     const user = await User.create({
       name: sanitizedName,
       email: sanitizedEmail.toLowerCase(),
@@ -76,18 +69,10 @@ export const registerUser = async (req, res) => {
       isRead: false,
     });
 
-    // DEBUG LOGGING - User saved
-    console.log("User created in MongoDB with ID:", user._id);
-    console.log("User emailVerificationToken in DB:", user.emailVerificationToken);
-    console.log("User emailVerificationExpire in DB:", user.emailVerificationExpire);
-
     // Send verification email
     try {
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
       const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
-
-      // DEBUG LOGGING - Email URL
-      console.log("Verification URL sent in email:", verificationUrl);
 
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -107,7 +92,7 @@ export const registerUser = async (req, res) => {
 
       await sendEmail(user.email, "Verify Your Email - ToolSphere", html);
     } catch (emailError) {
-      console.error("Failed to send verification email:", emailError);
+      logger.error("Failed to send verification email:", emailError);
     // Don't fail registration if email fails - user can request new verification email
     }
 
@@ -133,22 +118,11 @@ export const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email: sanitizedEmail.toLowerCase() });
     
-    // DEBUG LOGGING - Login
-    console.log("=== LOGIN DEBUG ===");
-    console.log("User found:", !!user);
-    if (user) {
-      console.log("User isVerified value from MongoDB:", user.isVerified);
-      console.log("User email:", user.email);
-    }
-
     if (!user || !user.password) {
       return res.status(401).json({ success: false, message: "Invalid credentials." });
     }
 
     const valid = await bcrypt.compare(password, user.password);
-    
-    // DEBUG LOGGING - Password comparison
-    console.log("Password comparison result:", valid);
 
     if (!valid) {
       return res.status(401).json({ success: false, message: "Invalid credentials." });
@@ -156,7 +130,6 @@ export const loginUser = async (req, res) => {
 
     // Check if email is verified
     if (!user.isVerified) {
-      console.log("User not verified, returning 403");
       return res.status(403).json({
         success: false,
         message: "Please verify your email before logging in.",
@@ -164,10 +137,6 @@ export const loginUser = async (req, res) => {
     }
 
     const token = createToken(user);
-    
-    // DEBUG LOGGING - Response
-    console.log("Login response - isVerified:", user.isVerified);
-    console.log("Login response - user object:", { id: user._id, name: user.name, email: user.email, isVerified: user.isVerified });
 
     res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, isVerified: user.isVerified } });
   } catch (err) {
@@ -237,7 +206,7 @@ export const googleAuth = async (req, res) => {
 
         await sendEmail(user.email, "Verify Your Email - ToolSphere", html);
       } catch (emailError) {
-        console.error("Failed to send verification email:", emailError);
+        logger.error("Failed to send verification email:", emailError);
       }
 
       // Don't return token for unverified users
@@ -525,11 +494,6 @@ export const verifyEmail = async (req, res) => {
     const { token } = req.params;
     const decodedToken = decodeURIComponent(token);
 
-    // DEBUG LOGGING - Verification
-    console.log("=== VERIFICATION DEBUG ===");
-    console.log("Token received from req.params:", token);
-    console.log("Token after decodeURIComponent:", decodedToken);
-
     if (!decodedToken) {
       return res.status(400).json({ success: false, message: "Verification token is required." });
     }
@@ -537,40 +501,24 @@ export const verifyEmail = async (req, res) => {
     // Hash the token to compare with database
     const hashedToken = crypto.createHash("sha256").update(decodedToken).digest("hex");
 
-    // DEBUG LOGGING - Hashed token
-    console.log("Token after hashing (sha256):", hashedToken);
-    console.log("Current time (Date.now()):", Date.now());
-
     // Find user with valid token and not expired
     const query = {
       emailVerificationToken: hashedToken,
       emailVerificationExpire: { $gt: Date.now() },
     };
     
-    // DEBUG LOGGING - MongoDB query
-    console.log("MongoDB query:", JSON.stringify(query, null, 2));
-
     const user = await User.findOne(query);
-
-    // DEBUG LOGGING - User found
-    console.log("User found:", !!user);
-    if (user) {
-      console.log("User found - ID:", user._id);
-      console.log("User found - email:", user.email);
-      console.log("User found - isVerified:", user.isVerified);
-      console.log("User found - emailVerificationExpire:", user.emailVerificationExpire);
-      console.log("User found - emailVerificationExpire (date):", new Date(user.emailVerificationExpire).toISOString());
-    }
 
     if (!user) {
       // Let's also check if the token exists but is expired
       const userWithToken = await User.findOne({ emailVerificationToken: hashedToken });
       if (userWithToken) {
-        console.log("Token exists but expired. Expiration time:", userWithToken.emailVerificationExpire);
-        console.log("Current time:", Date.now());
-        console.log("Time difference (ms):", Date.now() - userWithToken.emailVerificationExpire);
-      } else {
-        console.log("No user found with this token at all");
+        // Token exists but expired - log for debugging
+        logger.warn("Verification token expired", { 
+          userId: userWithToken._id,
+          email: userWithToken.email,
+          expiredAt: userWithToken.emailVerificationExpire 
+        });
       }
       return res.status(400).json({ success: false, message: "Invalid or expired verification token." });
     }
@@ -580,17 +528,11 @@ export const verifyEmail = async (req, res) => {
     user.emailVerificationToken = "";
     user.emailVerificationExpire = null;
     
-    // DEBUG LOGGING - Before save
-    console.log("Setting isVerified to true, clearing token fields");
-    
     await user.save();
-
-    // DEBUG LOGGING - After save
-    console.log("User saved successfully, isVerified:", user.isVerified);
 
     res.json({ success: true, message: "Email verified successfully! You can now log in." });
   } catch (err) {
-    console.error("Verification error:", err);
+    logger.error("Verification error:", err);
     res.status(500).json({ success: false, message: "Failed to verify email." });
   }
 };
@@ -659,7 +601,7 @@ export const resendVerificationEmail = async (req, res) => {
         message: "If an account with that email exists and needs verification, we have sent a new verification link.",
       });
     } catch (emailError) {
-      console.error("Failed to send verification email:", emailError);
+      logger.error("Failed to send verification email:", emailError);
       res.status(500).json({ success: false, message: "Failed to send verification email. Please try again later." });
     }
   } catch (err) {

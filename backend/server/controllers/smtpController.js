@@ -104,9 +104,9 @@ export const updateSmtpSetting = async (req, res) => {
     // Sanitize the value for SMTP host; preserve existing password when left blank
     const sanitizedValue = key === "smtp_host" && value !== undefined
       ? sanitizeSmtpHost(value)
-      : key === "smtp_password" && value !== undefined && value.trim() === ""
+      : key === "smtp_password" && (value === null || value === undefined || value.trim() === "")
         ? undefined
-        : value !== undefined
+        : value !== undefined && typeof value === "string"
           ? value.trim()
           : value;
 
