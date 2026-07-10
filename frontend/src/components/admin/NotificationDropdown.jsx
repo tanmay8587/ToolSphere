@@ -90,10 +90,6 @@ const notificationConfig = {
     icon: FiTool,
     color: "bg-blue-500/10 text-blue-400",
   },
-  review: {
-    icon: FiStar,
-    color: "bg-yellow-500/10 text-yellow-400",
-  },
   contact: {
     icon: FiMessageSquare,
     color: "bg-cyan-500/10 text-cyan-400",

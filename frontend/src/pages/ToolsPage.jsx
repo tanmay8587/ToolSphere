@@ -152,15 +152,27 @@ export default function ToolsPage() {
           <option value="Paid">Paid</option>
         </select>
 
-        <label className="flex items-center gap-2 text-white text-sm">
-          <input
-            type="checkbox"
-            checked={featured}
-            onChange={(e) => setFeatured(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
-          />
-          Featured only
-        </label>
+        <div className="flex items-center gap-2 text-white text-sm">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={featured}
+            aria-label="Featured Only"
+            onClick={() => setFeatured(!featured)}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+              featured
+                ? "bg-gradient-to-r from-blue-500 to-purple-600"
+                : "bg-slate-700"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-300 ${
+                featured ? "translate-x-5" : "translate-x-1"
+              }`}
+            />
+          </button>
+          <span className="select-none">⭐ Featured Only</span>
+        </div>
 
       </div>
 
