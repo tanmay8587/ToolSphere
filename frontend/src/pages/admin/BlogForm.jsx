@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate, useParams, useBlocker } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "../../layout/AdminLayout";
 import { getBlogById, addBlog, updateBlog } from "../../services/blogService";
 import { deleteImage } from "../../services/adminApi";
@@ -186,8 +186,16 @@ export default function BlogForm() {
   const [dirty, setDirty] = useState(false);
   const formRef = useRef(null);
 
-  // Block navigation when form is dirty
-  const blocker = useBlocker(dirty);
+  // Warn on page unload when form is dirty (BrowserRouter-compatible)
+  useEffect(() => {
+    if (!dirty) return;
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty]);
 
   // Form state
   const [form, setForm] = useState({
@@ -477,23 +485,9 @@ export default function BlogForm() {
         </div>
 
         {/* Unsaved Changes Warning */}
-        {blocker.state === "blocked" && (
+        {dirty && (
           <div className="mb-6 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-amber-200">
-            <p className="text-sm">You have unsaved changes. Are you sure you want to leave?</p>
-            <div className="mt-3 flex gap-3">
-              <button
-                onClick={() => blocker.proceed?.()}
-                className="rounded-lg bg-red-500/90 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500"
-              >
-                Leave without saving
-              </button>
-              <button
-                onClick={() => blocker.reset?.()}
-                className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-600"
-              >
-                Stay
-              </button>
-            </div>
+            <p className="text-sm">You have unsaved changes. Remember to save before leaving this page.</p>
           </div>
         )}
 
