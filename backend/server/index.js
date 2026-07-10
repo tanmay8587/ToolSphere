@@ -33,7 +33,7 @@ import statisticsRoutes from "./routes/statistics.js";
 import blogRoutes from "./routes/blog.js";
 import { adminBlogRouter } from "./routes/blog.js";
 import blogCommentRoutes from "./routes/blogComment.js";
-import { adminBlogCommentRouter } from "./routes/blogComment.js";
+import { adminRouter } from "./routes/blogComment.js";
 import blogInteractionRoutes from "./routes/blogInteraction.js";
 import logger from "./utils/logger.js";
 import validateEnvironment from "./utils/envValidation.js";
@@ -366,7 +366,7 @@ app.use("/api/blogs", blogRoutes);
 app.use("/api/blogs", blogCommentRoutes);
 app.use("/api/blogs", blogInteractionRoutes);
 app.use("/api/admin", adminBlogRouter);
-app.use("/api/admin", adminBlogCommentRouter);
+app.use("/api/admin", adminRouter);
 
 /* ===========================
    404 HANDLER
