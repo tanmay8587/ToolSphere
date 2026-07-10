@@ -165,7 +165,7 @@ export default function Sidebar() {
       </div>
 
       {/* NAV - Scrollable */}
-      <nav className="flex-1 space-y-2 px-4 py-6 overflow-y-auto overflow-x-hidden scrollbar-thin">
+      <nav className="flex-1 min-h-0 space-y-2 px-4 py-6 overflow-y-auto overflow-x-hidden scrollbar-thin">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
