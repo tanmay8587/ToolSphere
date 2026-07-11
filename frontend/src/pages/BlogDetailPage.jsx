@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark, FiChevronDown } from "react-icons/fi";
+import { FiClock, FiEye, FiArrowLeft, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark, FiChevronDown } from "react-icons/fi";
 import { getPublicBlogBySlug, getRelatedBlogs, getAdjacentBlogs, recordBlogView } from "../services/publicBlogService";
 import EmptyState from "../components/common/EmptyState";
 import BlogComments from "../components/blog/BlogComments";
+import SocialShare from "../components/blog/SocialShare";
 import {
   getBlogInteraction,
   likeBlog,
@@ -100,7 +101,6 @@ export default function BlogDetailPage() {
   const [nextBlog, setNextBlog] = useState(null);
   const [readingProgress, setReadingProgress] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [likes, setLikes] = useState(0);
   const [bookmarks, setBookmarks] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -277,21 +277,6 @@ export default function BlogDetailPage() {
   // NOTE: `toc` and `readingTime` are derived from `blog` and are computed
   // AFTER the loading/error guards below, so `blog` is guaranteed non-null.
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: blog.title, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }
-    } catch {
-      // aborted
-    }
-  };
-
   // Redirect unauthenticated users to login before interacting
   const requireAuth = () => {
     if (!isLoggedIn()) {
@@ -448,18 +433,6 @@ export default function BlogDetailPage() {
         className="pointer-events-none fixed top-0 left-0 z-50 h-1 w-full origin-left bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-transform duration-150 ease-out will-change-transform"
         style={{ transform: `scaleX(${readingProgress / 100})` }}
       />
-
-      {/* Sticky Share (Desktop) */}
-      <div className="hidden lg:flex fixed left-6 top-1/3 z-50 flex-col gap-3">
-        <button
-          onClick={handleShare}
-          className="flex items-center justify-center rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 transition"
-          title="Share this article"
-          aria-label="Share this article"
-        >
-          <FiShare2 size={18} />
-        </button>
-      </div>
 
       <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Back link */}
@@ -663,17 +636,8 @@ export default function BlogDetailPage() {
               </p>
             )}
 
-            {/* Mobile share */}
-            <div className="lg:hidden flex items-center gap-3 mt-8 pt-6 border-t border-slate-800">
-              <button
-                onClick={handleShare}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition"
-                aria-label="Share this article"
-              >
-                <FiShare2 size={16} />
-                {copied ? "Link Copied" : "Share"}
-              </button>
-            </div>
+            {/* Social Share */}
+            <SocialShare url={blogUrl} title={blog.title} text={blog.excerpt} />
 
             {/* Related Articles */}
             {relatedBlogs.length > 0 && (
