@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark, FiChevronDown } from "react-icons/fi";
-import { getPublicBlogBySlug, getRelatedBlogs, getAdjacentBlogs } from "../services/publicBlogService";
+import { getPublicBlogBySlug, getRelatedBlogs, getAdjacentBlogs, recordBlogView } from "../services/publicBlogService";
 import EmptyState from "../components/common/EmptyState";
 import BlogComments from "../components/blog/BlogComments";
 import CodeBlock from "../components/blog/CodeBlock";
@@ -112,6 +112,7 @@ export default function BlogDetailPage() {
   const [interactionLoading, setInteractionLoading] = useState(false);
   const [activeHeading, setActiveHeading] = useState("");
   const [mobileTocOpen, setMobileTocOpen] = useState(false);
+  const [views, setViews] = useState(0);
   const contentRef = useRef(null);
   const navigate = useNavigate();
 
@@ -123,6 +124,7 @@ export default function BlogDetailPage() {
         const result = await getPublicBlogBySlug(slug);
         if (result.success && result.blog) {
           setBlog(result.blog);
+          setViews(result.blog.views || 0);
         } else {
           setError("Blog not found");
         }
@@ -134,6 +136,20 @@ export default function BlogDetailPage() {
     };
     loadBlog();
     window.scrollTo(0, 0);
+  }, [slug]);
+
+  // Record a view via the existing View API when the blog opens
+  useEffect(() => {
+    if (!slug) return;
+    recordBlogView(slug)
+      .then((data) => {
+        if (data.success) {
+          setViews(data.views || 0);
+        }
+      })
+      .catch(() => {
+        // Non-blocking: keep the views loaded from the blog payload
+      });
   }, [slug]);
 
   // Load like/bookmark state for the current user
@@ -448,7 +464,7 @@ export default function BlogDetailPage() {
               </span>
               <span className="flex items-center gap-1.5 text-sm text-slate-400">
                 <FiEye size={14} />
-                {blog.views || 0} views
+                {views} views
               </span>
 
               {/* Like / Bookmark */}

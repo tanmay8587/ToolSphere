@@ -54,3 +54,22 @@ export async function getRelatedBlogs(slug) {
 export async function getAdjacentBlogs(slug) {
   return request(`/blogs/${slug}/adjacent`);
 }
+
+/* ===========================
+   RECORD BLOG VIEW (POST /api/blogs/:slug/view)
+   =========================== */
+export async function recordBlogView(slug) {
+  try {
+    const response = await fetch(`${API_BASE}/blogs/${slug}/view`, {
+      method: "POST",
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.message || `Request failed: ${response.status}`);
+    }
+    return data;
+  } catch (error) {
+    console.error(`[publicBlogService] Failed to record view for "${slug}":`, error);
+    return { success: false, views: 0, counted: false };
+  }
+}
