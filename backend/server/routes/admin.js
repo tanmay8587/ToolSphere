@@ -106,8 +106,8 @@ router.put("/tools/:id/reject", verifyAdmin, rejectTool);
 router.put("/tools/:id/feature", verifyAdmin, toggleFeaturedTool);
 
 /* ===========================
-   CATEGORIES
-=========================== */
+   TOOL CATEGORIES
+   =========================== */
 router.get("/categories", verifyAdmin, getAdminCategories);
 router.post("/categories", verifyAdmin, createCategory);
 router.put("/categories/:id", verifyAdmin, updateCategory);
@@ -115,8 +115,17 @@ router.delete("/categories/:id", verifyAdmin, deleteCategory);
 router.put("/categories/:id/toggle", verifyAdmin, toggleCategoryActive);
 
 /* ===========================
+   BLOG CATEGORIES
+   =========================== */
+router.get("/blog-categories", verifyAdmin, getAllCategories);
+router.get("/blog-categories/:id", verifyAdmin, getCategoryById);
+router.post("/blog-categories", verifyAdmin, createCategory);
+router.put("/blog-categories/:id", verifyAdmin, updateCategory);
+router.delete("/blog-categories/:id", verifyAdmin, deleteCategory);
+
+/* ===========================
    USERS MANAGEMENT
-=========================== */
+   =========================== */
 router.get("/users", verifyAdmin, getAdminUsers);
 router.put("/users/:id", verifyAdmin, updateAdminUser);
 router.delete("/users/:id", verifyAdmin, deleteAdminUser);

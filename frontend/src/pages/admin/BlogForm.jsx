@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "../../layout/AdminLayout";
 import { getBlogById, addBlog, updateBlog } from "../../services/blogService";
 import { deleteImage } from "../../services/adminApi";
+import { getAllCategories } from "../../services/blogCategoryService";
 import SectionCard from "../../components/admin/form/SectionCard";
 import ImageUploader from "../../components/admin/form/ImageUploader";
 import GalleryUploader from "../../components/admin/form/GalleryUploader";
@@ -239,11 +240,32 @@ export default function BlogForm() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [newsletterCount, setNewsletterCount] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Computed values
   const readingTime = calculateReadingTime(form.content);
   const wordCount = countWords(form.content);
   const charCount = stripHtml(form.content).length;
+
+  // Load categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const result = await getAllCategories();
+        if (result.success) {
+          setCategories(result.categories || []);
+        }
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   // Load blog for edit mode
   useEffect(() => {
@@ -578,13 +600,32 @@ export default function BlogForm() {
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">
-                <Input
-                  label="Category"
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  placeholder="e.g. Technology, AI, Tutorial"
-                />
+                <div>
+                  <label className="block text-sm text-slate-300 mb-1">
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    disabled={loadingCategories}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-cyan-500 disabled:opacity-50"
+                  >
+                    <option value="">
+                      {loadingCategories ? "Loading categories..." : "Select a category"}
+                    </option>
+                    {categories.map((cat) => (
+                      <option key={cat._id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                  {categories.length === 0 && !loadingCategories && (
+                    <p className="mt-1.5 text-xs text-amber-400">
+                      No categories available. Please create categories first.
+                    </p>
+                  )}
+                </div>
               </div>
 
               <TextArea

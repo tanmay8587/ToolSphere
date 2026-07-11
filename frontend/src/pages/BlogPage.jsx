@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { FiSearch, FiClock, FiEye, FiStar, FiCalendar } from "react-icons/fi";
 import { getPublicBlogs } from "../services/publicBlogService";
+import { getAllCategories } from "../services/blogCategoryService";
 import useDebounce from "../hooks/useDebounce";
 import Pagination from "../components/common/Pagination";
 import EmptyState from "../components/common/EmptyState";
@@ -33,6 +34,7 @@ export default function BlogPage() {
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "All");
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
+  const [categories, setCategories] = useState([]);
 
   const debouncedSearch = useDebounce(search, 400);
 
@@ -61,6 +63,22 @@ export default function BlogPage() {
       setLoading(false);
     }
   };
+
+  // Load categories for filter
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const result = await getAllCategories();
+        if (result.success) {
+          setCategories(result.categories || []);
+        }
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     fetchBlogs();
@@ -123,11 +141,11 @@ export default function BlogPage() {
             className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-cyan-500"
           >
             <option value="All">All Categories</option>
-            <option value="Technology">Technology</option>
-            <option value="AI">AI</option>
-            <option value="Tutorial">Tutorial</option>
-            <option value="Guide">Guide</option>
-            <option value="News">News</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat.name}>
+                {cat.name}
+              </option>
+            ))}
           </select>
           <select
             value={sort}

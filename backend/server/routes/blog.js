@@ -16,6 +16,14 @@ import {
   removeBookmark,
 } from "../controllers/blogController.js";
 
+import {
+  getAllCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+} from "../controllers/blogCategoryController.js";
+
 import { verifyAdmin, verifyUser } from "../middleware/auth.js";
 
 /* ===========================
@@ -111,6 +119,21 @@ adminBlogRouter.patch("/blogs/:id/status", verifyAdmin, updateStatus);
  * - Toggle featured flag (admin only)
  */
 adminBlogRouter.patch("/blogs/:id/featured", verifyAdmin, toggleFeatured);
+
+/* ===========================
+   PUBLIC CATEGORY ROUTES
+   =========================== */
+blogRouter.get("/categories", getAllCategories);
+blogRouter.get("/categories/:id", getCategoryById);
+
+/* ===========================
+   ADMIN CATEGORY ROUTES
+   =========================== */
+adminBlogRouter.get("/categories", verifyAdmin, getAllCategories);
+adminBlogRouter.get("/categories/:id", verifyAdmin, getCategoryById);
+adminBlogRouter.post("/categories", verifyAdmin, createCategory);
+adminBlogRouter.put("/categories/:id", verifyAdmin, updateCategory);
+adminBlogRouter.delete("/categories/:id", verifyAdmin, deleteCategory);
 
 export default blogRouter;
 export { adminBlogRouter };

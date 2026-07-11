@@ -15,6 +15,7 @@ import {
   FiStar,
   FiFileText,
   FiMessageSquare,
+  FiFolder,
 } from "react-icons/fi";
 import { useState, useEffect } from "react";
 
@@ -118,6 +119,11 @@ export default function Sidebar() {
       path: "/admin/blog-comments",
     },
     {
+      name: "Blog Categories",
+      icon: <FiFolder size={20} />,
+      path: "/admin/blog-categories",
+    },
+    {
       name: "Settings",
       icon: <FiSettings size={20} />,
       path: "/admin/settings",
@@ -209,7 +215,7 @@ export default function Sidebar() {
       </nav>
 
       {/* BOTTOM SECTION - Always visible */}
-      <div className="border-t border-white/10 px-4 py-3 space-y-2">
+      <div className="mt-auto border-t border-white/10 px-4 py-3 space-y-2">
         {bottomItems.map((item) => (
           <NavLink
             key={item.path}
