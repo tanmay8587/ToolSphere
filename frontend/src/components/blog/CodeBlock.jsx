@@ -15,6 +15,9 @@ import { FiCheck, FiCopy } from "react-icons/fi";
 // language component files (which reference the global `Prism`) are evaluated.
 import Prism from "prismjs";
 
+// Import a PrismJS theme (dark, matches the site's GitHub-dark code surface).
+import "prismjs/themes/prism-tomorrow.css";
+
 // Import PrismJS language definitions (these attach to the global Prism object)
 import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-typescript";
@@ -37,27 +40,29 @@ import "prismjs/components/prism-graphql";
 
 export default function CodeBlock({ code, language = "plaintext" }) {
   const codeRef = useRef(null);
+  const highlightedRef = useRef(false);
   const [copied, setCopied] = useState(false);
-  const [isPrismLoaded, setIsPrismLoaded] = useState(false);
 
-  // Prism core is imported statically above, so it is available immediately.
+  // Highlight the code block only after it has been rendered into the DOM.
+  // Guard with a ref so the effect never highlights the same element twice
+  // (e.g. under React StrictMode's double-invoked effects).
   useEffect(() => {
-    if (Prism) {
-      setIsPrismLoaded(true);
-    }
-  }, []);
+    const el = codeRef.current;
+    if (!el || highlightedRef.current) return;
 
-  // Highlight code when Prism is loaded or code changes
-  useEffect(() => {
-    if (isPrismLoaded && Prism && codeRef.current) {
-      try {
-        Prism.highlightElement(codeRef.current);
-      } catch (error) {
-        // If highlighting fails, just show the plain code
-        console.error("Prism highlighting error:", error);
-      }
+    try {
+      Prism.highlightElement(el);
+      highlightedRef.current = true;
+    } catch (error) {
+      // If highlighting fails, just show the plain code
+      console.error("Prism highlighting error:", error);
     }
-  }, [isPrismLoaded, code]);
+  }, [code]);
+
+  // Reset the guard when the code content changes so it can be re-highlighted.
+  useEffect(() => {
+    highlightedRef.current = false;
+  }, [code]);
 
   const handleCopy = async () => {
     try {
