@@ -2,29 +2,35 @@ import mongoose from "mongoose";
 
 const blogViewSchema = new mongoose.Schema(
   {
-    blog: {
+    // The blog that was viewed
+    blogId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Blog",
       required: true,
       index: true,
     },
 
-    slug: {
-      type: String,
-      required: true,
+    // Logged-in user who viewed the blog (null for guests)
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
       index: true,
     },
 
-    // Client IP address (supports proxies via x-forwarded-for)
-    ipAddress: {
+    // Persistent anonymous identifier for guests (sent via X-Visitor-ID header).
+    // Null for logged-in users.
+    visitorId: {
       type: String,
-      required: true,
+      default: null,
       index: true,
     },
 
-    // Session identifier stored in a cookie (bv_sid)
-    sessionId: {
-      type: String,
+    // Internal 24h window bucket (Math.floor(Date.now() / 24h)). Allows a viewer
+    // to be counted again after 24 hours while keeping each insert idempotent and
+    // race-safe under concurrent requests.
+    window: {
+      type: Number,
       required: true,
       index: true,
     },
@@ -42,10 +48,18 @@ const blogViewSchema = new mongoose.Schema(
 );
 
 /* ===========================
-   COMPOUND INDEX: prevent duplicate lookups
+   INDEXES
    =========================== */
-// Used to quickly check if a (blog, ip, session) combination already viewed
-// within the 30-minute window.
-blogViewSchema.index({ blog: 1, ipAddress: 1, sessionId: 1, viewedAt: -1 });
+
+// Unique per (blog, viewer, 24h window). This is the core enforcement:
+// MongoDB serializes the upsert on this key, so even concurrent requests from
+// the same viewer can only ever create ONE BlogView per 24 hours.
+blogViewSchema.index(
+  { blogId: 1, userId: 1, visitorId: 1, window: 1 },
+  { unique: true }
+);
+
+// Fast lookups when computing trending / per-blog view stats
+blogViewSchema.index({ blogId: 1, viewedAt: -1 });
 
 export default mongoose.model("BlogView", blogViewSchema);

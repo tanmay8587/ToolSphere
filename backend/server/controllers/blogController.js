@@ -10,38 +10,59 @@ import logger from "../utils/logger.js";
    VIEW TRACKING HELPERS
    =========================== */
 
-// How long a view counts as "recent" before it can be counted again
-const VIEW_DEDUP_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+// A viewer is counted at most once per this time window.
+const VIEW_DEDUP_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// Bucket key for the current 24h window (UTC-based, stable across timezones).
+const getViewWindow = (date = new Date()) =>
+  Math.floor(date.getTime() / VIEW_DEDUP_WINDOW_MS);
 
 /**
- * Extracts client IP address (works behind proxies)
+ * Records a unique view for a blog using backend-enforced dedup.
+ *
+ * - Logged-in users are deduped by (blogId + userId).
+ * - Guests are deduped by (blogId + visitorId) where visitorId is a persistent
+ *   anonymous id sent in the X-Visitor-ID header.
+ *
+ * The unique compound index on BlogView (blogId, userId, visitorId, window)
+ * guarantees that even concurrent / repeated requests can only ever create a
+ * single BlogView per viewer per 24h window. The Blog.views counter is only
+ * incremented when that upsert actually inserts a new document.
+ *
+ * @returns {{ counted: boolean, views: number }}
  */
-const getClientIP = (req) => {
-  return (
-    req.ip ||
-    req.connection?.remoteAddress ||
-    req.socket?.remoteAddress ||
-    (req.headers["x-forwarded-for"]
-      ? req.headers["x-forwarded-for"].split(",")[0].trim()
-      : null)
-  );
-};
+const recordUniqueView = async (blog, userId, visitorId) => {
+  const window = getViewWindow();
 
-/**
- * Reads the blog-view session cookie (bv_sid) from the Cookie header.
- * If absent, generates a new session id and returns it (caller sets the cookie).
- */
-const getOrCreateViewSession = (req) => {
-  const cookieHeader = req.headers.cookie || "";
-  const match = cookieHeader.match(/(?:^|;\s*)bv_sid=([^;]+)/);
-  if (match && match[1]) {
-    return decodeURIComponent(match[1]);
+  // One of userId / visitorId must be present.
+  const query = { blogId: blog._id, window };
+  if (userId) {
+    query.userId = userId;
+    query.visitorId = null;
+  } else {
+    query.userId = null;
+    query.visitorId = visitorId || "anonymous";
   }
-  // Generate a lightweight session id from IP + user-agent
-  const ip = getClientIP(req) || "unknown";
-  const ua = req.headers["user-agent"] || "";
-  const uaHash = Buffer.from(ua).toString("base64").substring(0, 20);
-  return `${ip}-${uaHash}`;
+
+  try {
+    await BlogView.create({ ...query, viewedAt: new Date() });
+  } catch (err) {
+    // Duplicate key (11000) => already viewed within this 24h window.
+    // Any other error is unexpected but we must not inflate the counter.
+    if (err && err.code !== 11000) {
+      logger.error("[recordUniqueView] Failed to record view:", err);
+    }
+    return { counted: false, views: blog.views || 0 };
+  }
+
+  // Genuinely new view -> increment the blog's counter atomically.
+  const updated = await Blog.findByIdAndUpdate(
+    blog._id,
+    { $inc: { views: 1 } },
+    { new: true }
+  );
+
+  return { counted: true, views: updated ? updated.views : (blog.views || 0) + 1 };
 };
 
 /* =====================================
@@ -164,9 +185,10 @@ export const getBlogBySlug = async (req, res) => {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
-    // Increment views automatically
-    blog.views = (blog.views || 0) + 1;
-    await blog.save();
+    // NOTE: Views are intentionally NOT incremented here. View counting is
+    // handled exclusively by the dedicated POST /:slug/view endpoint, which
+    // enforces backend-side unique view tracking (BlogView model). This prevents
+    // refresh / back-forward / re-open from inflating the counter.
 
     return res.json({
       success: true,
@@ -204,7 +226,7 @@ export const getTrendingBlogs = async (req, res) => {
 };
 
 /* =====================================
-   PUBLIC - POST BLOG VIEW (increment views)
+   PUBLIC - POST BLOG VIEW (unique, backend-enforced)
    ===================================== */
 export const viewBlog = async (req, res) => {
   try {
@@ -214,49 +236,25 @@ export const viewBlog = async (req, res) => {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
-    const ipAddress = getClientIP(req);
-    const sessionId = getOrCreateViewSession(req);
+    // Identify the viewer.
+    // 1) Logged-in user (req.user is populated by the optional auth middleware).
+    const userId = req.user?.id || null;
 
-    // Check for a recent view from this IP + session within the 30-minute window
-    const since = new Date(Date.now() - VIEW_DEDUP_WINDOW_MS);
-    const recentView = await BlogView.findOne({
-      blog: blog._id,
-      ipAddress,
-      sessionId,
-      viewedAt: { $gte: since },
-    });
+    // 2) Guest: persistent anonymous id from the X-Visitor-ID header.
+    //    The backend does NOT trust localStorage alone — it only uses this id
+    //    as a dedup key. If missing, we still record a view but keyed as a
+    //    generic anonymous so we never crash; the frontend always sends it.
+    const visitorId = req.headers["x-visitor-id"] || null;
 
-    let counted = false;
-
-    if (!recentView) {
-      // No recent view -> count it
-      await BlogView.create({
-        blog: blog._id,
-        slug: blog.slug,
-        ipAddress,
-        sessionId,
-        viewedAt: new Date(),
-      });
-
-      blog.views = (blog.views || 0) + 1;
-      await blog.save();
-      counted = true;
-    }
-
-    // Ensure the session cookie is set so subsequent requests are deduped
-    res.cookie("bv_sid", sessionId, {
-      maxAge: VIEW_DEDUP_WINDOW_MS,
-      httpOnly: false,
-      sameSite: "lax",
-    });
+    const { counted, views } = await recordUniqueView(blog, userId, visitorId);
 
     return res.json({
       success: true,
-      views: blog.views,
+      views,
       counted,
     });
   } catch (err) {
-    logger.error("[viewBlog] Error incrementing blog views:", err);
+    logger.error("[viewBlog] Error recording blog view:", err);
     return sendErrorResponse(res, 500, "Failed to record blog view");
   }
 };

@@ -28,7 +28,7 @@ import {
   deleteCategory,
 } from "../controllers/blogCategoryController.js";
 
-import { verifyAdmin, verifyUser } from "../middleware/auth.js";
+import { verifyAdmin, verifyUser, optionalUser } from "../middleware/auth.js";
 
 /* ===========================
    PUBLIC ROUTES  (/api/blogs)
@@ -64,9 +64,11 @@ blogRouter.get("/:slug", getBlogBySlug);
 
 /**
  * POST /api/blogs/:slug/view
- * - Public: increment blog view count by 1
+ * - Public: record a unique blog view (backend-enforced dedup).
+ *   Logged-in users are identified via the optional auth token; guests are
+ *   identified by the X-Visitor-ID header.
  */
-blogRouter.post("/:slug/view", viewBlog);
+blogRouter.post("/:slug/view", optionalUser, viewBlog);
 
 /**
  * GET /api/blogs/:slug/related

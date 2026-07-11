@@ -1,5 +1,8 @@
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
+import { getVisitorId } from "../utils/visitorId.js";
+import { getToken } from "../utils/auth.js";
+
 /* ===========================
    SAFE REQUEST WRAPPER (public)
    =========================== */
@@ -57,11 +60,25 @@ export async function getAdjacentBlogs(slug) {
 
 /* ===========================
    RECORD BLOG VIEW (POST /api/blogs/:slug/view)
+   Sends the persistent anonymous visitor id (X-Visitor-ID) and, when present,
+   the user auth token so the backend can deduplicate the view correctly.
    =========================== */
 export async function recordBlogView(slug) {
   try {
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Visitor-ID": getVisitorId(),
+    };
+
+    // Include the user token if logged in so the backend dedups by userId.
+    const token = getToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_BASE}/blogs/${slug}/view`, {
       method: "POST",
+      headers,
     });
     const data = await response.json().catch(() => null);
     if (!response.ok) {
