@@ -594,29 +594,34 @@ export default function BlogDetailPage() {
               <div className="lg:hidden mt-10 pt-8 border-t border-slate-800">
                 <button
                   onClick={() => setMobileTocOpen(!mobileTocOpen)}
-                  className="w-full flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left hover:border-cyan-500/50 transition"
+                  className="w-full flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left transition hover:border-cyan-500/50 hover:bg-slate-900"
                   aria-expanded={mobileTocOpen}
                 >
                   <span className="text-sm font-semibold text-white">Table of Contents</span>
-                  {mobileTocOpen ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
+                  {mobileTocOpen ? <FiChevronUp size={18} className="text-cyan-400" /> : <FiChevronDown size={18} className="text-slate-400" />}
                 </button>
                 {mobileTocOpen && (
                   <div className="mt-3 rounded-2xl border border-white/10 bg-slate-900/70 p-4">
-                    <nav className="space-y-2">
+                    <nav className="space-y-1">
                       {toc.map((heading, i) => (
                         <button
                           key={i}
                           onClick={() => scrollToHeading(heading.id)}
-                          className={`block w-full text-left text-sm transition hover:text-cyan-400 ${
+                          className={`group relative flex w-full items-center rounded-lg py-2 pl-4 pr-2 text-left text-sm transition-all duration-200 ${
                             activeHeading === heading.id
-                              ? "text-cyan-400 font-medium"
+                              ? "bg-cyan-500/10 font-medium text-cyan-300"
                               : heading.level === 2
-                              ? "text-slate-300"
+                              ? "text-slate-300 hover:bg-white/5 hover:text-cyan-300"
                               : heading.level === 3
-                              ? "text-slate-400 ml-3"
-                              : "text-slate-500 ml-6"
+                              ? "pl-7 text-slate-400 hover:bg-white/5 hover:text-cyan-300"
+                              : "pl-10 text-slate-500 hover:bg-white/5 hover:text-cyan-300"
                           }`}
                         >
+                          <span
+                            className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-cyan-400 transition-opacity duration-200 ${
+                              activeHeading === heading.id ? "opacity-100" : "opacity-0"
+                            }`}
+                          />
                           {heading.text}
                         </button>
                       ))}
@@ -753,23 +758,28 @@ export default function BlogDetailPage() {
           <aside className="hidden lg:block space-y-6">
             {/* Table of Contents */}
             {toc.length >= 2 && (
-              <div className="sticky top-24 rounded-2xl border border-white/10 bg-slate-950/70 p-5">
-                <h3 className="text-sm font-semibold text-white mb-3">Table of Contents</h3>
-                <nav className="space-y-1.5">
+              <div className="sticky top-24 rounded-2xl border border-white/10 bg-slate-950/70 p-5 backdrop-blur-sm">
+                <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">Table of Contents</h3>
+                <nav className="max-h-[calc(100vh-8rem)] space-y-1 overflow-y-auto pr-1">
                   {toc.map((heading, i) => (
                     <button
                       key={i}
                       onClick={() => scrollToHeading(heading.id)}
-                      className={`block w-full text-left text-sm transition hover:text-cyan-400 ${
+                      className={`group relative flex w-full items-center rounded-lg py-2 pl-4 pr-2 text-left text-sm transition-all duration-200 ${
                         activeHeading === heading.id
-                          ? "text-cyan-400 font-medium"
+                          ? "bg-cyan-500/10 font-medium text-cyan-300"
                           : heading.level === 2
-                          ? "text-slate-300"
+                          ? "text-slate-300 hover:bg-white/5 hover:text-cyan-300"
                           : heading.level === 3
-                          ? "text-slate-400 ml-3"
-                          : "text-slate-500 ml-6"
+                          ? "pl-7 text-slate-400 hover:bg-white/5 hover:text-cyan-300"
+                          : "pl-10 text-slate-500 hover:bg-white/5 hover:text-cyan-300"
                       }`}
                     >
+                      <span
+                        className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-cyan-400 transition-opacity duration-200 ${
+                          activeHeading === heading.id ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
                       {heading.text}
                     </button>
                   ))}
