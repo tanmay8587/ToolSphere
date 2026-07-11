@@ -50,12 +50,12 @@ export const getCategoryById = async (id) => {
    =========================== */
 
 /**
- * POST /api/admin/blog-categories
+ * POST /api/admin/categories
  * Create new category (admin only)
  */
 export const createCategory = async (data) => {
   try {
-    const response = await api.post("/admin/blog-categories", data);
+    const response = await api.post("/admin/categories", data);
     return response.data;
   } catch (err) {
     throw new Error(err.response?.data?.message || "Failed to create category");
@@ -63,12 +63,12 @@ export const createCategory = async (data) => {
 };
 
 /**
- * PUT /api/admin/blog-categories/:id
+ * PUT /api/admin/categories/:id
  * Update category (admin only)
  */
 export const updateCategory = async (id, data) => {
   try {
-    const response = await api.put(`/admin/blog-categories/${id}`, data);
+    const response = await api.put(`/admin/categories/${id}`, data);
     return response.data;
   } catch (err) {
     throw new Error(err.response?.data?.message || "Failed to update category");
@@ -76,12 +76,12 @@ export const updateCategory = async (id, data) => {
 };
 
 /**
- * DELETE /api/admin/blog-categories/:id
+ * DELETE /api/admin/categories/:id
  * Delete category (admin only)
  */
 export const deleteCategory = async (id) => {
   try {
-    const response = await api.delete(`/admin/blog-categories/${id}`);
+    const response = await api.delete(`/admin/categories/${id}`);
     return response.data;
   } catch (err) {
     throw new Error(err.response?.data?.message || "Failed to delete category");

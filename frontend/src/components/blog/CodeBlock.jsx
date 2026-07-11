@@ -11,7 +11,11 @@ import { FiCheck, FiCopy } from "react-icons/fi";
  * - Responsive design
  */
 
-// Import PrismJS styles
+// Import PrismJS core FIRST so the global `Prism` object exists before the
+// language component files (which reference the global `Prism`) are evaluated.
+import Prism from "prismjs";
+
+// Import PrismJS language definitions (these attach to the global Prism object)
 import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-typescript";
 import "prismjs/components/prism-jsx";
@@ -31,30 +35,16 @@ import "prismjs/components/prism-yaml";
 import "prismjs/components/prism-markdown";
 import "prismjs/components/prism-graphql";
 
-// Dynamic import for Prism core to avoid SSR issues
-let Prism = null;
-
 export default function CodeBlock({ code, language = "plaintext" }) {
   const codeRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [isPrismLoaded, setIsPrismLoaded] = useState(false);
 
-  // Load PrismJS dynamically
+  // Prism core is imported statically above, so it is available immediately.
   useEffect(() => {
-    const loadPrism = async () => {
-      if (typeof window !== "undefined" && !Prism) {
-        try {
-          Prism = (await import("prismjs")).default;
-          setIsPrismLoaded(true);
-        } catch (error) {
-          console.error("Failed to load PrismJS:", error);
-        }
-      } else if (Prism) {
-        setIsPrismLoaded(true);
-      }
-    };
-
-    loadPrism();
+    if (Prism) {
+      setIsPrismLoaded(true);
+    }
   }, []);
 
   // Highlight code when Prism is loaded or code changes

@@ -49,6 +49,14 @@ blogRouter.get("/", getBlogs);
 blogRouter.get("/trending", getTrendingBlogs);
 
 /**
+ * GET /api/blogs/categories
+ * - Public: list all blog categories
+ *   (declared BEFORE /:slug so it is not captured as a slug)
+ */
+blogRouter.get("/categories", getAllCategories);
+blogRouter.get("/categories/:id", getCategoryById);
+
+/**
  * GET /api/blogs/:slug
  * - Public single blog by slug (increments views)
  */
@@ -150,14 +158,8 @@ adminBlogRouter.patch("/blogs/:id/status", verifyAdmin, updateStatus);
 adminBlogRouter.patch("/blogs/:id/featured", verifyAdmin, toggleFeatured);
 
 /* ===========================
-   PUBLIC CATEGORY ROUTES
-   =========================== */
-blogRouter.get("/categories", getAllCategories);
-blogRouter.get("/categories/:id", getCategoryById);
-
-/* ===========================
-   ADMIN CATEGORY ROUTES
-   =========================== */
+    ADMIN CATEGORY ROUTES
+    =========================== */
 adminBlogRouter.get("/categories", verifyAdmin, getAllCategories);
 adminBlogRouter.get("/categories/:id", verifyAdmin, getCategoryById);
 adminBlogRouter.post("/categories", verifyAdmin, createCategory);
