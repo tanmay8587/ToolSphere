@@ -241,9 +241,32 @@ pre .copy-button:active {
 }
 
 /* =========================
-   BLOG DETAIL CONTENT
-   (overflow + responsive + typography)
-   ========================= */
+    EDITOR INLINE IMAGE (UploadableImage)
+    ========================= */
+
+/* The image node itself is responsive and never overflows the editor. */
+.editor-image-node {
+  max-width: 100%;
+}
+
+.editor-image-node .editor-image {
+  max-width: 100%;
+  height: auto;
+  width: auto;
+  margin: 0;
+}
+
+/* While a file is dragged over the editor, highlight the drop zone. */
+.tiptap-content.editor-drag-over {
+  outline: 2px dashed #06b6d4;
+  outline-offset: -8px;
+  background: rgba(6, 182, 212, 0.06);
+}
+
+/* =========================
+    BLOG DETAIL CONTENT
+    (overflow + responsive + typography)
+    ========================= */
 
 .blog-content {
   max-width: 100%;

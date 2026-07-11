@@ -3,6 +3,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Extension } from "@tiptap/core";
+import { UploadableImage } from "./UploadableImage";
+import { uploadImage } from "../../services/adminApi";
 
 /**
  * Reusable, fully-controlled TipTap rich text editor.
@@ -69,6 +71,9 @@ export default function TipTapEditor({
         },
       }),
       Placeholder.configure({ placeholder }),
+      // Inline image upload: drag & drop, paste, resize, alt, loading, error.
+      // Reuses the existing backend upload API (services/adminApi.uploadImage).
+      UploadableImage.configure({ uploadFn: uploadImage }),
       // Mod-K to open the link prompt (matches common editor UX).
       Extension.create({
         name: "linkShortcut",
@@ -284,6 +289,18 @@ function cleanPastedHtml(html) {
    ===================================== */
 function Toolbar({ editor }) {
   const setLink = () => promptForLink(editor);
+  const fileInputRef = useRef(null);
+
+  const triggerImageUpload = () => fileInputRef.current?.click();
+
+  const handleImageFiles = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length) {
+      editor.commands.uploadImageFiles(files);
+    }
+    // Reset so selecting the same file again re-triggers change.
+    e.target.value = "";
+  };
 
   // Base button classes: hover animation, active state, disabled state.
   const btnBase =
@@ -434,6 +451,21 @@ function Toolbar({ editor }) {
         <span className="leading-none">🔗</span>
       </Btn>
 
+      <Divider />
+
+      <Btn onClick={triggerImageUpload} title="Upload image">
+        <span className="leading-none">🖼️</span>
+      </Btn>
+
+      {/* Hidden file input for the upload button */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={handleImageFiles}
+      />
     </div>
   );
 }
