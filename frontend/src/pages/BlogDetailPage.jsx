@@ -564,7 +564,7 @@ export default function BlogDetailPage() {
             {/* Content */}
             <div
               ref={contentRef}
-              className="blog-content prose prose-invert prose-lg max-w-none prose-headings:text-white prose-a:text-cyan-400 prose-pre:bg-slate-900 prose-code:text-cyan-300 prose-blockquote:border-cyan-500 prose-blockquote:text-slate-300"
+              className="blog-content prose prose-invert prose-lg max-w-none prose-headings:text-white prose-headings:scroll-mt-24 prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-cyan-500 prose-blockquote:text-slate-300 prose-img:rounded-xl prose-img:mx-auto prose-pre:bg-transparent prose-pre:p-0 prose-pre:border-0 prose-code:text-cyan-300 prose-code:before:content-none prose-code:after:content-none"
               dangerouslySetInnerHTML={{ __html: blog.content }}
             />
 

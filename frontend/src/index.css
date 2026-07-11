@@ -264,9 +264,13 @@ pre .copy-button:active {
 }
 
 /* =========================
-    BLOG DETAIL CONTENT
-    (overflow + responsive + typography)
-    ========================= */
+   BLOG DETAIL CONTENT
+   Typography is handled by Tailwind Typography (`prose` / `prose-invert`)
+   applied on the .blog-content wrapper in BlogDetailPage.jsx. The rules
+   below only add what `prose` does not cover: overflow/word-break safety,
+   responsive image rounding, horizontal-scroll tables, the GitHub-dark code
+   surface + Prism tokens, and scroll-margin for the TOC anchor offset.
+   ========================= */
 
 .blog-content {
   max-width: 100%;
@@ -274,18 +278,12 @@ pre .copy-button:active {
   word-break: break-word;
 }
 
+/* Keep long words / URLs from overflowing the column on small screens. */
 .blog-content > *,
 .blog-content p,
-.blog-content h1,
-.blog-content h2,
-.blog-content h3,
-.blog-content h4,
-.blog-content h5,
-.blog-content h6,
 .blog-content li,
 .blog-content blockquote,
 .blog-content a,
-.blog-content span,
 .blog-content td,
 .blog-content th {
   max-width: 100%;
@@ -293,22 +291,24 @@ pre .copy-button:active {
   word-break: break-word;
 }
 
+/* Images: responsive, rounded, centered (prose-img:mx-auto also centers). */
 .blog-content img {
   max-width: 100%;
   height: auto;
   width: auto;
   display: block;
-  margin: 1.75rem 0;
+  margin-left: auto;
+  margin-right: auto;
   border-radius: 0.75rem;
 }
 
+/* Tables: allow horizontal scroll on small screens instead of overflowing. */
 .blog-content table {
   display: block;
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
   border-collapse: collapse;
-  margin: 1.75rem 0;
   font-size: 0.95rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.75rem;
@@ -332,13 +332,14 @@ pre .copy-button:active {
   color: #e2e8f0;
 }
 
+/* Code blocks: GitHub-dark surface. prose-pre:bg-transparent/p-0/border-0
+   in the markup lets this custom surface show through. */
 .blog-content pre {
   max-width: 100%;
   overflow-x: auto;
   white-space: pre;
   word-break: normal;
   overflow-wrap: normal;
-  margin: 1.75rem 0;
 }
 
 .blog-content pre code {
@@ -352,72 +353,15 @@ pre .copy-button:active {
   word-break: break-word;
 }
 
-.blog-content a {
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.blog-content h1 {
-  margin-top: 2.5rem;
-  margin-bottom: 1.25rem;
-  line-height: 1.25;
-}
-.blog-content h2 {
-  margin-top: 2.5rem;
-  margin-bottom: 1.1rem;
-  line-height: 1.3;
-  scroll-margin-top: 90px;
-}
-.blog-content h3 {
-  margin-top: 2rem;
-  margin-bottom: 0.9rem;
-  line-height: 1.35;
-  scroll-margin-top: 90px;
-}
+/* Anchor offset so TOC/scroll-spy headings land below the fixed navbar. */
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
 .blog-content h4 {
-  margin-top: 1.75rem;
-  margin-bottom: 0.75rem;
-  line-height: 1.4;
   scroll-margin-top: 90px;
 }
 
-.blog-content p {
-  margin-top: 0;
-  margin-bottom: 1.4rem;
-  line-height: 1.8;
-}
-
-.blog-content ul,
-.blog-content ol {
-  margin-top: 0;
-  margin-bottom: 1.4rem;
-  padding-left: 1.5rem;
-}
-.blog-content li {
-  margin-top: 0;
-  margin-bottom: 0.6rem;
-  line-height: 1.75;
-}
-.blog-content li > ul,
-.blog-content li > ol {
-  margin-top: 0.6rem;
-  margin-bottom: 0.6rem;
-}
-
-.blog-content blockquote {
-  margin: 1.75rem 0;
-  padding: 0.5rem 0 0.5rem 1.25rem;
-  border-left: 4px solid #06b6d4;
-  color: #cbd5e1;
-  font-style: italic;
-}
-.blog-content blockquote p {
-  margin-bottom: 0.6rem;
-}
-.blog-content blockquote p:last-child {
-  margin-bottom: 0;
-}
-
+/* First/last child spacing is owned by `prose`; keep container flush. */
 .blog-content > :first-child {
   margin-top: 0;
 }
