@@ -1,9 +1,48 @@
 import Blog from "../models/Blog.js";
+import BlogView from "../models/BlogView.js";
 import { createSlug } from "../utils/slug.js";
 import { normalizeTags } from "../utils/validation.js";
 import { notifyNewBlog } from "../utils/newsletterEmail.js";
 import { sendErrorResponse, AppError } from "../utils/errorResponse.js";
 import logger from "../utils/logger.js";
+
+/* ===========================
+   VIEW TRACKING HELPERS
+   =========================== */
+
+// How long a view counts as "recent" before it can be counted again
+const VIEW_DEDUP_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+
+/**
+ * Extracts client IP address (works behind proxies)
+ */
+const getClientIP = (req) => {
+  return (
+    req.ip ||
+    req.connection?.remoteAddress ||
+    req.socket?.remoteAddress ||
+    (req.headers["x-forwarded-for"]
+      ? req.headers["x-forwarded-for"].split(",")[0].trim()
+      : null)
+  );
+};
+
+/**
+ * Reads the blog-view session cookie (bv_sid) from the Cookie header.
+ * If absent, generates a new session id and returns it (caller sets the cookie).
+ */
+const getOrCreateViewSession = (req) => {
+  const cookieHeader = req.headers.cookie || "";
+  const match = cookieHeader.match(/(?:^|;\s*)bv_sid=([^;]+)/);
+  if (match && match[1]) {
+    return decodeURIComponent(match[1]);
+  }
+  // Generate a lightweight session id from IP + user-agent
+  const ip = getClientIP(req) || "unknown";
+  const ua = req.headers["user-agent"] || "";
+  const uaHash = Buffer.from(ua).toString("base64").substring(0, 20);
+  return `${ip}-${uaHash}`;
+};
 
 /* =====================================
    PUBLIC - GET BLOGS (paginated + filters)
@@ -150,13 +189,46 @@ export const viewBlog = async (req, res) => {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
-    // Increase views by 1
-    blog.views = (blog.views || 0) + 1;
-    await blog.save();
+    const ipAddress = getClientIP(req);
+    const sessionId = getOrCreateViewSession(req);
+
+    // Check for a recent view from this IP + session within the 30-minute window
+    const since = new Date(Date.now() - VIEW_DEDUP_WINDOW_MS);
+    const recentView = await BlogView.findOne({
+      blog: blog._id,
+      ipAddress,
+      sessionId,
+      viewedAt: { $gte: since },
+    });
+
+    let counted = false;
+
+    if (!recentView) {
+      // No recent view -> count it
+      await BlogView.create({
+        blog: blog._id,
+        slug: blog.slug,
+        ipAddress,
+        sessionId,
+        viewedAt: new Date(),
+      });
+
+      blog.views = (blog.views || 0) + 1;
+      await blog.save();
+      counted = true;
+    }
+
+    // Ensure the session cookie is set so subsequent requests are deduped
+    res.cookie("bv_sid", sessionId, {
+      maxAge: VIEW_DEDUP_WINDOW_MS,
+      httpOnly: false,
+      sameSite: "lax",
+    });
 
     return res.json({
       success: true,
       views: blog.views,
+      counted,
     });
   } catch (err) {
     logger.error("[viewBlog] Error incrementing blog views:", err);
