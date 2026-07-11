@@ -190,9 +190,13 @@ export default function BlogDetailPage() {
     loadRelated();
   }, [slug]);
 
-  // Reading progress (article-based) + back-to-top visibility
+  // Reading progress (article-based) + back-to-top visibility.
+  // Scroll work is throttled to one update per animation frame so the bar
+  // stays smooth and lightweight even during fast scrolling.
   useEffect(() => {
-    const handleScroll = () => {
+    let rafId = null;
+    const update = () => {
+      rafId = null;
       const scrollTop = window.scrollY;
       setShowBackToTop(scrollTop > 400);
 
@@ -210,9 +214,15 @@ export default function BlogDetailPage() {
         scrollable > 0 ? Math.min(Math.max((read / scrollable) * 100, 0), 100) : 0;
       setReadingProgress(progress);
     };
+    const handleScroll = () => {
+      if (rafId === null) rafId = requestAnimationFrame(update);
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // initialize once content is present
-    return () => window.removeEventListener("scroll", handleScroll);
+    update(); // initialize once content is present
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Add IDs to headings for table of contents
@@ -434,7 +444,10 @@ export default function BlogDetailPage() {
       </Helmet>
 
       {/* Reading Progress Bar */}
-      <div className="pointer-events-none fixed top-0 left-0 z-50 h-1 bg-gradient-to-r from-cyan-500 to-fuchsia-500 transition-all duration-150" style={{ width: `${readingProgress}%` }} />
+      <div
+        className="pointer-events-none fixed top-0 left-0 z-50 h-1 w-full origin-left bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-transform duration-150 ease-out will-change-transform"
+        style={{ transform: `scaleX(${readingProgress / 100})` }}
+      />
 
       {/* Sticky Share (Desktop) */}
       <div className="hidden lg:flex fixed left-6 top-1/3 z-50 flex-col gap-3">
