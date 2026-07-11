@@ -234,7 +234,11 @@ export default function BlogDetailPage() {
   }, [blog?.content]);
 
   const toc = generateTableOfContents(blog?.content);
-  const readingTime = blog.readingTime || calculateReadingTime(blog.content);
+  // blog is null during the initial render (loading) and on 404, so guard every
+  // access. Only compute reading time from content when blog actually exists,
+  // and never pass undefined/null into calculateReadingTime.
+  const readingTime =
+    blog?.readingTime ?? (blog ? calculateReadingTime(blog.content ?? "") : 0);
 
   const handleShare = async () => {
     const url = window.location.href;
