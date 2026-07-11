@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark } from "react-icons/fi";
+import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark, FiChevronDown } from "react-icons/fi";
 import { getPublicBlogBySlug, getRelatedBlogs, getAdjacentBlogs } from "../services/publicBlogService";
 import EmptyState from "../components/common/EmptyState";
 import BlogComments from "../components/blog/BlogComments";
@@ -67,6 +67,8 @@ export default function BlogDetailPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [interactionLoading, setInteractionLoading] = useState(false);
+  const [activeHeading, setActiveHeading] = useState("");
+  const [mobileTocOpen, setMobileTocOpen] = useState(false);
   const contentRef = useRef(null);
   const navigate = useNavigate();
 
@@ -133,7 +135,7 @@ export default function BlogDetailPage() {
     loadRelated();
   }, [slug]);
 
-  // Reading progress
+  // Reading progress and active heading detection
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
@@ -141,10 +143,25 @@ export default function BlogDetailPage() {
       const progress = docHeight > 0 ? Math.min((scrollTop / docHeight) * 100, 100) : 0;
       setReadingProgress(progress);
       setShowBackToTop(scrollTop > 400);
+
+      // Detect active heading
+      if (contentRef.current) {
+        const headings = contentRef.current.querySelectorAll("h2, h3, h4");
+        let current = "";
+        headings.forEach((heading) => {
+          const headingTop = heading.getBoundingClientRect().top;
+          if (headingTop <= 150) {
+            current = heading.id;
+          }
+        });
+        if (current && current !== activeHeading) {
+          setActiveHeading(current);
+        }
+      }
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [activeHeading]);
 
   // Add IDs to headings for table of contents
   useEffect(() => {
@@ -158,6 +175,7 @@ export default function BlogDetailPage() {
   }, [blog?.content]);
 
   const toc = generateTableOfContents(blog?.content);
+  const readingTime = blog.readingTime || calculateReadingTime(blog.content);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -229,6 +247,19 @@ export default function BlogDetailPage() {
     }
   };
 
+  const scrollToHeading = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -264,7 +295,6 @@ export default function BlogDetailPage() {
     );
   }
 
-  const readingTime = blog.readingTime || calculateReadingTime(blog.content);
   const blogUrl = window.location.origin + "/blog/" + blog.slug;
 
   const jsonLd = {
@@ -417,18 +447,42 @@ export default function BlogDetailPage() {
               {blog.title}
             </h1>
 
-            {/* Author */}
-            {blog.author && (
-              <div className="flex items-center gap-3 mb-8">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-fuchsia-600 text-sm font-semibold text-white">
-                  {blog.author.charAt(0).toUpperCase()}
-                </div>
+            {/* Reading Information Section */}
+            <div className="flex flex-wrap items-center gap-4 mb-8 p-4 rounded-2xl border border-white/10 bg-slate-900/50">
+              <div className="flex items-center gap-2 text-sm text-slate-300">
+                <FiClock size={16} className="text-cyan-400" />
+                <span className="font-medium">{readingTime} min read</span>
+              </div>
+              <div className="h-4 w-px bg-slate-700" />
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <FiCalendar size={16} />
                 <div>
-                  <p className="text-sm font-medium text-white">{blog.author}</p>
-                  <p className="text-xs text-slate-400">Author</p>
+                  <span className="text-slate-500">Published:</span>{" "}
+                  <span className="text-slate-300">{formatDate(blog.publishedAt || blog.createdAt)}</span>
                 </div>
               </div>
-            )}
+              {blog.updatedAt && blog.updatedAt !== blog.publishedAt && (
+                <>
+                  <div className="h-4 w-px bg-slate-700" />
+                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <FiCalendar size={16} />
+                    <div>
+                      <span className="text-slate-500">Updated:</span>{" "}
+                      <span className="text-slate-300">{formatDate(blog.updatedAt)}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+              {blog.author && (
+                <>
+                  <div className="h-4 w-px bg-slate-700" />
+                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <FiUser size={16} />
+                    <span className="text-slate-300">{blog.author}</span>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Excerpt */}
             {blog.excerpt && (
@@ -462,6 +516,43 @@ export default function BlogDetailPage() {
                     </Link>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Mobile Table of Contents Accordion */}
+            {toc.length >= 2 && (
+              <div className="lg:hidden mt-10 pt-8 border-t border-slate-800">
+                <button
+                  onClick={() => setMobileTocOpen(!mobileTocOpen)}
+                  className="w-full flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left hover:border-cyan-500/50 transition"
+                  aria-expanded={mobileTocOpen}
+                >
+                  <span className="text-sm font-semibold text-white">Table of Contents</span>
+                  {mobileTocOpen ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
+                </button>
+                {mobileTocOpen && (
+                  <div className="mt-3 rounded-2xl border border-white/10 bg-slate-900/70 p-4">
+                    <nav className="space-y-2">
+                      {toc.map((heading, i) => (
+                        <button
+                          key={i}
+                          onClick={() => scrollToHeading(heading.id)}
+                          className={`block w-full text-left text-sm transition hover:text-cyan-400 ${
+                            activeHeading === heading.id
+                              ? "text-cyan-400 font-medium"
+                              : heading.level === 2
+                              ? "text-slate-300"
+                              : heading.level === 3
+                              ? "text-slate-400 ml-3"
+                              : "text-slate-500 ml-6"
+                          }`}
+                        >
+                          {heading.text}
+                        </button>
+                      ))}
+                    </nav>
+                  </div>
+                )}
               </div>
             )}
 
@@ -596,20 +687,26 @@ export default function BlogDetailPage() {
           {/* Sidebar (Desktop) */}
           <aside className="hidden lg:block space-y-6">
             {/* Table of Contents */}
-            {toc.length > 0 && (
+            {toc.length >= 2 && (
               <div className="sticky top-24 rounded-2xl border border-white/10 bg-slate-950/70 p-5">
                 <h3 className="text-sm font-semibold text-white mb-3">Table of Contents</h3>
                 <nav className="space-y-1.5">
                   {toc.map((heading, i) => (
-                    <a
+                    <button
                       key={i}
-                      href={`#${heading.id}`}
-                      className={`block text-sm transition hover:text-cyan-400 ${
-                        heading.level === 2 ? "text-slate-300" : heading.level === 3 ? "text-slate-400 ml-3" : "text-slate-500 ml-6"
+                      onClick={() => scrollToHeading(heading.id)}
+                      className={`block w-full text-left text-sm transition hover:text-cyan-400 ${
+                        activeHeading === heading.id
+                          ? "text-cyan-400 font-medium"
+                          : heading.level === 2
+                          ? "text-slate-300"
+                          : heading.level === 3
+                          ? "text-slate-400 ml-3"
+                          : "text-slate-500 ml-6"
                       }`}
                     >
                       {heading.text}
-                    </a>
+                    </button>
                   ))}
                 </nav>
               </div>
