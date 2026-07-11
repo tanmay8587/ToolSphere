@@ -26,15 +26,6 @@ const blogViewSchema = new mongoose.Schema(
       index: true,
     },
 
-    // Internal 24h window bucket (Math.floor(Date.now() / 24h)). Allows a viewer
-    // to be counted again after 24 hours while keeping each insert idempotent and
-    // race-safe under concurrent requests.
-    window: {
-      type: Number,
-      required: true,
-      index: true,
-    },
-
     // Timestamp of the recorded view
     viewedAt: {
       type: Date,
@@ -51,11 +42,12 @@ const blogViewSchema = new mongoose.Schema(
    INDEXES
    =========================== */
 
-// Unique per (blog, viewer, 24h window). This is the core enforcement:
-// MongoDB serializes the upsert on this key, so even concurrent requests from
-// the same viewer can only ever create ONE BlogView per 24 hours.
+// Unique per (blog, viewer). This is the core race-safety enforcement:
+// MongoDB serializes the insert on this key, so even concurrent requests from
+// the same viewer can only ever create ONE BlogView. The 24h time window is
+// enforced by the controller's query (see recordUniqueView in blogController).
 blogViewSchema.index(
-  { blogId: 1, userId: 1, visitorId: 1, window: 1 },
+  { blogId: 1, userId: 1, visitorId: 1 },
   { unique: true }
 );
 

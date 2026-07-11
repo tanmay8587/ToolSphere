@@ -10,32 +10,31 @@ import logger from "../utils/logger.js";
    VIEW TRACKING HELPERS
    =========================== */
 
-// A viewer is counted at most once per this time window.
+// A viewer is counted at most once within this time window.
 const VIEW_DEDUP_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-// Bucket key for the current 24h window (UTC-based, stable across timezones).
-const getViewWindow = (date = new Date()) =>
-  Math.floor(date.getTime() / VIEW_DEDUP_WINDOW_MS);
 
 /**
  * Records a unique view for a blog using backend-enforced dedup.
  *
- * - Logged-in users are deduped by (blogId + userId).
- * - Guests are deduped by (blogId + visitorId) where visitorId is a persistent
- *   anonymous id sent in the X-Visitor-ID header.
+ * - Logged-in users are deduped by (blogId + userId) within the last 24h.
+ * - Guests are deduped by (blogId + visitorId) within the last 24h, where
+ *   visitorId is a persistent anonymous id sent in the X-Visitor-ID header.
  *
- * The unique compound index on BlogView (blogId, userId, visitorId, window)
- * guarantees that even concurrent / repeated requests can only ever create a
- * single BlogView per viewer per 24h window. The Blog.views counter is only
- * incremented when that upsert actually inserts a new document.
+ * The flow:
+ *   1. Query BlogView for an existing record for this viewer in the last 24h.
+ *   2. If one exists -> do NOT increment Blog.views (return counted:false).
+ *   3. Otherwise -> create a BlogView and atomically increment Blog.views.
+ *
+ * The unique compound index on BlogView (blogId, userId, visitorId) guarantees
+ * that even concurrent / repeated requests can only ever create a single
+ * BlogView per viewer, so the counter is never inflated by a race.
  *
  * @returns {{ counted: boolean, views: number }}
  */
 const recordUniqueView = async (blog, userId, visitorId) => {
-  const window = getViewWindow();
-
-  // One of userId / visitorId must be present.
-  const query = { blogId: blog._id, window };
+  // Build the dedup query for this viewer.
+  const since = new Date(Date.now() - VIEW_DEDUP_WINDOW_MS);
+  const query = { blogId: blog._id, viewedAt: { $gte: since } };
   if (userId) {
     query.userId = userId;
     query.visitorId = null;
@@ -44,18 +43,31 @@ const recordUniqueView = async (blog, userId, visitorId) => {
     query.visitorId = visitorId || "anonymous";
   }
 
+  // 1) Check whether this viewer already viewed the blog in the last 24h.
+  const existing = await BlogView.findOne(query);
+  if (existing) {
+    // Duplicate within the window -> do NOT increment.
+    return { counted: false, views: blog.views || 0 };
+  }
+
+  // 2) Create the view record. The unique index makes this race-safe: if a
+  //    concurrent request already inserted one, this throws 11000 and we treat
+  //    it as a duplicate (no increment).
   try {
-    await BlogView.create({ ...query, viewedAt: new Date() });
+    await BlogView.create({
+      blogId: blog._id,
+      userId: query.userId,
+      visitorId: query.visitorId,
+      viewedAt: new Date(),
+    });
   } catch (err) {
-    // Duplicate key (11000) => already viewed within this 24h window.
-    // Any other error is unexpected but we must not inflate the counter.
     if (err && err.code !== 11000) {
       logger.error("[recordUniqueView] Failed to record view:", err);
     }
     return { counted: false, views: blog.views || 0 };
   }
 
-  // Genuinely new view -> increment the blog's counter atomically.
+  // 3) Genuinely new view -> increment the blog's counter atomically.
   const updated = await Blog.findByIdAndUpdate(
     blog._id,
     { $inc: { views: 1 } },
