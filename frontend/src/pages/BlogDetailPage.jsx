@@ -5,7 +5,6 @@ import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser,
 import { getPublicBlogBySlug, getRelatedBlogs, getAdjacentBlogs, recordBlogView } from "../services/publicBlogService";
 import EmptyState from "../components/common/EmptyState";
 import BlogComments from "../components/blog/BlogComments";
-import CodeBlock from "../components/blog/CodeBlock";
 import {
   getBlogInteraction,
   likeBlog,
@@ -25,61 +24,58 @@ const calculateReadingTime = (html = "") => {
   return Math.max(1, Math.ceil(words / 200));
 };
 
+/**
+ * Decode common HTML entities (e.g. &nbsp;, &#39;, &) into plain text.
+ * Used to produce clean heading text for the Table of Contents and to keep
+ * anchor ids consistent with the rendered (decoded) DOM headings.
+ */
+const decodeHtmlEntities = (str = "") => {
+  if (typeof document === "undefined") {
+    // Fallback for non-DOM environments (e.g. SSR/tests)
+    return str
+      .replace(/&nbsp;/g, " ")
+      .replace(/&#39;/g, "'")
+      .replace(/&/g, "&")
+      .replace(/"/g, '"')
+      .replace(/</g, "<")
+      .replace(/>/g, ">")
+      .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec))
+      .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  }
+  const txt = document.createElement("textarea");
+  txt.innerHTML = str;
+  return txt.value;
+};
+
+/**
+ * Convert a heading's text into a stable, URL-safe slug used for anchor ids.
+ * Decodes HTML entities first so it matches the decoded textContent of the
+ * rendered DOM heading (which is what scrollToHeading targets).
+ */
+const slugifyHeading = (text = "") => {
+  return decodeHtmlEntities(text)
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-");
+};
+
 const generateTableOfContents = (html) => {
   if (!html) return [];
   const headingRegex = /<h([2-4])(?:\s[^>]*)?>(.*?)<\/h\1>/gi;
   const headings = [];
   let match;
   while ((match = headingRegex.exec(html)) !== null) {
+    const rawText = match[2].replace(/<[^>]*>/g, "");
+    const cleanText = decodeHtmlEntities(rawText).replace(/\s+/g, " ").trim();
     headings.push({
       level: parseInt(match[1]),
-      text: match[2].replace(/<[^>]*>/g, ""),
-      id: match[2].replace(/<[^>]*>/g, "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+      text: cleanText,
+      id: slugifyHeading(rawText),
     });
   }
   return headings;
-};
-
-/**
- * Parse blog content and render code blocks
- * @param {string} content - Blog content with fenced code blocks
- * @returns {Array} - Array of content segments (text and code blocks)
- */
-const parseContentWithCodeBlocks = (content) => {
-  if (!content) return [];
-  
-  const segments = [];
-  const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-  let lastIndex = 0;
-  let match;
-  let key = 0;
-
-  while ((match = codeBlockRegex.exec(content)) !== null) {
-    // Add text before code block
-    if (match.index > lastIndex) {
-      const textContent = content.slice(lastIndex, match.index);
-      if (textContent.trim()) {
-        segments.push({ type: 'text', content: textContent, key: key++ });
-      }
-    }
-
-    // Add code block
-    const language = match[1] || 'plaintext';
-    const code = match[2].trim();
-    segments.push({ type: 'code', language, code, key: key++ });
-
-    lastIndex = match.index + match[0].length;
-  }
-
-  // Add remaining text after last code block
-  if (lastIndex < content.length) {
-    const textContent = content.slice(lastIndex);
-    if (textContent.trim()) {
-      segments.push({ type: 'text', content: textContent, key: key++ });
-    }
-  }
-
-  return segments;
 };
 
 const formatDate = (date) => {
@@ -228,8 +224,8 @@ export default function BlogDetailPage() {
     const container = contentRef.current;
     container.querySelectorAll("h2, h3, h4").forEach((heading) => {
       const text = heading.textContent || "";
-      const id = text.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-      heading.id = id;
+      const id = slugifyHeading(text);
+      if (id) heading.id = id;
     });
   }, [blog?.content]);
 
@@ -248,16 +244,6 @@ export default function BlogDetailPage() {
       }
     } catch {
       // aborted
-    }
-  };
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // ignore
     }
   };
 
@@ -416,17 +402,11 @@ export default function BlogDetailPage() {
       <div className="hidden lg:flex fixed left-6 top-1/3 z-50 flex-col gap-3">
         <button
           onClick={handleShare}
-          className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 transition"
-          title="Share"
+          className="flex items-center justify-center rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 transition"
+          title="Share this article"
+          aria-label="Share this article"
         >
           <FiShare2 size={18} />
-        </button>
-        <button
-          onClick={handleCopyLink}
-          className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 transition"
-          title="Copy link"
-        >
-          {copied ? "✓" : <FiShare2 size={18} />}
         </button>
       </div>
 
@@ -558,31 +538,9 @@ export default function BlogDetailPage() {
             {/* Content */}
             <div
               ref={contentRef}
-              className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-a:text-cyan-400 prose-pre:bg-slate-900 prose-code:text-cyan-300 prose-blockquote:border-cyan-500 prose-blockquote:text-slate-300"
+              className="blog-content prose prose-invert prose-lg max-w-none prose-headings:text-white prose-a:text-cyan-400 prose-pre:bg-slate-900 prose-code:text-cyan-300 prose-blockquote:border-cyan-500 prose-blockquote:text-slate-300"
               dangerouslySetInnerHTML={{ __html: blog.content }}
             />
-
-            {/* Render content with code blocks */}
-            {blog.content && (() => {
-              const segments = parseContentWithCodeBlocks(blog.content);
-              return segments.map((segment) => {
-                if (segment.type === 'code') {
-                  return (
-                    <CodeBlock
-                      key={segment.key}
-                      code={segment.code}
-                      language={segment.language}
-                    />
-                  );
-                }
-                return (
-                  <div
-                    key={segment.key}
-                    dangerouslySetInnerHTML={{ __html: segment.content }}
-                  />
-                );
-              });
-            })()}
 
             {/* Tags */}
             {blog.tags?.length > 0 && (
@@ -652,17 +610,12 @@ export default function BlogDetailPage() {
             {/* Mobile share */}
             <div className="lg:hidden flex items-center gap-3 mt-8 pt-6 border-t border-slate-800">
               <button
-                onClick={handleCopyLink}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition"
-              >
-                {copied ? "✓ Copied" : "Copy Link"}
-              </button>
-              <button
                 onClick={handleShare}
                 className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 transition"
+                aria-label="Share this article"
               >
                 <FiShare2 size={16} />
-                Share
+                {copied ? "Link Copied" : "Share"}
               </button>
             </div>
 
