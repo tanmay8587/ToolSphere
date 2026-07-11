@@ -602,6 +602,7 @@ export const bookmarkBlog = async (req, res) => {
       success: true,
       message: "Blog bookmarked successfully",
       bookmarks: blog.bookmarkedBy.length,
+      isBookmarked: true,
     });
   } catch (err) {
     logger.error("[bookmarkBlog] Error bookmarking blog:", err);
@@ -635,6 +636,7 @@ export const removeBookmark = async (req, res) => {
       success: true,
       message: "Bookmark removed successfully",
       bookmarks: blog.bookmarkedBy.length,
+      isBookmarked: false,
     });
   } catch (err) {
     logger.error("[removeBookmark] Error removing bookmark:", err);
