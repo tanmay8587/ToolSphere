@@ -226,22 +226,54 @@ function promptForLink(editor) {
   editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
 }
 
-// Strip unsafe/ugly markup from pasted HTML, preserving basic formatting.
+// Strip unnecessary formatting from pasted HTML while preserving document
+// structure (headings, paragraphs, lists, blockquotes, links, code, etc.).
 function cleanPastedHtml(html) {
   if (typeof window === "undefined" || !html) return html;
   try {
     const doc = new DOMParser().parseFromString(html, "text/html");
-    doc
+    const root = doc.body;
+
+    // 1. Remove unsafe / embedded elements entirely.
+    root
       .querySelectorAll("script, style, meta, link, title, noscript, iframe, object, embed")
       .forEach((el) => el.remove());
-    doc.querySelectorAll("*").forEach((el) => {
-      Array.from(el.attributes).forEach((attr) => {
-        if (/^on/i.test(attr.name) || /^\s*javascript:/i.test(attr.value)) {
-          el.removeAttribute(attr.name);
+
+    // 2. Pure presentation wrappers to unwrap (keep their text content).
+    const FORMATTING_TAGS = new Set([
+      "span", "font", "b", "i", "u", "s", "strike", "sub", "sup",
+      "small", "big", "center", "label", "tt",
+    ]);
+
+    // 3. Attributes allowed per structural tag (everything else is stripped).
+    const ALLOWED_ATTRS = { a: ["href", "target", "rel"] };
+
+    const walk = (node) => {
+      Array.from(node.childNodes).forEach((child) => {
+        if (child.nodeType !== Node.ELEMENT_NODE) return;
+        const tag = child.tagName.toLowerCase();
+        if (FORMATTING_TAGS.has(tag)) {
+          // Unwrap: replace the element with its children, preserving text.
+          const parent = child.parentNode;
+          while (child.firstChild) parent.insertBefore(child.firstChild, child);
+          parent.removeChild(child);
+        } else {
+          const allowed = ALLOWED_ATTRS[tag] || [];
+          Array.from(child.attributes).forEach((attr) => {
+            const name = attr.name.toLowerCase();
+            if (!allowed.includes(name)) {
+              child.removeAttribute(attr.name);
+            } else if (name === "href" && /^\s*javascript:/i.test(attr.value)) {
+              child.removeAttribute(attr.name);
+            }
+          });
+          walk(child);
         }
       });
-    });
-    return doc.body.innerHTML;
+    };
+    walk(root);
+
+    return root.innerHTML;
   } catch {
     return html;
   }
