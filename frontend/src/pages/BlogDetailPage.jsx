@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark } from "react-icons/fi";
-import { getPublicBlogBySlug } from "../services/publicBlogService";
+import { getPublicBlogBySlug, getRelatedBlogs, getAdjacentBlogs } from "../services/publicBlogService";
 import EmptyState from "../components/common/EmptyState";
 import BlogComments from "../components/blog/BlogComments";
 import {
@@ -57,6 +57,8 @@ export default function BlogDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [relatedBlogs, setRelatedBlogs] = useState([]);
+  const [previousBlog, setPreviousBlog] = useState(null);
+  const [nextBlog, setNextBlog] = useState(null);
   const [readingProgress, setReadingProgress] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -76,7 +78,6 @@ export default function BlogDetailPage() {
         const result = await getPublicBlogBySlug(slug);
         if (result.success && result.blog) {
           setBlog(result.blog);
-          setRelatedBlogs(result.relatedBlogs || []);
         } else {
           setError("Blog not found");
         }
@@ -105,6 +106,31 @@ export default function BlogDetailPage() {
       .catch(() => {
         // Non-blocking: counts simply stay at 0
       });
+  }, [slug]);
+
+  /**
+   * Load related blogs and prev/next navigation
+   */
+  useEffect(() => {
+    const loadRelated = async () => {
+      if (!slug) return;
+      try {
+        const [relatedRes, adjacentRes] = await Promise.all([
+          getRelatedBlogs(slug),
+          getAdjacentBlogs(slug),
+        ]);
+        if (relatedRes.success) {
+          setRelatedBlogs(relatedRes.relatedBlogs || []);
+        }
+        if (adjacentRes.success) {
+          setPreviousBlog(adjacentRes.previousBlog);
+          setNextBlog(adjacentRes.nextBlog);
+        }
+      } catch (err) {
+        // Non-blocking
+      }
+    };
+    loadRelated();
   }, [slug]);
 
   // Reading progress
@@ -462,6 +488,109 @@ export default function BlogDetailPage() {
                 Share
               </button>
             </div>
+
+            {/* Related Articles */}
+            {relatedBlogs.length > 0 && (
+              <div className="mt-16 pt-10 border-t border-slate-800">
+                <h2 className="text-2xl font-bold text-white mb-6">Related Articles</h2>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  {relatedBlogs.map((related) => (
+                    <Link
+                      key={related._id}
+                      to={`/blog/${related.slug}`}
+                      className="group rounded-2xl border border-white/10 bg-slate-900/70 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
+                    >
+                      {related.coverImage && (
+                        <div className="h-40 overflow-hidden">
+                          <img
+                            src={related.coverImage}
+                            alt={related.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                      <div className="p-4 space-y-2">
+                        {related.category && (
+                          <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
+                            {related.category}
+                          </span>
+                        )}
+                        <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">
+                          {related.title}
+                        </h3>
+                        <p className="text-sm text-slate-400 line-clamp-2">
+                          {related.excerpt}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-slate-500 pt-2 border-t border-slate-800">
+                          <span className="flex items-center gap-1">
+                            <FiClock size={12} />
+                            {related.readingTime || "5"} min
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <FiCalendar size={12} />
+                            {formatDate(related.publishedAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Previous / Next Navigation */}
+            {(previousBlog || nextBlog) && (
+              <div className="mt-12 pt-8 border-t border-slate-800">
+                <div className="grid gap-6 md:grid-cols-2">
+                  {previousBlog ? (
+                    <Link
+                      to={`/blog/${previousBlog.slug}`}
+                      className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
+                    >
+                      <span className="text-xs font-medium text-slate-400 mb-2 block">Previous Article</span>
+                      <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">
+                        {previousBlog.title}
+                      </h3>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 mt-3">
+                        {previousBlog.category && (
+                          <span className="rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300">
+                            {previousBlog.category}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <FiCalendar size={12} />
+                          {formatDate(previousBlog.publishedAt)}
+                        </span>
+                      </div>
+                    </Link>
+                  ) : <div />}
+
+                  {nextBlog ? (
+                    <Link
+                      to={`/blog/${nextBlog.slug}`}
+                      className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10 text-right"
+                    >
+                      <span className="text-xs font-medium text-slate-400 mb-2 block">Next Article</span>
+                      <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">
+                        {nextBlog.title}
+                      </h3>
+                      <div className="flex items-center justify-end gap-3 text-xs text-slate-500 mt-3">
+                        <span className="flex items-center gap-1">
+                          <FiCalendar size={12} />
+                          {formatDate(nextBlog.publishedAt)}
+                        </span>
+                        {nextBlog.category && (
+                          <span className="rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300">
+                            {nextBlog.category}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  ) : <div />}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar (Desktop) */}
@@ -483,25 +612,6 @@ export default function BlogDetailPage() {
                     </a>
                   ))}
                 </nav>
-              </div>
-            )}
-
-            {/* Related Blogs */}
-            {relatedBlogs.length > 0 && (
-              <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-5">
-                <h3 className="text-sm font-semibold text-white mb-3">Related Articles</h3>
-                <div className="space-y-4">
-                  {relatedBlogs.slice(0, 4).map((related) => (
-                    <Link key={related._id} to={`/blog/${related.slug}`} className="group block">
-                      <p className="text-sm text-slate-300 group-hover:text-cyan-400 transition line-clamp-2">
-                        {related.title}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {formatDate(related.publishedAt)} · {related.readingTime || calculateReadingTime(related.content)} min
-                      </p>
-                    </Link>
-                  ))}
-                </div>
               </div>
             )}
           </aside>

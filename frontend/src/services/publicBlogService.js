@@ -40,3 +40,17 @@ export async function getPublicBlogs(params = {}) {
 export async function getPublicBlogBySlug(slug) {
   return request(`/blogs/${slug}`);
 }
+
+/* ===========================
+   GET RELATED BLOGS
+   =========================== */
+export async function getRelatedBlogs(slug) {
+  return request(`/blogs/${slug}/related`);
+}
+
+/* ===========================
+   GET ADJACENT BLOGS (PREVIOUS/NEXT)
+   =========================== */
+export async function getAdjacentBlogs(slug) {
+  return request(`/blogs/${slug}/adjacent`);
+}

@@ -14,6 +14,8 @@ import {
   unlikeBlog,
   bookmarkBlog,
   removeBookmark,
+  getRelatedBlogs,
+  getAdjacentBlogs,
 } from "../controllers/blogController.js";
 
 import {
@@ -39,9 +41,21 @@ blogRouter.get("/", getBlogs);
 
 /**
  * GET /api/blogs/:slug
- * - Public single blog by slug (increments views, returns related)
+ * - Public single blog by slug (increments views)
  */
 blogRouter.get("/:slug", getBlogBySlug);
+
+/**
+ * GET /api/blogs/:slug/related
+ * - Public related blogs for a given slug
+ */
+blogRouter.get("/:slug/related", getRelatedBlogs);
+
+/**
+ * GET /api/blogs/:slug/adjacent
+ * - Public previous/next blogs by publish date
+ */
+blogRouter.get("/:slug/adjacent", getAdjacentBlogs);
 
 /**
  * POST /api/blogs/:id/like

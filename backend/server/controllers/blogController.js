@@ -115,7 +115,7 @@ export const getBlogById = async (req, res) => {
 };
 
 /* =====================================
-   PUBLIC - GET BLOG BY SLUG (+ related)
+   PUBLIC - GET BLOG BY SLUG
    ===================================== */
 export const getBlogBySlug = async (req, res) => {
   try {
@@ -129,24 +129,147 @@ export const getBlogBySlug = async (req, res) => {
     blog.views = (blog.views || 0) + 1;
     await blog.save();
 
-    // Related blogs (same category, excluding current)
-    const relatedBlogs = await Blog.find({
+    return res.json({
+      success: true,
+      blog,
+    });
+  } catch (err) {
+    logger.error("[getBlogBySlug] Error fetching blog:", err);
+    return sendErrorResponse(res, 500, "Failed to fetch blog");
+  }
+};
+
+/* =====================================
+   PUBLIC - GET RELATED BLOGS
+   ===================================== */
+export const getRelatedBlogs = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const blog = await Blog.findOne({ slug, isDeleted: false });
+
+    if (!blog) {
+      return sendErrorResponse(res, 404, "Blog not found");
+    }
+
+    const relatedBlogs = [];
+    const seenIds = new Set([blog._id.toString()]);
+
+    // Step 1: Get blogs from same category (max 4)
+    const sameCategoryBlogs = await Blog.find({
       _id: { $ne: blog._id },
       category: blog.category,
       isDeleted: false,
       status: "published",
     })
       .sort({ publishedAt: -1 })
-      .limit(5);
+      .limit(4);
+
+    sameCategoryBlogs.forEach((b) => {
+      relatedBlogs.push(b);
+      seenIds.add(b._id.toString());
+    });
+
+    // Step 2: If fewer than 4, fill with blogs sharing similar tags
+    if (relatedBlogs.length < 4 && blog.tags && blog.tags.length > 0) {
+      const tagMatches = await Blog.find({
+        _id: { $nin: Array.from(seenIds).map(id => id) },
+        tags: { $in: blog.tags },
+        isDeleted: false,
+        status: "published",
+      })
+        .sort({ publishedAt: -1 })
+        .limit(4 - relatedBlogs.length);
+
+      tagMatches.forEach((b) => {
+        relatedBlogs.push(b);
+        seenIds.add(b._id.toString());
+      });
+    }
+
+    // Step 3: If still fewer than 4, fill with latest published blogs
+    if (relatedBlogs.length < 4) {
+      const latestBlogs = await Blog.find({
+        _id: { $nin: Array.from(seenIds).map(id => id) },
+        isDeleted: false,
+        status: "published",
+      })
+        .sort({ publishedAt: -1 })
+        .limit(4 - relatedBlogs.length);
+
+      latestBlogs.forEach((b) => {
+        relatedBlogs.push(b);
+        seenIds.add(b._id.toString());
+      });
+    }
+
+    // Return only fields needed for cards
+    const formattedBlogs = relatedBlogs.slice(0, 4).map(({ _id, title, slug, coverImage, excerpt, category, readingTime, publishedAt }) => ({
+      _id,
+      title,
+      slug,
+      coverImage,
+      excerpt,
+      category,
+      readingTime,
+      publishedAt,
+    }));
 
     return res.json({
       success: true,
-      blog,
-      relatedBlogs,
+      relatedBlogs: formattedBlogs,
     });
   } catch (err) {
-    logger.error("[getBlogBySlug] Error fetching blog:", err);
-    return sendErrorResponse(res, 500, "Failed to fetch blog");
+    logger.error("[getRelatedBlogs] Error fetching related blogs:", err);
+    return sendErrorResponse(res, 500, "Failed to fetch related blogs");
+  }
+};
+
+/* =====================================
+   PUBLIC - GET PREVIOUS/NEXT BLOG
+   ===================================== */
+export const getAdjacentBlogs = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const blog = await Blog.findOne({ slug, isDeleted: false, status: "published" });
+
+    if (!blog) {
+      return sendErrorResponse(res, 404, "Blog not found");
+    }
+
+    // Previous blog: published before current, closest date
+    const previousBlog = await Blog.findOne({
+      _id: { $ne: blog._id },
+      publishedAt: { $lt: blog.publishedAt },
+      isDeleted: false,
+      status: "published",
+    })
+      .sort({ publishedAt: -1 })
+      .limit(1);
+
+    // Next blog: published after current, closest date
+    const nextBlog = await Blog.findOne({
+      _id: { $ne: blog._id },
+      publishedAt: { $gt: blog.publishedAt },
+      isDeleted: false,
+      status: "published",
+    })
+      .sort({ publishedAt: 1 })
+      .limit(1);
+
+    const formatBlog = (b) => {
+      if (!b) return null;
+      const { _id, title, slug, coverImage, excerpt, category, readingTime, publishedAt } = b;
+      return { _id, title, slug, coverImage, excerpt, category, readingTime, publishedAt };
+    };
+
+    return res.json({
+      success: true,
+      previousBlog: formatBlog(previousBlog),
+      nextBlog: formatBlog(nextBlog),
+    });
+  } catch (err) {
+    logger.error("[getAdjacentBlogs] Error fetching adjacent blogs:", err);
+    return sendErrorResponse(res, 500, "Failed to fetch adjacent blogs");
   }
 };
 
