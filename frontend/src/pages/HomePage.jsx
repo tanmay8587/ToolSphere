@@ -6,9 +6,11 @@ import { useEffect, useState } from "react";
 import { getFeaturedTools, getCategories, getTools } from "../services/toolsService";
 import { subscribeToNewsletter } from "../services/newsletterService";
 import { getStatistics } from "../services/statisticsService";
+import { getTrendingBlogs } from "../services/publicBlogService";
 import { ToastContainer, useToast } from "../components/common/Toast";
 import CategoryIcon from "../components/common/CategoryIcon";
 import EmptyState from "../components/common/EmptyState";
+import BlogCard from "../components/blog/BlogCard";
 import { isLoggedIn } from "../utils/auth";
 
 const trendingTools = [
@@ -54,6 +56,11 @@ export default function HomePage() {
   const [homeStats, setHomeStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
+
+  // Trending blogs state
+  const [trendingBlogs, setTrendingBlogs] = useState([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
+  const [trendingError, setTrendingError] = useState(null);
 
   // Newsletter form state
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -190,6 +197,31 @@ export default function HomePage() {
     }
 
     loadStatistics();
+  }, []);
+
+  useEffect(() => {
+    async function loadTrendingBlogs() {
+      try {
+        setTrendingLoading(true);
+        setTrendingError(null);
+
+        const data = await getTrendingBlogs();
+
+        if (data.success) {
+          setTrendingBlogs(data.blogs || []);
+        } else {
+          setTrendingBlogs([]);
+        }
+      } catch (err) {
+        console.error("Error loading trending blogs:", err);
+        setTrendingError("Failed to load trending blogs");
+        setTrendingBlogs([]);
+      } finally {
+        setTrendingLoading(false);
+      }
+    }
+
+    loadTrendingBlogs();
   }, []);
 
   useEffect(() => {
@@ -626,6 +658,52 @@ export default function HomePage() {
 
         </div>
 
+      </section>
+
+      {/* TRENDING BLOGS */}
+      <section>
+        <div className="mb-6 flex items-end justify-between">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">
+              Trending
+            </p>
+            <h2 className="text-2xl font-semibold">Popular blog posts</h2>
+          </div>
+
+          <Link to="/blog" className="text-sm text-cyan-300 transition hover:text-cyan-200">
+            View all
+          </Link>
+        </div>
+
+        {trendingError ? (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-center">
+            <p className="text-sm text-red-300">{trendingError}</p>
+          </div>
+        ) : trendingLoading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-white/10 bg-slate-900/50 p-5 animate-pulse space-y-4"
+              >
+                <div className="h-40 bg-slate-800 rounded-xl" />
+                <div className="h-4 w-1/3 bg-slate-800 rounded" />
+                <div className="h-5 w-3/4 bg-slate-800 rounded" />
+                <div className="h-4 w-full bg-slate-800 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : trendingBlogs.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-8 text-center">
+            <p className="text-sm text-slate-400">No trending posts yet.</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {trendingBlogs.map((blog) => (
+              <BlogCard key={blog._id || blog.slug} blog={blog} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* NEWSLETTER */}

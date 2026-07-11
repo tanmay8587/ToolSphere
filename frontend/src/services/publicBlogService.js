@@ -73,3 +73,10 @@ export async function recordBlogView(slug) {
     return { success: false, views: 0, counted: false };
   }
 }
+
+/* ===========================
+   GET TRENDING BLOGS (top 6 by views)
+   =========================== */
+export async function getTrendingBlogs() {
+  return request(`/blogs/trending`);
+}
