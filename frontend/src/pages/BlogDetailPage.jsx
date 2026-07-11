@@ -190,7 +190,7 @@ export default function BlogDetailPage() {
     loadRelated();
   }, [slug]);
 
-  // Reading progress and active heading detection
+  // Reading progress + back-to-top visibility (active heading handled by IntersectionObserver)
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
@@ -198,25 +198,10 @@ export default function BlogDetailPage() {
       const progress = docHeight > 0 ? Math.min((scrollTop / docHeight) * 100, 100) : 0;
       setReadingProgress(progress);
       setShowBackToTop(scrollTop > 400);
-
-      // Detect active heading
-      if (contentRef.current) {
-        const headings = contentRef.current.querySelectorAll("h2, h3, h4");
-        let current = "";
-        headings.forEach((heading) => {
-          const headingTop = heading.getBoundingClientRect().top;
-          if (headingTop <= 150) {
-            current = heading.id;
-          }
-        });
-        if (current && current !== activeHeading) {
-          setActiveHeading(current);
-        }
-      }
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [activeHeading]);
+  }, []);
 
   // Add IDs to headings for table of contents
   useEffect(() => {
@@ -227,6 +212,44 @@ export default function BlogDetailPage() {
       const id = slugifyHeading(text);
       if (id) heading.id = id;
     });
+  }, [blog?.content]);
+
+  // Active TOC highlighting via IntersectionObserver (lightweight, no scroll listener)
+  useEffect(() => {
+    if (!blog?.content || !contentRef.current) return;
+    const headings = Array.from(contentRef.current.querySelectorAll("h2, h3, h4"));
+    if (!headings.length) return;
+
+    const visible = new Set();
+    const navbar = document.querySelector("header");
+    const navHeight = navbar ? navbar.offsetHeight : 64;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        });
+        // Highlight the first heading (in document order) currently in view
+        let active = headings.find((h) => visible.has(h.id));
+        // If nothing is in the active band but we've reached the bottom,
+        // keep the last heading highlighted for the final section.
+        if (!active && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+          active = headings[headings.length - 1];
+        }
+        if (active) {
+          setActiveHeading((prev) => (prev === active.id ? prev : active.id));
+        }
+      },
+      {
+        // Activate a heading once it sits just below the fixed navbar,
+        // and deactivate it once it scrolls past the upper ~30% of the viewport.
+        rootMargin: `-${navHeight + 16}px 0px -70% 0px`,
+        threshold: 0,
+      }
+    );
+
+    headings.forEach((h) => observer.observe(h));
+    return () => observer.disconnect();
   }, [blog?.content]);
 
   // NOTE: `toc` and `readingTime` are derived from `blog` and are computed
