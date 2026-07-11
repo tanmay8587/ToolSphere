@@ -295,7 +295,10 @@ export default function BlogDetailPage() {
   const scrollToHeading = (id) => {
     const element = document.getElementById(id);
     if (element) {
-      const offset = 80;
+      // Dynamically measure the fixed/sticky navbar height so the heading
+      // lands just below it. Falls back to 80px if no header is found.
+      const navbar = document.querySelector("header");
+      const offset = navbar ? navbar.offsetHeight + 16 : 80;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
       window.scrollTo({
