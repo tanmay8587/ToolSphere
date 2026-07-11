@@ -149,7 +149,7 @@ export default function Sidebar() {
     <aside 
       className={`
         ${sidebarWidth}
-        flex-shrink-0 h-screen flex-col border-r border-white/10 bg-slate-950 transition-all duration-300
+        flex flex-shrink-0 h-screen flex-col border-r border-white/10 bg-slate-950 transition-all duration-300
       `}
     >
       {/* LOGO / HEADER */}
@@ -215,7 +215,7 @@ export default function Sidebar() {
       </nav>
 
       {/* BOTTOM SECTION - Always visible */}
-      <div className="mt-auto border-t border-white/10 px-4 py-3 space-y-2">
+      <div className="mt-auto flex-shrink-0 border-t border-white/10 px-4 py-3 space-y-2">
         {bottomItems.map((item) => (
           <NavLink
             key={item.path}
