@@ -17,6 +17,7 @@ import {
   getRelatedBlogs,
   getAdjacentBlogs,
   viewBlog,
+  getTrendingBlogs,
 } from "../controllers/blogController.js";
 
 import {
@@ -39,6 +40,13 @@ const blogRouter = express.Router();
  * - Public blog listing (pagination, search, filters, sort)
  */
 blogRouter.get("/", getBlogs);
+
+/**
+ * GET /api/blogs/trending
+ * - Public: top 6 published blogs ordered by views
+ *   (declared before /:slug so it is not captured as a slug)
+ */
+blogRouter.get("/trending", getTrendingBlogs);
 
 /**
  * GET /api/blogs/:slug

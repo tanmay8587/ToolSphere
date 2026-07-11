@@ -179,6 +179,31 @@ export const getBlogBySlug = async (req, res) => {
 };
 
 /* =====================================
+   PUBLIC - GET TRENDING BLOGS
+   ===================================== */
+export const getTrendingBlogs = async (req, res) => {
+  try {
+    const trendingBlogs = await Blog.find({
+      isDeleted: false,
+      status: "published",
+    })
+      .sort({ views: -1, publishedAt: -1 })
+      .limit(6)
+      .select(
+        "title slug coverImage category excerpt readingTime views publishedAt"
+      );
+
+    return res.json({
+      success: true,
+      blogs: trendingBlogs,
+    });
+  } catch (err) {
+    logger.error("[getTrendingBlogs] Error fetching trending blogs:", err);
+    return sendErrorResponse(res, 500, "Failed to fetch trending blogs");
+  }
+};
+
+/* =====================================
    PUBLIC - POST BLOG VIEW (increment views)
    ===================================== */
 export const viewBlog = async (req, res) => {
