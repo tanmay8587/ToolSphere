@@ -2,8 +2,14 @@ import SmtpSetting from "../models/SmtpSetting.js";
 import logger from "../utils/logger.js";
 import { Resend } from "resend";
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend client only if API key is available
+let resend = null;
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+  logger.info("✅ Resend email service initialized");
+} else {
+  logger.warn("⚠️  RESEND_API_KEY not configured - email sending will be disabled");
+}
 
 // Helper to sanitize SMTP host value
 const sanitizeSmtpHost = (value) => {
@@ -234,6 +240,14 @@ export const testEmail = async (req, res) => {
       });
     }
 
+    // Check if Resend is configured
+    if (!resend) {
+      return res.status(400).json({
+        success: false,
+        message: "Email service is not configured. Please set RESEND_API_KEY in environment variables.",
+      });
+    }
+
     // Get SMTP configuration
     const config = await getSmtpConfig();
 
@@ -313,6 +327,11 @@ export const testEmail = async (req, res) => {
 
 export const sendEmail = async (to, subject, html) => {
   try {
+    // Check if Resend is configured
+    if (!resend) {
+      throw new Error("Email service is not configured. RESEND_API_KEY is missing.");
+    }
+
     const config = await getSmtpConfig();
 
     if (!config || !config.senderEmail) {

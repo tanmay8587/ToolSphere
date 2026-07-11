@@ -62,6 +62,14 @@ import {
   getNewsletterStats,
 } from "../controllers/newsletterController.js";
 
+import {
+  getAllCategories as getAllBlogCategories,
+  getCategoryById as getBlogCategoryById,
+  createCategory as createBlogCategory,
+  updateCategory as updateBlogCategory,
+  deleteCategory as deleteBlogCategory,
+} from "../controllers/blogCategoryController.js";
+
 import { getAdminNotifications } from "../controllers/notificationController.js";
 
 const router = express.Router();
@@ -117,11 +125,11 @@ router.put("/categories/:id/toggle", verifyAdmin, toggleCategoryActive);
 /* ===========================
    BLOG CATEGORIES
    =========================== */
-router.get("/blog-categories", verifyAdmin, getAllCategories);
-router.get("/blog-categories/:id", verifyAdmin, getCategoryById);
-router.post("/blog-categories", verifyAdmin, createCategory);
-router.put("/blog-categories/:id", verifyAdmin, updateCategory);
-router.delete("/blog-categories/:id", verifyAdmin, deleteCategory);
+router.get("/blog-categories", verifyAdmin, getAllBlogCategories);
+router.get("/blog-categories/:id", verifyAdmin, getBlogCategoryById);
+router.post("/blog-categories", verifyAdmin, createBlogCategory);
+router.put("/blog-categories/:id", verifyAdmin, updateBlogCategory);
+router.delete("/blog-categories/:id", verifyAdmin, deleteBlogCategory);
 
 /* ===========================
    USERS MANAGEMENT
