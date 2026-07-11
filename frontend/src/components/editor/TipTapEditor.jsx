@@ -80,13 +80,6 @@ export default function TipTapEditor({
    TOOLBAR
    ===================================== */
 function Toolbar({ editor }) {
-  const btn = (active) =>
-    `px-2.5 py-1.5 rounded-md text-sm font-medium transition ${
-      active
-        ? "bg-cyan-500/20 text-cyan-300"
-        : "text-slate-300 hover:bg-white/5 hover:text-white"
-    }`;
-
   const setLink = () => {
     const previous = editor.getAttributes("link").href;
     const url = window.prompt("Enter URL", previous ?? "https://");
@@ -103,126 +96,156 @@ function Toolbar({ editor }) {
       .run();
   };
 
+  // Base button classes: hover animation, active state, disabled state.
+  const btnBase =
+    "inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2.5 text-sm font-medium " +
+    "transition-all duration-150 ease-out select-none " +
+    "hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 " +
+    "focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 " +
+    "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:scale-100";
+
+  const btnState = (active) =>
+    active
+      ? "bg-cyan-500/20 text-cyan-300 shadow-inner"
+      : "text-slate-300";
+
+  const Divider = () => (
+    <span className="mx-1 h-6 w-px shrink-0 self-center bg-slate-700" aria-hidden="true" />
+  );
+
+  const Btn = ({ onClick, active, disabled, title, children }) => (
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      aria-label={title}
+      aria-pressed={active}
+      className={`${btnBase} ${btnState(active)}`}
+    >
+      {children}
+    </button>
+  );
+
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-slate-700 bg-slate-950/60 px-2 py-2">
-      <button
-        type="button"
-        className={btn(editor.isActive("bold"))}
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        title="Bold"
-      >
-        B
-      </button>
-      <button
-        type="button"
-        className={btn(editor.isActive("italic"))}
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        title="Italic"
-      >
-        <span className="italic">I</span>
-      </button>
-      <button
-        type="button"
-        className={btn(editor.isActive("strike"))}
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        title="Strikethrough"
-      >
-        <span className="line-through">S</span>
-      </button>
-      <button
-        type="button"
-        className={btn(editor.isActive("underline"))}
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
-        title="Underline"
-      >
-        <span className="underline">U</span>
-      </button>
-
-      <span className="mx-1 h-5 w-px bg-slate-700" />
-
-      {[1, 2, 3, 4].map((level) => (
-        <button
-          key={level}
-          type="button"
-          className={btn(editor.isActive("heading", { level }))}
-          onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
-          title={`Heading ${level}`}
-        >
-          H{level}
-        </button>
-      ))}
-
-      <span className="mx-1 h-5 w-px bg-slate-700" />
-
-      <button
-        type="button"
-        className={btn(editor.isActive("bulletList"))}
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        title="Bullet List"
-      >
-        • List
-      </button>
-      <button
-        type="button"
-        className={btn(editor.isActive("orderedList"))}
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        title="Ordered List"
-      >
-        1. List
-      </button>
-      <button
-        type="button"
-        className={btn(editor.isActive("blockquote"))}
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        title="Blockquote"
-      >
-        ❝
-      </button>
-      <button
-        type="button"
-        className={btn(editor.isActive("codeBlock"))}
-        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        title="Code Block"
-      >
-        {"</>"}
-      </button>
-      <button
-        type="button"
-        className={btn(editor.isActive("link"))}
-        onClick={setLink}
-        title="Link"
-      >
-        🔗
-      </button>
-      <button
-        type="button"
-        className={btn(false)}
-        onClick={() => editor.chain().focus().setHorizontalRule().run()}
-        title="Horizontal Rule"
-      >
-        ―
-      </button>
-
-      <span className="mx-1 h-5 w-px bg-slate-700" />
-
-      <button
-        type="button"
-        className={btn(false)}
+    <div className="sticky top-0 z-10 flex items-center gap-0.5 overflow-x-auto border-b border-slate-700 bg-slate-950/80 px-2 py-2 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60">
+      <Btn
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!editor.can().undo()}
         title="Undo"
       >
-        ↶
-      </button>
-      <button
-        type="button"
-        className={btn(false)}
+        <span className="text-base leading-none">↶</span>
+      </Btn>
+      <Btn
         onClick={() => editor.chain().focus().redo().run()}
         disabled={!editor.can().redo()}
         title="Redo"
       >
-        ↷
-      </button>
+        <span className="text-base leading-none">↷</span>
+      </Btn>
+
+      <Divider />
+
+      <Btn
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        active={editor.isActive("bold")}
+        title="Bold"
+      >
+        <span className="font-bold">B</span>
+      </Btn>
+      <Btn
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        active={editor.isActive("italic")}
+        title="Italic"
+      >
+        <span className="italic font-serif">I</span>
+      </Btn>
+      <Btn
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        active={editor.isActive("underline")}
+        title="Underline"
+      >
+        <span className="underline">U</span>
+      </Btn>
+      <Btn
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+        active={editor.isActive("strike")}
+        title="Strikethrough"
+      >
+        <span className="line-through">S</span>
+      </Btn>
+
+      <Divider />
+
+      <Btn
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        active={editor.isActive("heading", { level: 1 })}
+        title="Heading 1"
+      >
+        H1
+      </Btn>
+      <Btn
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        active={editor.isActive("heading", { level: 2 })}
+        title="Heading 2"
+      >
+        H2
+      </Btn>
+      <Btn
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        active={editor.isActive("heading", { level: 3 })}
+        title="Heading 3"
+      >
+        H3
+      </Btn>
+
+      <Divider />
+
+      <Btn
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        active={editor.isActive("bulletList")}
+        title="Bullet List"
+      >
+        <span className="leading-none">•≡</span>
+      </Btn>
+      <Btn
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        active={editor.isActive("orderedList")}
+        title="Ordered List"
+      >
+        <span className="leading-none">1.≡</span>
+      </Btn>
+      <Btn
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        active={editor.isActive("blockquote")}
+        title="Quote"
+      >
+        <span className="leading-none">❝</span>
+      </Btn>
+      <Btn
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        active={editor.isActive("codeBlock")}
+        title="Code Block"
+      >
+        <span className="font-mono text-xs leading-none">{"</>"}</span>
+      </Btn>
+      <Btn
+        onClick={() => editor.chain().focus().setHorizontalRule().run()}
+        title="Horizontal Rule"
+      >
+        <span className="leading-none">―</span>
+      </Btn>
+
+      <Divider />
+
+      <Btn
+        onClick={setLink}
+        active={editor.isActive("link")}
+        title="Link"
+      >
+        <span className="leading-none">🔗</span>
+      </Btn>
     </div>
   );
 }
