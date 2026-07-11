@@ -16,6 +16,7 @@ import {
   removeBookmark,
   getRelatedBlogs,
   getAdjacentBlogs,
+  viewBlog,
 } from "../controllers/blogController.js";
 
 import {
@@ -44,6 +45,12 @@ blogRouter.get("/", getBlogs);
  * - Public single blog by slug (increments views)
  */
 blogRouter.get("/:slug", getBlogBySlug);
+
+/**
+ * POST /api/blogs/:slug/view
+ * - Public: increment blog view count by 1
+ */
+blogRouter.post("/:slug/view", viewBlog);
 
 /**
  * GET /api/blogs/:slug/related

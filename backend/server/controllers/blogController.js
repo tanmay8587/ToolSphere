@@ -140,6 +140,31 @@ export const getBlogBySlug = async (req, res) => {
 };
 
 /* =====================================
+   PUBLIC - POST BLOG VIEW (increment views)
+   ===================================== */
+export const viewBlog = async (req, res) => {
+  try {
+    const blog = await Blog.findOne({ slug: req.params.slug, isDeleted: false });
+
+    if (!blog) {
+      return sendErrorResponse(res, 404, "Blog not found");
+    }
+
+    // Increase views by 1
+    blog.views = (blog.views || 0) + 1;
+    await blog.save();
+
+    return res.json({
+      success: true,
+      views: blog.views,
+    });
+  } catch (err) {
+    logger.error("[viewBlog] Error incrementing blog views:", err);
+    return sendErrorResponse(res, 500, "Failed to record blog view");
+  }
+};
+
+/* =====================================
    PUBLIC - GET RELATED BLOGS
    ===================================== */
 export const getRelatedBlogs = async (req, res) => {
