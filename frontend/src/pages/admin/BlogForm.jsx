@@ -8,8 +8,7 @@ import SectionCard from "../../components/admin/form/SectionCard";
 import ImageUploader from "../../components/admin/form/ImageUploader";
 import GalleryUploader from "../../components/admin/form/GalleryUploader";
 import TagInput from "../../components/admin/form/TagInput";
-import ReactQuill from "react-quill-new";
-import "react-quill-new/dist/quill.snow.css";
+import TipTapEditor from "../../components/editor/TipTapEditor";
 import { FiAlertCircle, FiEye, FiCalendar } from "react-icons/fi";
 
 /* =====================================
@@ -55,42 +54,6 @@ const toLocalDateTimeInputValue = (date = new Date()) => {
   const minutes = pad(date.getMinutes());
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
-
-/* =====================================
-   QUIL MODULES
-   ===================================== */
-const quillModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, 4, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ indent: "-1" }, { indent: "+1" }],
-    [{ align: [] }],
-    ["blockquote", "code-block"],
-    [{ color: [] }, { background: [] }],
-    ["link", "image"],
-    [{ script: "sub" }, { script: "super" }],
-    ["clean"],
-  ],
-};
-
-const quillFormats = [
-  "header",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "blockquote",
-  "list",
-  "indent",
-  "link",
-  "image",
-  "code-block",
-  "align",
-  "color",
-  "background",
-  "script",
-];
 
 /* =====================================
    FORM INPUT COMPONENTS
@@ -648,14 +611,11 @@ export default function BlogForm() {
           >
             <div className="space-y-3">
               <div className={errors.content ? "border border-red-500 rounded-xl overflow-hidden" : ""}>
-                <ReactQuill
+                <TipTapEditor
                   value={form.content}
                   onChange={handleContentChange}
-                  modules={quillModules}
-                  formats={quillFormats}
                   placeholder="Write your blog content here..."
-                  theme="snow"
-                  className="blog-editor bg-slate-900 text-white rounded-xl"
+                  editable={!loading}
                 />
               </div>
               {errors.content && (
