@@ -233,12 +233,8 @@ export default function BlogDetailPage() {
     });
   }, [blog?.content]);
 
-  const toc = generateTableOfContents(blog?.content);
-  // blog is null during the initial render (loading) and on 404, so guard every
-  // access. Only compute reading time from content when blog actually exists,
-  // and never pass undefined/null into calculateReadingTime.
-  const readingTime =
-    blog?.readingTime ?? (blog ? calculateReadingTime(blog.content ?? "") : 0);
+  // NOTE: `toc` and `readingTime` are derived from `blog` and are computed
+  // AFTER the loading/error guards below, so `blog` is guaranteed non-null.
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -357,6 +353,11 @@ export default function BlogDetailPage() {
       </div>
     );
   }
+
+  // Derived values that depend on `blog` are computed ONLY after the guards
+  // above, so `blog` is guaranteed to be a non-null object here.
+  const toc = generateTableOfContents(blog.content);
+  const readingTime = blog.readingTime ?? calculateReadingTime(blog.content ?? "");
 
   const blogUrl = window.location.origin + "/blog/" + blog.slug;
 
