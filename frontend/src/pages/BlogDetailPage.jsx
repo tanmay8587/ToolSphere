@@ -190,16 +190,28 @@ export default function BlogDetailPage() {
     loadRelated();
   }, [slug]);
 
-  // Reading progress + back-to-top visibility (active heading handled by IntersectionObserver)
+  // Reading progress (article-based) + back-to-top visibility
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = docHeight > 0 ? Math.min((scrollTop / docHeight) * 100, 100) : 0;
-      setReadingProgress(progress);
       setShowBackToTop(scrollTop > 400);
+
+      // Progress reflects how much of the ARTICLE body has been read,
+      // not the whole page (which also includes comments, related, prev/next).
+      const el = contentRef.current;
+      if (!el) {
+        setReadingProgress(0);
+        return;
+      }
+      const articleTop = el.getBoundingClientRect().top + scrollTop;
+      const scrollable = el.offsetHeight - window.innerHeight;
+      const read = scrollTop - articleTop;
+      const progress =
+        scrollable > 0 ? Math.min(Math.max((read / scrollable) * 100, 0), 100) : 0;
+      setReadingProgress(progress);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // initialize once content is present
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -422,7 +434,7 @@ export default function BlogDetailPage() {
       </Helmet>
 
       {/* Reading Progress Bar */}
-      <div className="fixed top-0 left-0 z-50 h-1 bg-gradient-to-r from-cyan-500 to-fuchsia-500 transition-all duration-150" style={{ width: `${readingProgress}%` }} />
+      <div className="pointer-events-none fixed top-0 left-0 z-50 h-1 bg-gradient-to-r from-cyan-500 to-fuchsia-500 transition-all duration-150" style={{ width: `${readingProgress}%` }} />
 
       {/* Sticky Share (Desktop) */}
       <div className="hidden lg:flex fixed left-6 top-1/3 z-50 flex-col gap-3">
