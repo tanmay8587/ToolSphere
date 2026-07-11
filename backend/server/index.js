@@ -16,7 +16,7 @@ import { createDefaultAdmin } from "./utils/createAdmin.js";
 import toolsRouter from "./routes/tools.js";
 import adminRoutes from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
-import { buildSeedTools, buildSeedCategories } from "./utils/seedTools.js";
+import { buildSeedTools, buildSeedCategories, buildSeedBlogCategories } from "./utils/seedTools.js";
 import uploadRoutes from "./routes/upload.js";
 import newsletterRoutes from "./routes/newsletter.js";
 import notificationRoutes from "./routes/notifications.js";
@@ -594,6 +594,25 @@ const seedDatabase = async () => {
       logger.info(`✅ Seeded ${seedData.length} tools`);
     } else {
       logger.info("ℹ️ Tools already exist, skipping tool seed");
+    }
+
+    // Seed blog categories (independent of tool categories)
+    const BlogCategory = (await import("./models/BlogCategory.js")).default;
+    const blogCategoryCount = await BlogCategory.countDocuments();
+
+    if (blogCategoryCount === 0) {
+      logger.info("🌱 Seeding blog categories...");
+
+      const blogCategoryData = buildSeedBlogCategories();
+
+      if (!Array.isArray(blogCategoryData) || blogCategoryData.length === 0) {
+        logger.warn("⚠️ Blog category seed data empty, skipping...");
+      } else {
+        await BlogCategory.insertMany(blogCategoryData);
+        logger.info(`✅ Seeded ${blogCategoryData.length} blog categories`);
+      }
+    } else {
+      logger.info("ℹ️ Blog categories already exist, skipping blog category seed");
     }
   } catch (err) {
     logger.error("⚠️ Seed failed (non-blocking):", err.message);

@@ -6,6 +6,8 @@
  * This ensures code formatting and whitespace are preserved.
  */
 
+import { sanitizeTextField } from "./validation.js";
+
 /**
  * Extract and preserve fenced code blocks
  * @param {string} content - The blog content
@@ -70,8 +72,6 @@ export const sanitizeBlogContent = (content) => {
   const { placeholderContent, codeBlocks } = preserveCodeBlocks(content);
 
   // Step 2: Sanitize the content without code blocks
-  // Import sanitizeTextField to avoid XSS
-  const { sanitizeTextField } = require('./validation.js');
   let sanitized = sanitizeTextField(placeholderContent);
 
   // Step 3: Restore code blocks

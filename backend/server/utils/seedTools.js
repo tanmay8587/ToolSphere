@@ -144,6 +144,27 @@ export function buildSeedTools() {
 }
 
 /* =========================
+   BUILD SEED BLOG CATEGORIES
+========================= */
+
+export function buildSeedBlogCategories() {
+  const blogCategories = [
+    { name: "Technology", description: "Latest tech news, trends, and insights." },
+    { name: "Tutorials", description: "Step-by-step guides and how-tos." },
+    { name: "AI & ML", description: "Artificial intelligence and machine learning articles." },
+    { name: "Productivity", description: "Tips and tools to boost your workflow." },
+    { name: "News", description: "Platform and industry announcements." },
+    { name: "Opinion", description: "Editorial pieces and thought leadership." },
+  ];
+
+  return blogCategories.map((cat) => ({
+    name: cat.name,
+    description: cat.description,
+    color: "#3B82F6",
+  }));
+}
+
+/* =========================
    SEED RUNNER
 ========================= */
 
