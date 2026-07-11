@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import slugify from "slugify";
 import { sanitizeTextField } from "../utils/validation.js";
+import { sanitizeBlogContent } from "../utils/codeBlockPreserver.js";
 
 const blogSchema = new mongoose.Schema(
   {
@@ -243,7 +244,8 @@ blogSchema.pre("save", function (next) {
     this.excerpt = sanitizeTextField(this.excerpt);
   }
   if (this.isModified("content") && this.content) {
-    this.content = sanitizeTextField(this.content);
+    // Sanitize content while preserving code blocks
+    this.content = sanitizeBlogContent(this.content);
     // Auto-calculate reading time from content length
     this.readingTime = calculateReadingTime(this.content);
   }
@@ -289,7 +291,8 @@ const sanitizeBlogUpdate = (update) => {
   if (update.title) update.title = sanitizeTextField(update.title);
   if (update.excerpt) update.excerpt = sanitizeTextField(update.excerpt);
   if (update.content) {
-    update.content = sanitizeTextField(update.content);
+    // Sanitize content while preserving code blocks
+    update.content = sanitizeBlogContent(update.content);
     update.readingTime = calculateReadingTime(update.content);
   }
   if (update.category) update.category = sanitizeTextField(update.category);

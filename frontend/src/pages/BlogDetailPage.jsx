@@ -5,6 +5,7 @@ import { FiClock, FiEye, FiArrowLeft, FiShare2, FiChevronUp, FiCalendar, FiUser,
 import { getPublicBlogBySlug, getRelatedBlogs, getAdjacentBlogs } from "../services/publicBlogService";
 import EmptyState from "../components/common/EmptyState";
 import BlogComments from "../components/blog/BlogComments";
+import CodeBlock from "../components/blog/CodeBlock";
 import {
   getBlogInteraction,
   likeBlog,
@@ -37,6 +38,48 @@ const generateTableOfContents = (html) => {
     });
   }
   return headings;
+};
+
+/**
+ * Parse blog content and render code blocks
+ * @param {string} content - Blog content with fenced code blocks
+ * @returns {Array} - Array of content segments (text and code blocks)
+ */
+const parseContentWithCodeBlocks = (content) => {
+  if (!content) return [];
+  
+  const segments = [];
+  const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+  let key = 0;
+
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    // Add text before code block
+    if (match.index > lastIndex) {
+      const textContent = content.slice(lastIndex, match.index);
+      if (textContent.trim()) {
+        segments.push({ type: 'text', content: textContent, key: key++ });
+      }
+    }
+
+    // Add code block
+    const language = match[1] || 'plaintext';
+    const code = match[2].trim();
+    segments.push({ type: 'code', language, code, key: key++ });
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text after last code block
+  if (lastIndex < content.length) {
+    const textContent = content.slice(lastIndex);
+    if (textContent.trim()) {
+      segments.push({ type: 'text', content: textContent, key: key++ });
+    }
+  }
+
+  return segments;
 };
 
 const formatDate = (date) => {
@@ -497,6 +540,28 @@ export default function BlogDetailPage() {
               className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-a:text-cyan-400 prose-pre:bg-slate-900 prose-code:text-cyan-300 prose-blockquote:border-cyan-500 prose-blockquote:text-slate-300"
               dangerouslySetInnerHTML={{ __html: blog.content }}
             />
+
+            {/* Render content with code blocks */}
+            {blog.content && (() => {
+              const segments = parseContentWithCodeBlocks(blog.content);
+              return segments.map((segment) => {
+                if (segment.type === 'code') {
+                  return (
+                    <CodeBlock
+                      key={segment.key}
+                      code={segment.code}
+                      language={segment.language}
+                    />
+                  );
+                }
+                return (
+                  <div
+                    key={segment.key}
+                    dangerouslySetInnerHTML={{ __html: segment.content }}
+                  />
+                );
+              });
+            })()}
 
             {/* Tags */}
             {blog.tags?.length > 0 && (

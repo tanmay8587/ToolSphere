@@ -98,3 +98,144 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, #22d3ee, #c084fc);
 }
+
+/* =========================
+   CODE BLOCKS
+   ========================= */
+
+/* Inline code */
+code:not(pre code) {
+  background: rgba(6, 182, 212, 0.1);
+  color: #22d3ee;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-family: 'Courier New', Courier, monospace;
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+/* Code block container */
+pre {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+/* Code block content */
+pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+  color: #e6edf3;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  font-family: 'Courier New', Courier, monospace;
+  display: block;
+  overflow-x: auto;
+}
+
+/* Syntax highlighting colors (GitHub Dark theme) */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #8b949e;
+}
+
+.token.punctuation {
+  color: #e6edf3;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #79c0ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #a5d6ff;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #d2a8ff;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #ff7b72;
+}
+
+.token.function,
+.token.class-name {
+  color: #d2a8ff;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #ffa657;
+}
+
+/* Code block header (language label) */
+pre[data-language]::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #161b22;
+  color: #8b949e;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-bottom-left-radius: 0.5rem;
+  border-top-right-radius: 0.75rem;
+  font-family: Inter, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Copy button for code blocks */
+pre .copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+pre:hover .copy-button {
+  opacity: 1;
+}
+
+pre .copy-button:hover {
+  background: #21262d;
+  color: #e6edf3;
+}
+
+pre .copy-button:active {
+  transform: scale(0.95);
+}
