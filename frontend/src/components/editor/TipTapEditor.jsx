@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -30,7 +30,9 @@ export default function TipTapEditor({
 }) {
   const [stats, setStats] = useState({ words: 0, chars: 0, readingTime: 1 });
   const [toc, setToc] = useState([]);
-  const [showToc, setShowToc] = useState(false);
+  const [activeHeading, setActiveHeading] = useState(-1);
+  const tocSigRef = useRef("");
+  const scrollRef = useRef(null);
 
   // Recompute live word/char counts, reading time, and the TOC.
   const recompute = useCallback((ed) => {
@@ -46,7 +48,11 @@ export default function TipTapEditor({
         items.push({ level: node.attrs.level, text: node.textContent || "Untitled" });
       }
     });
-    setToc(items);
+    const sig = items.map((i) => `${i.level}:${i.text}`).join("|");
+    if (sig !== tocSigRef.current) {
+      tocSigRef.current = sig;
+      setToc(items);
+    }
   }, []);
 
   const editor = useEditor({
@@ -112,21 +118,49 @@ export default function TipTapEditor({
     editor?.setEditable(editable);
   }, [editable, editor]);
 
+  // Scroll-spy: highlight the TOC entry for the section currently in view.
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!root || !editor) return;
+    const headings = root.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    if (!headings.length) {
+      setActiveHeading(-1);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length) {
+          const idx = Array.from(headings).indexOf(visible[0].target);
+          if (idx !== -1) setActiveHeading(idx);
+        }
+      },
+      { root, rootMargin: "0px 0px -65% 0px", threshold: 0 }
+    );
+    headings.forEach((h) => observer.observe(h));
+    return () => observer.disconnect();
+  }, [editor, toc]);
+
   if (!editor) return null;
 
   const scrollToHeading = (index) => {
     const headings = editor.view.dom.querySelectorAll("h1,h2,h3,h4,h5,h6");
     const el = headings[index];
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveHeading(index);
+    }
   };
 
   return (
     <div className={`tiptap-editor relative rounded-xl border border-slate-700 bg-slate-900 overflow-hidden ${className}`}>
-      <Toolbar editor={editor} showToc={showToc} onToggleToc={() => setShowToc((v) => !v)} />
+      <Toolbar editor={editor} />
 
-      {/* Table of Contents popover */}
-      {showToc && (
-        <div className="absolute right-2 top-14 z-20 max-h-72 w-64 overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 p-3 shadow-xl shadow-black/40">
+      <div className="flex">
+        {/* Table of Contents sidebar */}
+        <aside className="w-56 shrink-0 overflow-y-auto border-r border-slate-700 bg-slate-950/40 p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Table of Contents
           </p>
@@ -145,7 +179,7 @@ export default function TipTapEditor({
                         : item.level === 2
                         ? "text-slate-200"
                         : "text-slate-400"
-                    }`}
+                    } ${activeHeading === i ? "bg-cyan-500/20 text-cyan-300" : ""}`}
                     style={{ paddingLeft: `${(item.level - 1) * 12 + 6}px` }}
                   >
                     {item.text}
@@ -154,10 +188,12 @@ export default function TipTapEditor({
               ))}
             </ul>
           )}
-        </div>
-      )}
+        </aside>
 
-      <EditorContent editor={editor} />
+        <div ref={scrollRef} className="flex-1 overflow-y-auto" style={{ maxHeight: "600px" }}>
+          <EditorContent editor={editor} />
+        </div>
+      </div>
 
       {/* Live writing stats footer */}
       <div className="flex flex-wrap items-center gap-4 border-t border-slate-700 bg-slate-950/60 px-4 py-2 text-xs text-slate-400">
@@ -214,7 +250,7 @@ function cleanPastedHtml(html) {
 /* =====================================
    TOOLBAR
    ===================================== */
-function Toolbar({ editor, showToc, onToggleToc }) {
+function Toolbar({ editor }) {
   const setLink = () => promptForLink(editor);
 
   // Base button classes: hover animation, active state, disabled state.
@@ -366,9 +402,6 @@ function Toolbar({ editor, showToc, onToggleToc }) {
         <span className="leading-none">🔗</span>
       </Btn>
 
-      <Btn onClick={onToggleToc} active={showToc} title="Table of Contents">
-        <span className="leading-none">☰</span>
-      </Btn>
     </div>
   );
 }
