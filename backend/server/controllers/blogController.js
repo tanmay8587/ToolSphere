@@ -40,16 +40,28 @@ export const getBlogs = async (req, res) => {
       filters.featured = false;
     }
 
-    // Search by title
+    // Search by title, excerpt, content, and tags
     if (typeof search === "string" && search.trim()) {
       const truncatedSearch = search.substring(0, 100);
       const escapedSearch = truncatedSearch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      filters.title = { $regex: escapedSearch, $options: "i" };
+      filters.$or = [
+        { title: { $regex: escapedSearch, $options: "i" } },
+        { excerpt: { $regex: escapedSearch, $options: "i" } },
+        { content: { $regex: escapedSearch, $options: "i" } },
+        { tags: { $regex: escapedSearch, $options: "i" } },
+      ];
+    }
+
+    // Tag filter
+    if (typeof tag === "string" && tag.trim()) {
+      filters.tags = { $regex: new RegExp(`^${tag.trim()}$`, "i") };
     }
 
     const sortMap = {
       newest: { publishedAt: -1, createdAt: -1 },
       oldest: { publishedAt: 1, createdAt: 1 },
+      "most-viewed": { views: -1, publishedAt: -1 },
+      "most-liked": { likes: -1, publishedAt: -1 },
     };
 
     const pageNumber = Math.max(1, parseInt(page) || 1);
@@ -72,6 +84,8 @@ export const getBlogs = async (req, res) => {
       total,
       currentPage: pageNumber,
       totalPages,
+      hasNextPage: pageNumber < totalPages,
+      hasPreviousPage: pageNumber > 1,
     });
   } catch (err) {
     logger.error("[getBlogs] Error fetching blogs:", err);

@@ -24,6 +24,7 @@ export async function getPublicBlogs(params = {}) {
   const query = new URLSearchParams();
   if (params.search) query.set("search", params.search);
   if (params.category && params.category !== "All") query.set("category", params.category);
+  if (params.tag) query.set("tag", params.tag);
   if (params.status) query.set("status", params.status);
   if (params.featured === "true") query.set("featured", "true");
   if (params.sort) query.set("sort", params.sort);

@@ -29,12 +29,20 @@ export default function BlogPage() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({ total: 0, currentPage: 1, totalPages: 0 });
+  const [pagination, setPagination] = useState({ 
+    total: 0, 
+    currentPage: 1, 
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "All");
+  const [tag, setTag] = useState(searchParams.get("tag") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
   const [categories, setCategories] = useState([]);
+  const [allTags, setAllTags] = useState([]);
 
   const debouncedSearch = useDebounce(search, 400);
 
@@ -45,6 +53,7 @@ export default function BlogPage() {
       const result = await getPublicBlogs({
         search: debouncedSearch,
         category,
+        tag: tag || undefined,
         sort,
         page: searchParams.get("page") || "1",
         limit: "9",
@@ -55,6 +64,8 @@ export default function BlogPage() {
           total: result.total || 0,
           currentPage: result.currentPage || 1,
           totalPages: result.totalPages || 0,
+          hasNextPage: result.hasNextPage || false,
+          hasPreviousPage: result.hasPreviousPage || false,
         });
       }
     } catch (err) {
@@ -64,35 +75,50 @@ export default function BlogPage() {
     }
   };
 
-  // Load categories for filter
+  // Load categories and tags for filters
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadFilters = async () => {
       try {
-        const result = await getAllCategories();
-        if (result.success) {
-          setCategories(result.categories || []);
+        const [categoriesResult, blogsResult] = await Promise.all([
+          getAllCategories(),
+          getPublicBlogs({ limit: "100" }),
+        ]);
+        
+        if (categoriesResult.success) {
+          setCategories(categoriesResult.categories || []);
+        }
+        
+        if (blogsResult.success && blogsResult.blogs) {
+          const tagsSet = new Set();
+          blogsResult.blogs.forEach((blog) => {
+            if (blog.tags && Array.isArray(blog.tags)) {
+              blog.tags.forEach((tag) => tagsSet.add(tag));
+            }
+          });
+          setAllTags(Array.from(tagsSet).sort());
         }
       } catch (err) {
-        console.error("Failed to load categories:", err);
+        console.error("Failed to load filters:", err);
       }
     };
 
-    loadCategories();
+    loadFilters();
   }, []);
 
   useEffect(() => {
     fetchBlogs();
-  }, [debouncedSearch, category, sort, searchParams]);
+  }, [debouncedSearch, category, tag, sort, searchParams]);
 
   useEffect(() => {
     const params = {};
     if (debouncedSearch) params.search = debouncedSearch;
     if (category !== "All") params.category = category;
+    if (tag) params.tag = tag;
     if (sort !== "newest") params.sort = sort;
     const page = searchParams.get("page");
     if (page && page !== "1") params.page = page;
     setSearchParams(params, { replace: true });
-  }, [debouncedSearch, category, sort]);
+  }, [debouncedSearch, category, tag, sort]);
 
   const handlePageChange = (newPage) => {
     const params = new URLSearchParams(searchParams);
@@ -124,7 +150,7 @@ export default function BlogPage() {
         </div>
 
         {/* Search & Filters */}
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
@@ -148,15 +174,70 @@ export default function BlogPage() {
             ))}
           </select>
           <select
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+            className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-cyan-500"
+          >
+            <option value="">All Tags</option>
+            {allTags.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
             className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-cyan-500"
           >
             <option value="newest">Latest</option>
             <option value="oldest">Oldest</option>
-            <option value="views">Most Viewed</option>
+            <option value="most-viewed">Most Viewed</option>
+            <option value="most-liked">Most Liked</option>
           </select>
         </div>
+
+        {/* Active Filters */}
+        {(search || category !== "All" || tag || sort !== "newest") && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-slate-400">Active filters:</span>
+            {search && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300">
+                Search: {search}
+                <button onClick={() => setSearch("")} className="hover:text-white">×</button>
+              </span>
+            )}
+            {category !== "All" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300">
+                Category: {category}
+                <button onClick={() => setCategory("All")} className="hover:text-white">×</button>
+              </span>
+            )}
+            {tag && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300">
+                Tag: {tag}
+                <button onClick={() => setTag("")} className="hover:text-white">×</button>
+              </span>
+            )}
+            {sort !== "newest" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300">
+                Sort: {sort}
+                <button onClick={() => setSort("newest")} className="hover:text-white">×</button>
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setSearch("");
+                setCategory("All");
+                setTag("");
+                setSort("newest");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/20"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
 
         {/* Error */}
         {error && (
