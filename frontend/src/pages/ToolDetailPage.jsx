@@ -292,6 +292,35 @@ export default function ToolDetailPage() {
     );
   }
 
+  const toolUrl = window.location.href;
+  const toolJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": tool.name,
+    "description": tool.seoDescription || tool.description,
+    "url": tool.website || toolUrl,
+    "image": tool.ogImage || tool.coverImage || tool.logo,
+    "applicationCategory": tool.category || "AI Tool",
+    "operatingSystem": "Web-based",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": tool.pricing || "Free"
+    },
+    "aggregateRating": tool.rating ? {
+      "@type": "AggregateRating",
+      "ratingValue": tool.rating,
+      "bestRating": "5",
+      "worstRating": "1",
+      "ratingCount": tool.reviewCount || 1
+    } : undefined,
+    "publisher": {
+      "@type": "Organization",
+      "name": "ToolSphere"
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -383,6 +412,9 @@ export default function ToolDetailPage() {
             tool.logo
           }
         />
+        <script type="application/ld+json">
+          {JSON.stringify(toolJsonLd)}
+        </script>
       </Helmet>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
 

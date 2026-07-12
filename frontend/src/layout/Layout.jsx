@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { FiMenu, FiSearch, FiX, FiUser, FiUserPlus } from 'react-icons/fi';
 import { Mail, MapPin, Clock, Zap, ArrowRight } from 'lucide-react';
 import { SiX, SiGithub, SiInstagram, SiYoutube, SiDiscord, SiTelegram, SiFacebook } from 'react-icons/si';
@@ -248,6 +249,26 @@ export default function Layout() {
     }
   }, [brandingSettings]);
 
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": brandingSettings.site_name || "ToolSphere",
+    "url": "https://toolsphere.ai",
+    "logo": brandingSettings.logo || "https://toolsphere.ai/logo.png",
+    "description": footerSettings.footer_description || "Discover & explore the best AI tools in one place. Curated directory of top AI platforms for every workflow.",
+    "email": footerSettings.footer_email || "hello@toolsphere.ai",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": footerSettings.office_location || "San Francisco, CA"
+    },
+    "sameAs": socialLinks.map(link => link.url),
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": footerSettings.footer_email || "hello@toolsphere.ai",
+      "contactType": "customer service"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
 
@@ -456,6 +477,12 @@ export default function Layout() {
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(organizationJsonLd)}
+        </script>
+      </Helmet>
 
       {/* Analytics Scripts - Only loaded when values are provided */}
       {analyticsSettings.google_analytics_id && (

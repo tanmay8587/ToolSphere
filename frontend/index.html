@@ -7,6 +7,23 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>AI Tools Directory</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ToolSphere",
+        "url": "https://toolsphere.ai",
+        "description": "Discover & explore the best AI tools in one place. Curated directory of top AI platforms for every workflow.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://toolsphere.ai/tools?search={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
   </head>
   <body class="bg-slate-950">
     <div id="root"></div>
