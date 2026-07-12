@@ -7,6 +7,140 @@ import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
 import ToggleSwitch from "../components/common/ToggleSwitch";
 
+// Confirmation Dialog Component
+function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-red-400">
+              <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-white">{title}</h3>
+        </div>
+        <p className="text-sm text-slate-400 mb-6">{message}</p>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/10"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+          >
+            Delete
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// Edit Review Modal Component
+function EditReviewModal({ isOpen, review, onSave, onCancel }) {
+  const [rating, setRating] = useState(review?.rating || 5);
+  const [comment, setComment] = useState(review?.comment || "");
+
+  useEffect(() => {
+    if (review) {
+      setRating(review.rating);
+      setComment(review.comment || "");
+    }
+  }, [review]);
+
+  if (!isOpen || !review) return null;
+
+  const handleSave = () => {
+    onSave(review._id, { rating, comment });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl"
+      >
+        <h3 className="text-lg font-semibold text-white mb-4">Edit Review</h3>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Tool</label>
+            <p className="text-white">{review.tool?.name || 'Unknown Tool'}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Rating</label>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className="transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill={star <= rating ? "currentColor" : "none"}
+                    stroke="currentColor"
+                    className={`h-8 w-8 ${
+                      star <= rating ? "text-amber-400" : "text-slate-600"
+                    }`}
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Review</label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              rows={4}
+              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+              placeholder="Write your review..."
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 justify-end mt-6">
+          <button
+            onClick={onCancel}
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/10"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-600"
+          >
+            Save Changes
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 const containerVariants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
@@ -98,6 +232,10 @@ export default function Profile() {
   const [newsletterEnabled, setNewsletterEnabled] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
   const [activeTab, setActiveTab] = useState("bookmarks");
+  const [editingReview, setEditingReview] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deletingReview, setDeletingReview] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
@@ -216,6 +354,50 @@ export default function Profile() {
       addToast("Blog unliked successfully.", "success");
     } catch (err) {
       addToast(err.message || "Failed to unlike blog.", "error");
+    }
+  };
+
+  const handleEditReview = (review) => {
+    setEditingReview(review);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveReview = async (reviewId, updatedData) => {
+    try {
+      // TODO: Add API call to update review
+      // For now, update local state
+      setReviews((prev) =>
+        prev.map((review) =>
+          review._id === reviewId
+            ? { ...review, rating: updatedData.rating, comment: updatedData.comment }
+            : review
+        )
+      );
+      setIsEditModalOpen(false);
+      setEditingReview(null);
+      addToast("Review updated successfully.", "success");
+    } catch (err) {
+      addToast(err.message || "Failed to update review.", "error");
+    }
+  };
+
+  const handleDeleteReview = (review) => {
+    setDeletingReview(review);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!deletingReview) return;
+
+    try {
+      // TODO: Add API call to delete review
+      // For now, update local state
+      setReviews((prev) => prev.filter((review) => review._id !== deletingReview._id));
+      setIsDeleteDialogOpen(false);
+      setDeletingReview(null);
+      addToast("Review deleted successfully.", "success");
+    } catch (err) {
+      addToast(err.message || "Failed to delete review.", "error");
     }
   };
 
@@ -1091,23 +1273,54 @@ export default function Profile() {
                           transition={liftSpring}
                           className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 shadow-lg"
                         >
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-white truncate">{review.tool?.name || 'Tool review'}</h3>
-                              <p className="mt-1 text-sm text-slate-400">Rating: {review.rating} / 5</p>
+                          <div className="flex items-start justify-between gap-4">
+                            <div
+                              className="flex-1 min-w-0 cursor-pointer"
+                              onClick={() => navigate(`/tools/${review.tool?.slug}`)}
+                            >
+                              <h3 className="font-semibold text-white truncate hover:text-amber-300 transition-colors">
+                                {review.tool?.name || 'Tool review'}
+                              </h3>
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-amber-300">
+                                  {review.rating}★
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                  {review.createdAt ? new Date(review.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : ""}
+                                </span>
+                              </div>
                             </div>
-                            <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-amber-300 shrink-0">
-                              {review.rating}★
-                            </span>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex gap-2 shrink-0">
+                              <button
+                                onClick={() => handleEditReview(review)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800 text-slate-400 transition-colors hover:bg-cyan-500/20 hover:text-cyan-400"
+                                title="Edit review"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                  <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.2l-3.712-3.712-8.106 8.106-1.157 1.157 3.712 3.712 1.157-1.157 2.047-2.047ZM3.75 21.75h16.5a.75.75 0 0 0 0-1.5H3.75a.75.75 0 0 0 0 1.5Zm16.5-13.5a.75.75 0 0 0 0-1.5H3.75a.75.75 0 0 0 0 1.5h16.5Z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReview(review)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800 text-slate-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
+                                title="Delete review"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                  <path fillRule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.355 5.945a.75.75 0 1 0-1.5.058l.347 9a.75.75 0 1 0 1.499-.058l-.346-9Zm5.48.058a.75.75 0 1 0-1.498-.058l-.347 9a.75.75 0 0 0 1.5.058l.345-9Z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
-                          <p className="mt-4 text-slate-300">{review.comment || 'No comment provided.'}</p>
+                          <p className="mt-3 text-slate-300">{review.comment || 'No comment provided.'}</p>
                         </motion.div>
                       ))}
                     </div>
                   ) : (
                     <EmptyState
                       icon="review"
-                      title="No reviews yet"
+                      title="You haven't written any reviews yet."
                       description="Share your experience with the tools you've tried to help others."
                       buttonText="Browse AI Tools"
                       onClick={() => navigate("/tools")}
@@ -1154,6 +1367,28 @@ export default function Profile() {
           </div>
         </motion.div>
       </motion.div>
+
+      {/* Modals */}
+      <EditReviewModal
+        isOpen={isEditModalOpen}
+        review={editingReview}
+        onSave={handleSaveReview}
+        onCancel={() => {
+          setIsEditModalOpen(false);
+          setEditingReview(null);
+        }}
+      />
+
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        title="Delete Review"
+        message="Are you sure you want to delete this review? This action cannot be undone."
+        onConfirm={confirmDeleteReview}
+        onCancel={() => {
+          setIsDeleteDialogOpen(false);
+          setDeletingReview(null);
+        }}
+      />
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
     </motion.div>
