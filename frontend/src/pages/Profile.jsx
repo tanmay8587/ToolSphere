@@ -143,15 +143,22 @@ function EditReviewModal({ isOpen, review, onSave, onCancel }) {
 
 const containerVariants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.02 } },
 };
 
 const sectionVariants = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 
-const liftSpring = { type: "spring", stiffness: 300, damping: 22 };
+const liftSpring = { type: "spring", stiffness: 400, damping: 25 };
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+  transition: { duration: 0.3, ease: "easeOut" }
+};
 
 const pageVariants = {
   hidden: { opacity: 0 },
@@ -748,7 +755,13 @@ export default function Profile() {
                 <div className="h-28 w-28 rounded-full bg-gradient-to-br from-cyan-400 via-indigo-500 to-purple-600 p-[3px] shadow-lg shadow-cyan-500/30">
                   <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-900">
                     {profile?.avatar ? (
-                      <img src={profile.avatar} alt={profile.name} className="h-full w-full rounded-full object-cover" />
+                      <img 
+                        src={profile.avatar} 
+                        alt={profile.name} 
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full rounded-full object-cover" 
+                      />
                     ) : (
                       <span className="text-4xl font-bold text-white">
                         {profile?.name?.[0] || "U"}
@@ -942,7 +955,17 @@ export default function Profile() {
             <div className="flex overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setActiveTab("bookmarks")}
-                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveTab("bookmarks");
+                  }
+                }}
+                role="tab"
+                aria-selected={activeTab === "bookmarks"}
+                aria-controls="tab-panel"
+                tabIndex={activeTab === "bookmarks" ? 0 : -1}
+                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-t-lg ${
                   activeTab === "bookmarks"
                     ? "text-cyan-300"
                     : "text-slate-400 hover:text-slate-200"
@@ -970,7 +993,17 @@ export default function Profile() {
 
               <button
                 onClick={() => setActiveTab("saved-blogs")}
-                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveTab("saved-blogs");
+                  }
+                }}
+                role="tab"
+                aria-selected={activeTab === "saved-blogs"}
+                aria-controls="tab-panel"
+                tabIndex={activeTab === "saved-blogs" ? 0 : -1}
+                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-t-lg ${
                   activeTab === "saved-blogs"
                     ? "text-emerald-300"
                     : "text-slate-400 hover:text-slate-200"
@@ -998,7 +1031,17 @@ export default function Profile() {
 
               <button
                 onClick={() => setActiveTab("liked-blogs")}
-                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveTab("liked-blogs");
+                  }
+                }}
+                role="tab"
+                aria-selected={activeTab === "liked-blogs"}
+                aria-controls="tab-panel"
+                tabIndex={activeTab === "liked-blogs" ? 0 : -1}
+                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-t-lg ${
                   activeTab === "liked-blogs"
                     ? "text-pink-300"
                     : "text-slate-400 hover:text-slate-200"
@@ -1026,7 +1069,17 @@ export default function Profile() {
 
               <button
                 onClick={() => setActiveTab("reviews")}
-                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveTab("reviews");
+                  }
+                }}
+                role="tab"
+                aria-selected={activeTab === "reviews"}
+                aria-controls="tab-panel"
+                tabIndex={activeTab === "reviews" ? 0 : -1}
+                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-t-lg ${
                   activeTab === "reviews"
                     ? "text-amber-300"
                     : "text-slate-400 hover:text-slate-200"
@@ -1117,6 +1170,8 @@ export default function Profile() {
                                 <img
                                   src={tool.logo}
                                   alt={tool.name}
+                                  loading="lazy"
+                                  decoding="async"
                                   className="h-full w-full object-contain p-1.5"
                                 />
                               ) : (
@@ -1227,12 +1282,14 @@ export default function Profile() {
                         >
                           {/* Cover Image with Remove Button */}
                           <div className="relative h-40 w-full overflow-hidden bg-slate-800">
-                            {blog.coverImage ? (
-                              <img
-                                src={blog.coverImage}
-                                alt={blog.title}
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                              />
+                              {blog.coverImage ? (
+                                <img
+                                  src={blog.coverImage}
+                                  alt={blog.title}
+                                  loading="lazy"
+                                  decoding="async"
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-10 w-10 text-slate-600">
