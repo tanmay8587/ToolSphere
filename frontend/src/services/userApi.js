@@ -49,6 +49,7 @@ export const getProfile = () => API.get("/auth/profile");
 export const updateProfile = (data) => API.put("/auth/profile", data);
 export const updateNewsletterPreference = (newsletterEnabled) =>
   API.put("/auth/newsletter-preference", { newsletterEnabled });
+export const changePassword = (data) => API.put("/auth/change-password", data);
 export const bookmarkTool = (toolId) => API.post(`/auth/tools/${toolId}/bookmark`);
 export const reviewTool = (toolId, data) => API.post(`/auth/tools/${toolId}/review`, data);
 export const getLikedBlogs = () => API.get("/users/me/liked-blogs");

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getProfile, updateNewsletterPreference, getLikedBlogs } from "../services/userApi";
+import { getProfile, updateNewsletterPreference, getLikedBlogs, changePassword } from "../services/userApi";
 import { getSavedBlogs, removeBookmark, saveBlog, unlikeBlog } from "../services/blogInteractionService";
 import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
 import ToggleSwitch from "../components/common/ToggleSwitch";
+import PasswordInput from "../components/common/PasswordInput";
+import { FiLock, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 
 // Confirmation Dialog Component
 function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
@@ -248,6 +250,13 @@ export default function Profile() {
   const [displayCount, setDisplayCount] = useState(6);
   const { toasts, addToast, removeToast } = useToast();
 
+  // Change password state
+  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [pwErrors, setPwErrors] = useState({});
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwSuccess, setPwSuccess] = useState("");
+  const [pwError, setPwError] = useState("");
+
   useEffect(() => {
     const loadProfile = async () => {
       setLoading(true);
@@ -408,6 +417,68 @@ export default function Profile() {
       addToast("Review deleted successfully.", "success");
     } catch (err) {
       addToast(err.message || "Failed to delete review.", "error");
+    }
+  };
+
+  // Change password
+  const handlePwChange = (e) => {
+    setPwForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setPwErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    setPwSuccess("");
+    setPwError("");
+  };
+
+  const validatePasswordForm = () => {
+    const errors = {};
+    if (!pwForm.currentPassword) {
+      errors.currentPassword = "Current password is required";
+    }
+    if (!pwForm.newPassword) {
+      errors.newPassword = "New password is required";
+    } else if (pwForm.newPassword.length < 8) {
+      errors.newPassword = "Password must be at least 8 characters";
+    } else if (!/[A-Z]/.test(pwForm.newPassword)) {
+      errors.newPassword = "Password must contain at least one uppercase letter";
+    } else if (!/[a-z]/.test(pwForm.newPassword)) {
+      errors.newPassword = "Password must contain at least one lowercase letter";
+    } else if (!/\d/.test(pwForm.newPassword)) {
+      errors.newPassword = "Password must contain at least one number";
+    }
+
+    if (!pwForm.confirmPassword) {
+      errors.confirmPassword = "Please confirm your new password";
+    } else if (pwForm.newPassword !== pwForm.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+
+    setPwErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwSuccess("");
+    setPwError("");
+
+    if (!validatePasswordForm()) return;
+
+    setPwLoading(true);
+    try {
+      const { data } = await changePassword({
+        currentPassword: pwForm.currentPassword,
+        newPassword: pwForm.newPassword,
+        confirmPassword: pwForm.confirmPassword,
+      });
+      if (data.success) {
+        setPwSuccess(data.message || "Password changed successfully.");
+        setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      } else {
+        setPwError(data.message || "Failed to change password.");
+      }
+    } catch (err) {
+      setPwError(err.response?.data?.message || "Failed to change password.");
+    } finally {
+      setPwLoading(false);
     }
   };
 
@@ -1619,6 +1690,104 @@ export default function Profile() {
               />
             </div>
           </div>
+        </motion.div>
+
+        {/* Change Password */}
+        <motion.div variants={sectionVariants} className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-500/15 text-cyan-300">
+              <FiLock className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Change Password</h2>
+              <p className="mt-1 text-sm text-slate-400">Update your password to keep your account secure.</p>
+            </div>
+          </div>
+
+          {pwSuccess && (
+            <div className="mt-6 flex items-start gap-2 rounded-2xl bg-emerald-500/10 p-4 text-sm text-emerald-200">
+              <FiCheckCircle className="mt-0.5 flex-shrink-0" size={16} />
+              <div>{pwSuccess}</div>
+            </div>
+          )}
+
+          {pwError && (
+            <div className="mt-6 flex items-start gap-2 rounded-2xl bg-red-500/10 p-4 text-sm text-red-200">
+              <FiAlertCircle className="mt-0.5 flex-shrink-0" size={16} />
+              <div>{pwError}</div>
+            </div>
+          )}
+
+          <form onSubmit={handleChangePassword} className="mt-6 space-y-5">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-300">
+                Current Password
+              </label>
+              <PasswordInput
+                name="currentPassword"
+                value={pwForm.currentPassword}
+                onChange={handlePwChange}
+                error={pwErrors.currentPassword}
+                placeholder="Enter your current password"
+                className="rounded-2xl border border-slate-700 bg-slate-950"
+              />
+              {pwErrors.currentPassword && (
+                <p className="mt-1 text-xs text-red-400">{pwErrors.currentPassword}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-300">
+                New Password
+              </label>
+              <PasswordInput
+                name="newPassword"
+                value={pwForm.newPassword}
+                onChange={handlePwChange}
+                error={pwErrors.newPassword}
+                placeholder="Enter new password"
+                className="rounded-2xl border border-slate-700 bg-slate-950"
+              />
+              {pwErrors.newPassword && (
+                <p className="mt-1 text-xs text-red-400">{pwErrors.newPassword}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-300">
+                Confirm New Password
+              </label>
+              <PasswordInput
+                name="confirmPassword"
+                value={pwForm.confirmPassword}
+                onChange={handlePwChange}
+                error={pwErrors.confirmPassword}
+                placeholder="Confirm new password"
+                className="rounded-2xl border border-slate-700 bg-slate-950"
+              />
+              {pwErrors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-400">{pwErrors.confirmPassword}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={pwLoading}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:opacity-50"
+            >
+              {pwLoading ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <FiLock size={16} />
+                  Update Password
+                </>
+              )}
+            </button>
+          </form>
         </motion.div>
       </motion.div>
 
