@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getProfile, updateNewsletterPreference } from "../services/userApi";
+import { getProfile, updateNewsletterPreference, getLikedBlogs } from "../services/userApi";
 import { getSavedBlogs } from "../services/blogInteractionService";
 import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
@@ -24,17 +24,80 @@ const pageVariants = {
   show: { opacity: 1, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
+// Custom scrollbar hide style
+const scrollbarHideStyle = `
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const iconMap = {
+  bookmark: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-cyan-300">
+      <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
+    </svg>
+  ),
+  blog: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-emerald-300">
+      <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+    </svg>
+  ),
+  heart: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-pink-300">
+      <path d="M11.645 20.91l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488-.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488-.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0Z" clipRule="evenodd" />
+    </svg>
+  ),
+  review: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-amber-300">
+      <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006Z" clipRule="evenodd" />
+    </svg>
+  ),
+};
+
+function EmptyState({ icon, title, description, buttonText, onClick }) {
+  return (
+    <motion.div
+      whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.2)" }}
+      transition={liftSpring}
+      className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center shadow-lg"
+    >
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/20 via-indigo-500/20 to-purple-600/20 ring-1 ring-white/10">
+        {iconMap[icon]}
+      </div>
+      <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
+      <p className="mt-1 max-w-sm text-sm text-slate-400">{description}</p>
+      <button
+        onClick={onClick}
+        className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+          <path d="M15.75 8.25a.75.75 0 0 1 .82.66l.54 5.42a.75.75 0 0 1-.84.82l-5.42-.54a.75.75 0 0 1-.66-.82l.54-5.42a.75.75 0 0 1 .82-.66Z" />
+          <path fillRule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75Zm0 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Zm9.75-7.5a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm-15 0a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm12.53 5.03a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm-9.19-9.19a.75.75 0 0 1-1.06 0L4.22 7.78a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm9.19-1.06a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 1 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0ZM6.53 16.28a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 0 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+        </svg>
+        {buttonText}
+      </button>
+    </motion.div>
+  );
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [savedBlogs, setSavedBlogs] = useState([]);
+  const [likedBlogs, setLikedBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savedBlogsLoading, setSavedBlogsLoading] = useState(true);
+  const [likedBlogsLoading, setLikedBlogsLoading] = useState(true);
   const [error, setError] = useState("");
   const [newsletterEnabled, setNewsletterEnabled] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
+  const [activeTab, setActiveTab] = useState("bookmarks");
   const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
@@ -78,6 +141,21 @@ export default function Profile() {
     };
 
     loadSavedBlogs();
+
+    const loadLikedBlogs = async () => {
+      try {
+        const { data } = await getLikedBlogs();
+        if (data.success) {
+          setLikedBlogs(data.likedBlogs || []);
+        }
+      } catch (err) {
+        // Silently fail - liked blogs are optional content
+      } finally {
+        setLikedBlogsLoading(false);
+      }
+    };
+
+    loadLikedBlogs();
   }, []);
 
   const handleLogout = () => {
@@ -309,6 +387,7 @@ export default function Profile() {
       initial="hidden"
       animate="show"
     >
+      <style>{scrollbarHideStyle}</style>
       <motion.div
         className="mx-auto max-w-5xl space-y-8"
         variants={containerVariants}
@@ -535,292 +614,364 @@ export default function Profile() {
           </div>
         </motion.div>
 
-        {/* Recent Activity */}
-        <motion.div variants={sectionVariants} className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
-          <h2 className="text-2xl font-semibold text-white">Recent Activity</h2>
-          <p className="mt-2 text-sm text-slate-400">Your latest bookmarks and reviews across the directory.</p>
-
-          {recentActivity.length ? (
-            <div className="mt-6 space-y-3">
-              {recentActivity.map((item) => {
-                const meta = getActivityMeta(item.type);
-                const handleOpen = () => {
-                  if (item.type === "blog" && item.slug) {
-                    navigate(`/blog/${item.slug}`);
-                  } else if (item.slug) {
-                    navigate(`/tools/${item.slug}`);
-                  }
-                };
-                return (
-                <motion.div
-                  key={item.id}
-                  onClick={handleOpen}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleOpen();
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  whileHover={{ y: -2, boxShadow: "0 12px 28px -12px rgba(148,163,184,0.25)" }}
-                  transition={liftSpring}
-                  className="flex cursor-pointer items-center gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 shadow-lg transition-colors hover:border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900"
-                >
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${meta.color}`}
-                  >
-                    <span>{meta.icon}</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${meta.color}`}>
-                        {meta.label}
-                      </span>
-                    </div>
-                    <p className="mt-1 truncate font-semibold text-white">{item.title}</p>
-                    <p className="mt-0.5 text-sm text-slate-400">{item.subtitle}</p>
-                  </div>
-                  <span className="shrink-0 text-xs text-slate-500">
-                    {getRelativeTime(item.date)}
-                  </span>
-                </motion.div>
-                );
-              })}
-            </div>
-          ) : (
-            <motion.div
-              whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.2)" }}
-              transition={liftSpring}
-              className="mt-6 flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center shadow-lg"
-            >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/20 via-indigo-500/20 to-purple-600/20 ring-1 ring-white/10">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-cyan-300">
-                  <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-lg font-semibold text-white">No recent activity yet</h3>
-              <p className="mt-1 max-w-sm text-sm text-slate-400">
-                Start exploring the directory and bookmarking your favorite AI tools to see your activity here.
-              </p>
+        {/* Activity Tabs */}
+        <motion.div variants={sectionVariants} className="rounded-3xl border border-slate-800 bg-slate-900 shadow-lg overflow-hidden">
+          {/* Tab Navigation */}
+          <div className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+            <div className="flex overflow-x-auto scrollbar-hide">
               <button
-                onClick={() => navigate("/tools")}
-                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600"
+                onClick={() => setActiveTab("bookmarks")}
+                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap ${
+                  activeTab === "bookmarks"
+                    ? "text-cyan-300"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                  <path d="M15.75 8.25a.75.75 0 0 1 .82.66l.54 5.42a.75.75 0 0 1-.84.82l-5.42-.54a.75.75 0 0 1-.66-.82l.54-5.42a.75.75 0 0 1 .82-.66Z" />
-                  <path fillRule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75Zm0 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Zm9.75-7.5a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm-15 0a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm12.53 5.03a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm-9.19-9.19a.75.75 0 0 1-1.06 0L4.22 7.78a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm9.19-1.06a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 1 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0ZM6.53 16.28a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 0 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
                 </svg>
-                Explore AI Tools
-              </button>
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* Saved Blogs */}
-        <motion.div variants={sectionVariants} className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
-          <h2 className="text-2xl font-semibold text-white">Saved Blogs</h2>
-          <p className="mt-2 text-sm text-slate-400">Blog posts you've saved for later reading.</p>
-
-          {savedBlogsLoading ? (
-            <div className="mt-6 flex items-center justify-center py-12">
-              <svg className="h-6 w-6 animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
-              </svg>
-            </div>
-          ) : savedBlogs.length ? (
-            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {savedBlogs.map((blog) => (
-                <motion.div
-                  key={blog._id}
-                  onClick={() => navigate(`/blog/${blog.slug}`)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      navigate(`/blog/${blog.slug}`);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
-                  transition={liftSpring}
-                  className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/40 shadow-lg transition-colors hover:border-cyan-500/30"
-                >
-                  {/* Cover Image */}
-                  <div className="relative h-40 w-full overflow-hidden bg-slate-800">
-                    {blog.coverImage ? (
-                      <img
-                        src={blog.coverImage}
-                        alt={blog.title}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-10 w-10 text-slate-600">
-                          <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex flex-1 flex-col gap-2 p-4">
-                    <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-cyan-300 transition-colors">
-                      {blog.title}
-                    </h3>
-                    <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-                      {blog.category && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-medium text-cyan-300">
-                          {blog.category}
-                        </span>
-                      )}
-                      {blog.readingTime > 0 && (
-                        <span className="flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
-                            <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
-                          </svg>
-                          {blog.readingTime} min read
-                        </span>
-                      )}
-                      {blog.publishedAt && (
-                        <span className="flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
-                            <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a2.25 2.25 0 0 1 2.25 2.25v11.25a2.25 2.25 0 0 1-2.25 2.25H5.25a2.25 2.25 0 0 1-2.25-2.25V6.75A2.25 2.25 0 0 1 5.25 4.5H6V3a.75.75 0 0 1 .75-.75Zm-3 9a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z" clipRule="evenodd" />
-                          </svg>
-                          {new Date(blog.publishedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <motion.div
-              whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.2)" }}
-              transition={liftSpring}
-              className="mt-6 flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center shadow-lg"
-            >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400/20 via-teal-500/20 to-cyan-600/20 ring-1 ring-white/10">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-emerald-300">
-                  <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-lg font-semibold text-white">You haven't saved any blogs yet.</h3>
-              <p className="mt-1 max-w-sm text-sm text-slate-400">
-                Save interesting blog posts to read them later at your convenience.
-              </p>
-              <button
-                onClick={() => navigate("/blog")}
-                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                  <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
-                </svg>
-                Browse Blogs
-              </button>
-            </motion.div>
-          )}
-        </motion.div>
-
-        <motion.div variants={sectionVariants} className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
-            <h2 className="text-2xl font-semibold">Bookmarks</h2>
-            <p className="mt-2 text-sm text-slate-400">Saved tools you can revisit anytime.</p>
-            <div className="mt-6 space-y-4">
-              {bookmarks.length ? (
-                bookmarks.map((tool) => (
+                <span>Bookmarked Tools</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${
+                  activeTab === "bookmarks"
+                    ? "bg-cyan-500/20 text-cyan-300"
+                    : "bg-slate-800 text-slate-400"
+                }`}>
+                  {bookmarks.length}
+                </span>
+                {activeTab === "bookmarks" && (
                   <motion.div
-                    key={tool._id}
-                    whileHover={{ y: -3, boxShadow: "0 14px 30px -12px rgba(34,211,238,0.2)" }}
-                    transition={liftSpring}
-                    className="rounded-3xl border border-slate-800 bg-slate-950/60 p-4 shadow-lg"
-                  >
-                    <h3 className="font-semibold text-white">{tool.name}</h3>
-                    <p className="mt-1 text-slate-400">{tool.category || "Tool"}</p>
-                  </motion.div>
-                ))
-              ) : (
-                <motion.div
-                  whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.2)" }}
-                  transition={liftSpring}
-                  className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center shadow-lg"
-                >
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/20 via-indigo-500/20 to-purple-600/20 ring-1 ring-white/10">
-                    <div className="pointer-events-none absolute inset-0 rounded-full bg-cyan-500/20 blur-xl"></div>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="relative h-8 w-8 text-cyan-300">
-                      <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <h3 className="mt-5 text-xl font-semibold text-white">No bookmarks yet</h3>
-                  <p className="mt-2 max-w-sm text-sm text-slate-400">Save your favorite AI tools to keep them handy in one place.</p>
-                  <button
-                    onClick={() => navigate("/tools")}
-                    className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                      <path d="M15.75 8.25a.75.75 0 0 1 .82.66l.54 5.42a.75.75 0 0 1-.84.82l-5.42-.54a.75.75 0 0 1-.66-.82l.54-5.42a.75.75 0 0 1 .82-.66Z" />
-                      <path fillRule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75Zm0 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Zm9.75-7.5a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm-15 0a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm12.53 5.03a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm-9.19-9.19a.75.75 0 0 1-1.06 0L4.22 7.78a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm9.19-1.06a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 1 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0ZM6.53 16.28a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 0 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
-                    </svg>
-                    Browse AI Tools
-                  </button>
-                </motion.div>
-              )}
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab("saved-blogs")}
+                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap ${
+                  activeTab === "saved-blogs"
+                    ? "text-emerald-300"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+                </svg>
+                <span>Saved Blogs</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${
+                  activeTab === "saved-blogs"
+                    ? "bg-emerald-500/20 text-emerald-300"
+                    : "bg-slate-800 text-slate-400"
+                }`}>
+                  {savedBlogs.length}
+                </span>
+                {activeTab === "saved-blogs" && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab("liked-blogs")}
+                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap ${
+                  activeTab === "liked-blogs"
+                    ? "text-pink-300"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M11.645 20.91l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488-.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488-.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0Z" clipRule="evenodd" />
+                </svg>
+                <span>Liked Blogs</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${
+                  activeTab === "liked-blogs"
+                    ? "bg-pink-500/20 text-pink-300"
+                    : "bg-slate-800 text-slate-400"
+                }`}>
+                  {likedBlogs.length}
+                </span>
+                {activeTab === "liked-blogs" && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-pink-400"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab("reviews")}
+                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap ${
+                  activeTab === "reviews"
+                    ? "text-amber-300"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006Z" clipRule="evenodd" />
+                </svg>
+                <span>My Reviews</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${
+                  activeTab === "reviews"
+                    ? "bg-amber-500/20 text-amber-300"
+                    : "bg-slate-800 text-slate-400"
+                }`}>
+                  {reviews.length}
+                </span>
+                {activeTab === "reviews" && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </button>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
-            <h2 className="text-2xl font-semibold">Reviews</h2>
-            <p className="mt-2 text-sm text-slate-400">Your submitted ratings and comments.</p>
-            <div className="mt-6 space-y-4">
-              {reviews.length ? (
-                reviews.map((review) => (
-                  <motion.div
-                    key={review._id}
-                    whileHover={{ y: -3, boxShadow: "0 14px 30px -12px rgba(251,191,36,0.2)" }}
-                    transition={liftSpring}
-                    className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5 shadow-lg"
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <h3 className="font-semibold text-white">{review.tool?.name || 'Tool review'}</h3>
-                        <p className="mt-1 text-sm text-slate-400">Rating: {review.rating} / 5</p>
-                      </div>
-                      <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-300">
-                        {review.rating}★
-                      </span>
-                    </div>
-                    <p className="mt-4 text-slate-300">{review.comment || 'No comment provided.'}</p>
-                  </motion.div>
-                ))
-              ) : (
+          {/* Tab Content */}
+          <div className="p-6 sm:p-8">
+            <AnimatePresence mode="wait">
+              {activeTab === "bookmarks" && (
                 <motion.div
-                  whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(251,191,36,0.2)" }}
-                  transition={liftSpring}
-                  className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-950/40 px-6 py-12 text-center shadow-lg"
+                  key="bookmarks"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400/20 via-orange-500/20 to-pink-600/20 ring-1 ring-white/10">
-                    <div className="pointer-events-none absolute inset-0 rounded-full bg-amber-500/20 blur-xl"></div>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="relative h-8 w-8 text-amber-300">
-                      <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006Z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <h3 className="mt-5 text-xl font-semibold text-white">No reviews yet</h3>
-                  <p className="mt-2 max-w-sm text-sm text-slate-400">Share your experience with the tools you've tried to help others.</p>
-                  <button
-                    onClick={() => navigate("/tools")}
-                    className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                      <path d="M15.75 8.25a.75.75 0 0 1 .82.66l.54 5.42a.75.75 0 0 1-.84.82l-5.42-.54a.75.75 0 0 1-.66-.82l.54-5.42a.75.75 0 0 1 .82-.66Z" />
-                      <path fillRule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75Zm0 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75Zm9.75-7.5a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm-15 0a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75Zm12.53 5.03a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm-9.19-9.19a.75.75 0 0 1-1.06 0L4.22 7.78a.75.75 0 1 1 1.06-1.06l1.06 1.06a.75.75 0 0 1 0 1.06Zm9.19-1.06a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 1 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0ZM6.53 16.28a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 0 1-1.06-1.06l1.06-1.06a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
-                    </svg>
-                    Browse AI Tools
-                  </button>
+                  {bookmarks.length ? (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {bookmarks.map((tool) => (
+                        <motion.div
+                          key={tool._id}
+                          whileHover={{ y: -3, boxShadow: "0 14px 30px -12px rgba(34,211,238,0.2)" }}
+                          transition={liftSpring}
+                          className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 shadow-lg cursor-pointer"
+                          onClick={() => navigate(`/tools/${tool.slug}`)}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-white truncate">{tool.name}</h3>
+                              <p className="mt-1 text-sm text-slate-400">{tool.category || "Tool"}</p>
+                            </div>
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                                <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      icon="bookmark"
+                      title="No bookmarks yet"
+                      description="Save your favorite AI tools to keep them handy in one place."
+                      buttonText="Browse AI Tools"
+                      onClick={() => navigate("/tools")}
+                    />
+                  )}
                 </motion.div>
               )}
-            </div>
+
+              {activeTab === "saved-blogs" && (
+                <motion.div
+                  key="saved-blogs"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {savedBlogsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <svg className="h-6 w-6 animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
+                      </svg>
+                    </div>
+                  ) : savedBlogs.length ? (
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {savedBlogs.map((blog) => (
+                        <motion.div
+                          key={blog._id}
+                          whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
+                          transition={liftSpring}
+                          className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/40 shadow-lg transition-colors hover:border-cyan-500/30"
+                          onClick={() => navigate(`/blog/${blog.slug}`)}
+                        >
+                          <div className="relative h-40 w-full overflow-hidden bg-slate-800">
+                            {blog.coverImage ? (
+                              <img
+                                src={blog.coverImage}
+                                alt={blog.title}
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-10 w-10 text-slate-600">
+                                  <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-1 flex-col gap-2 p-4">
+                            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-cyan-300 transition-colors">
+                              {blog.title}
+                            </h3>
+                            <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                              {blog.category && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-medium text-cyan-300">
+                                  {blog.category}
+                                </span>
+                              )}
+                              {blog.readingTime > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                                    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+                                  </svg>
+                                  {blog.readingTime} min read
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      icon="blog"
+                      title="You haven't saved any blogs yet."
+                      description="Save interesting blog posts to read them later at your convenience."
+                      buttonText="Browse Blogs"
+                      onClick={() => navigate("/blog")}
+                    />
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === "liked-blogs" && (
+                <motion.div
+                  key="liked-blogs"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {likedBlogsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <svg className="h-6 w-6 animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
+                      </svg>
+                    </div>
+                  ) : likedBlogs.length ? (
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {likedBlogs.map((blog) => (
+                        <motion.div
+                          key={blog._id}
+                          whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
+                          transition={liftSpring}
+                          className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/40 shadow-lg transition-colors hover:border-pink-500/30"
+                          onClick={() => navigate(`/blog/${blog.slug}`)}
+                        >
+                          <div className="relative h-40 w-full overflow-hidden bg-slate-800">
+                            {blog.coverImage ? (
+                              <img
+                                src={blog.coverImage}
+                                alt={blog.title}
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-10 w-10 text-slate-600">
+                                  <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-1 flex-col gap-2 p-4">
+                            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-pink-300 transition-colors">
+                              {blog.title}
+                            </h3>
+                            <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                              {blog.category && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-pink-500/10 px-2.5 py-0.5 text-xs font-medium text-pink-300">
+                                  {blog.category}
+                                </span>
+                              )}
+                              {blog.readingTime > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                                    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+                                  </svg>
+                                  {blog.readingTime} min read
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      icon="heart"
+                      title="You haven't liked any blogs yet."
+                      description="Like blog posts to save them here and show your appreciation."
+                      buttonText="Browse Blogs"
+                      onClick={() => navigate("/blog")}
+                    />
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === "reviews" && (
+                <motion.div
+                  key="reviews"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {reviews.length ? (
+                    <div className="space-y-4">
+                      {reviews.map((review) => (
+                        <motion.div
+                          key={review._id}
+                          whileHover={{ y: -3, boxShadow: "0 14px 30px -12px rgba(251,191,36,0.2)" }}
+                          transition={liftSpring}
+                          className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 shadow-lg"
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-white truncate">{review.tool?.name || 'Tool review'}</h3>
+                              <p className="mt-1 text-sm text-slate-400">Rating: {review.rating} / 5</p>
+                            </div>
+                            <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-amber-300 shrink-0">
+                              {review.rating}★
+                            </span>
+                          </div>
+                          <p className="mt-4 text-slate-300">{review.comment || 'No comment provided.'}</p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      icon="review"
+                      title="No reviews yet"
+                      description="Share your experience with the tools you've tried to help others."
+                      buttonText="Browse AI Tools"
+                      onClick={() => navigate("/tools")}
+                    />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
 

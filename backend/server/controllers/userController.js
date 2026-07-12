@@ -657,3 +657,31 @@ export const getSavedBlogs = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch saved blogs." });
   }
 };
+
+/* ==========================================
+     GET LIKED BLOGS
+     GET /api/users/me/liked-blogs
+     Returns the current user's liked blogs (populated).
+     ===================================== */
+export const getLikedBlogs = async (req, res) => {
+  try {
+    // Import Blog model
+    const Blog = (await import("../models/Blog.js")).default;
+
+    // Find all blogs where the current user is in the likedBy array
+    const likedBlogs = await Blog.find({
+      likedBy: req.user.id,
+      isDeleted: false,
+      status: "published",
+    }).select("title slug coverImage category excerpt readingTime publishedAt views");
+
+    return res.json({
+      success: true,
+      likedBlogs,
+      totalLiked: likedBlogs.length,
+    });
+  } catch (err) {
+    logger.error("[getLikedBlogs] Error fetching liked blogs:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch liked blogs." });
+  }
+};

@@ -50,6 +50,7 @@ export const updateNewsletterPreference = (newsletterEnabled) =>
   API.put("/auth/newsletter-preference", { newsletterEnabled });
 export const bookmarkTool = (toolId) => API.post(`/auth/tools/${toolId}/bookmark`);
 export const reviewTool = (toolId, data) => API.post(`/auth/tools/${toolId}/review`, data);
+export const getLikedBlogs = () => API.get("/users/me/liked-blogs");
 
 // Email verification
 export const verifyEmail = (token) => API.get(`/auth/verify-email/${token}`);

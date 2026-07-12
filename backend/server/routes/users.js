@@ -1,5 +1,5 @@
 import express from "express";
-import { getSavedBlogs } from "../controllers/userController.js";
+import { getSavedBlogs, getLikedBlogs } from "../controllers/userController.js";
 import { verifyUser } from "../middleware/auth.js";
 
 /* ===========================
@@ -13,5 +13,11 @@ const router = express.Router();
  * - Returns the current user's saved blogs (populated).
  */
 router.get("/me/saved-blogs", verifyUser, getSavedBlogs);
+
+/**
+ * GET /api/users/me/liked-blogs
+ * - Returns the current user's liked blogs (populated).
+ */
+router.get("/me/liked-blogs", verifyUser, getLikedBlogs);
 
 export default router;
