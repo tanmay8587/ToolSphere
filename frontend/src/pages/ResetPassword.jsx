@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { resetPassword } from "../services/userApi";
+import { resetPassword, verifyResetToken } from "../services/userApi";
 import PasswordInput from "../components/common/PasswordInput";
-import { FiLock, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
+import { FiLock, FiCheckCircle, FiAlertCircle, FiLoader } from "react-icons/fi";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -15,13 +15,52 @@ export default function ResetPassword() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
-  const [tokenValid, setTokenValid] = useState(true);
 
+  // Token verification states
+  const [verifying, setVerifying] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+  const [tokenError, setTokenError] = useState("");
+
+  // Verify the reset token with the backend on page load
   useEffect(() => {
-    if (!token) {
-      setTokenValid(false);
-      setError("Invalid reset token");
-    }
+    let cancelled = false;
+
+    const verify = async () => {
+      if (!token) {
+        if (!cancelled) {
+          setVerifying(false);
+          setTokenValid(false);
+          setTokenError("Invalid reset link. No token was provided.");
+        }
+        return;
+      }
+
+      try {
+        const { data } = await verifyResetToken(token);
+        if (cancelled) return;
+
+        if (data.success) {
+          setTokenValid(true);
+        } else {
+          setTokenValid(false);
+          setTokenError(data.message || "This reset link is invalid.");
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setTokenValid(false);
+        setTokenError(
+          err.response?.data?.message ||
+            "This password reset link is invalid or has expired."
+        );
+      } finally {
+        if (!cancelled) setVerifying(false);
+      }
+    };
+
+    verify();
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   const validate = () => {
@@ -29,8 +68,14 @@ export default function ResetPassword() {
 
     if (!formData.password) {
       errors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length < 8) {
+      errors.password = "Password must be at least 8 characters";
+    } else if (!/[A-Z]/.test(formData.password)) {
+      errors.password = "Password must contain at least one uppercase letter";
+    } else if (!/[a-z]/.test(formData.password)) {
+      errors.password = "Password must contain at least one lowercase letter";
+    } else if (!/\d/.test(formData.password)) {
+      errors.password = "Password must contain at least one number";
     }
 
     if (!formData.confirmPassword) {
@@ -63,6 +108,7 @@ export default function ResetPassword() {
       const { data } = await resetPassword(token, { password: formData.password });
       if (data.success) {
         setSuccess(data.message);
+        // Auto redirect to login after a short delay
         setTimeout(() => {
           navigate("/login");
         }, 3000);
@@ -76,6 +122,22 @@ export default function ResetPassword() {
     }
   };
 
+  // Loading state while verifying token
+  if (verifying) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-10">
+        <div className="w-full max-w-md rounded-[2rem] border border-slate-800 bg-slate-900 p-10 shadow-2xl">
+          <div className="text-center">
+            <FiLoader className="mx-auto text-cyan-400 mb-4 animate-spin" size={48} />
+            <h1 className="text-2xl font-bold text-white mb-2">Verifying link…</h1>
+            <p className="text-slate-400">Please wait while we validate your reset link.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Invalid or expired token state
   if (!tokenValid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-10">
@@ -84,13 +146,20 @@ export default function ResetPassword() {
             <FiAlertCircle className="mx-auto text-red-400 mb-4" size={48} />
             <h1 className="text-3xl font-bold text-white mb-4">Invalid Link</h1>
             <p className="text-slate-400 mb-6">
-              This password reset link is invalid or has expired.
+              {tokenError ||
+                "This password reset link is invalid or has expired."}
             </p>
             <button
               onClick={() => navigate("/forgot-password")}
               className="w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600"
             >
               Request New Link
+            </button>
+            <button
+              onClick={() => navigate("/login")}
+              className="mt-3 w-full rounded-2xl border border-slate-700 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-slate-800"
+            >
+              Back to Login
             </button>
           </div>
         </div>

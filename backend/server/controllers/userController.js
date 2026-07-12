@@ -485,6 +485,50 @@ export const resetPassword = async (req, res) => {
 };
 
 /* ==========================================
+   VERIFY RESET TOKEN
+   ========================================== */
+
+export const verifyResetToken = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: "Reset token is required." });
+    }
+
+    // Hash the token to compare with database
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    // Find user with valid token and not expired
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      // Check if token exists but is expired to give a precise message
+      const expiredUser = await User.findOne({ resetPasswordToken: hashedToken });
+      if (expiredUser) {
+        return res.status(400).json({
+          success: false,
+          expired: true,
+          message: "This password reset link has expired. Please request a new one.",
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: "This password reset link is invalid. Please request a new one.",
+      });
+    }
+
+    res.json({ success: true, message: "Token is valid." });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to verify reset token." });
+  }
+};
+
+/* ==========================================
    EMAIL VERIFICATION
    ========================================== */
 

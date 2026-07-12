@@ -10,6 +10,7 @@ import {
   addReview,
   forgotPassword,
   resetPassword,
+  verifyResetToken,
   verifyEmail,
   resendVerificationEmail,
   logoutUser,
@@ -25,6 +26,7 @@ router.post("/logout", verifyUser, logoutUser);
 
 router.post("/forgot-password", forgotPassword);
 router.put("/reset-password/:token", resetPassword);
+router.get("/verify-reset-token/:token", verifyResetToken);
 
 router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", resendVerificationEmail);
