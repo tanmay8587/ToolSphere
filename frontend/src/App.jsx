@@ -5,6 +5,10 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "./layout/Layout";
 import ScrollToTop from "./components/common/ScrollToTop";
 
+/* Error Handling */
+import ErrorBoundary from "./components/common/ErrorBoundary";
+import ServerErrorPage from "./pages/ServerErrorPage";
+
 /* Protected Route */
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -72,8 +76,9 @@ function App() {
   return (
     <>
       <ScrollToTop />
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
 
           {/* PUBLIC ROUTES */}
           <Route path="/" element={<Layout />}>
@@ -292,8 +297,12 @@ function App() {
           {/* MAINTENANCE PAGE - Standalone route for maintenance mode */}
           <Route path="/maintenance" element={<MaintenancePage />} />
 
+          {/* ERROR PAGES */}
+          <Route path="/500" element={<ServerErrorPage />} />
+          
         </Routes>
       </Suspense>
+    </ErrorBoundary>
     </>
   );
 }
