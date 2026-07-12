@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getProfile, updateNewsletterPreference, getLikedBlogs } from "../services/userApi";
-import { getSavedBlogs } from "../services/blogInteractionService";
+import { getSavedBlogs, removeBookmark } from "../services/blogInteractionService";
 import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
 import ToggleSwitch from "../components/common/ToggleSwitch";
@@ -183,6 +183,17 @@ export default function Profile() {
       addToast(err.message || "Failed to update newsletter preference.", "error");
     } finally {
       setSavingPref(false);
+    }
+  };
+
+  const handleRemoveBookmark = async (toolId) => {
+    try {
+      await removeBookmark(toolId);
+      // Remove the tool from the bookmarks state
+      setBookmarks((prev) => prev.filter((tool) => tool._id !== toolId));
+      addToast("Bookmark removed successfully.", "success");
+    } catch (err) {
+      addToast(err.message || "Failed to remove bookmark.", "error");
     }
   };
 
@@ -745,24 +756,75 @@ export default function Profile() {
                   transition={{ duration: 0.3 }}
                 >
                   {bookmarks.length ? (
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                       {bookmarks.map((tool) => (
                         <motion.div
                           key={tool._id}
-                          whileHover={{ y: -3, boxShadow: "0 14px 30px -12px rgba(34,211,238,0.2)" }}
+                          whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
                           transition={liftSpring}
-                          className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 shadow-lg cursor-pointer"
-                          onClick={() => navigate(`/tools/${tool.slug}`)}
+                          className="group flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60 shadow-lg transition-colors hover:border-cyan-500/30"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-white truncate">{tool.name}</h3>
-                              <p className="mt-1 text-sm text-slate-400">{tool.category || "Tool"}</p>
+                          {/* Card Header with Logo and Remove Button */}
+                          <div className="relative flex items-start gap-4 p-5 pb-4">
+                            {/* Logo */}
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-900/50 overflow-hidden">
+                              {tool.logo ? (
+                                <img
+                                  src={tool.logo}
+                                  alt={tool.name}
+                                  className="h-full w-full object-contain p-1.5"
+                                />
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 text-slate-500">
+                                  <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+                                </svg>
+                              )}
                             </div>
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+
+                            {/* Remove Bookmark Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveBookmark(tool._id);
+                              }}
+                              className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/80 text-slate-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
+                              title="Remove bookmark"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                                 <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
                               </svg>
+                            </button>
+                          </div>
+
+                          {/* Card Content */}
+                          <div
+                            className="flex flex-1 flex-col gap-2 px-5 pb-5 cursor-pointer"
+                            onClick={() => navigate(`/tools/${tool.slug}`)}
+                          >
+                            <div className="flex-1">
+                              <h3 className="line-clamp-1 font-semibold text-white group-hover:text-cyan-300 transition-colors">
+                                {tool.name}
+                              </h3>
+                              {tool.category && (
+                                <span className="mt-1.5 inline-flex items-center rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-medium text-cyan-300">
+                                  {tool.category}
+                                </span>
+                              )}
+                              {tool.description && (
+                                <p className="mt-2 line-clamp-2 text-sm text-slate-400">
+                                  {tool.description}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Bookmark Date */}
+                            <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                                <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75A2.25 2.25 0 0 1 21 6.75v12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18.75v-12A2.25 2.25 0 0 1 5.25 4.5H6V3a.75.75 0 0 1 .75-.75Zm-3 9a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 4.5a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z" clipRule="evenodd" />
+                              </svg>
+                              <span>
+                                Bookmarked {tool.createdAt ? new Date(tool.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "recently"}
+                              </span>
                             </div>
                           </div>
                         </motion.div>
@@ -771,7 +833,7 @@ export default function Profile() {
                   ) : (
                     <EmptyState
                       icon="bookmark"
-                      title="No bookmarks yet"
+                      title="You haven't bookmarked any tools yet."
                       description="Save your favorite AI tools to keep them handy in one place."
                       buttonText="Browse AI Tools"
                       onClick={() => navigate("/tools")}
