@@ -791,3 +791,55 @@ export const getLikedBlogs = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch liked blogs." });
   }
 };
+
+/* ==========================================
+     DELETE ACCOUNT
+     ===================================== */
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ success: false, message: "Password is required to delete your account." });
+    }
+
+    // Get user with password
+    const user = await User.findById(req.user.id).select("+password");
+    if (!user || !user.password) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Verify password
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(400).json({ success: false, message: "Incorrect password." });
+    }
+
+    const userId = user._id;
+
+    // Remove user's bookmarks
+    await Bookmark.deleteMany({ user: userId });
+
+    // Remove user's reviews
+    await Review.deleteMany({ user: userId });
+
+    // Remove user from likedBy arrays in blogs
+    const Blog = (await import("../models/Blog.js")).default;
+    await Blog.updateMany(
+      { likedBy: userId },
+      { $pull: { likedBy: userId } }
+    );
+
+    // Remove user from savedBlogs arrays
+    await User.findByIdAndUpdate(userId, { $set: { savedBlogs: [] } });
+
+    // Delete the user account
+    await User.findByIdAndDelete(userId);
+
+    res.json({ success: true, message: "Your account has been deleted successfully." });
+  } catch (err) {
+    logger.error("[deleteAccount] Error deleting account:", err);
+    res.status(500).json({ success: false, message: "Failed to delete account. Please try again." });
+  }
+};
