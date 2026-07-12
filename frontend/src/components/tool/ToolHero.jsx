@@ -9,6 +9,7 @@ export default function ToolHero({
   tool,
   isBookmarked,
   bookmarkLoading,
+  bookmarkAnim,
   onBookmark,
   onShare,
 }) {
@@ -80,9 +81,13 @@ export default function ToolHero({
             <button
               onClick={onBookmark}
               disabled={bookmarkLoading}
-              className="rounded-2xl border border-white/10 bg-slate-800 px-5 py-3 text-white transition hover:bg-slate-700 disabled:opacity-50"
+              className={`rounded-2xl border px-5 py-3 transition-all duration-200 disabled:opacity-50 ${
+                isBookmarked
+                  ? "bg-white border-white text-slate-900 hover:bg-slate-100"
+                  : "border-white/10 bg-slate-800 text-white hover:bg-slate-700"
+              } ${bookmarkAnim ? "scale-110" : "scale-100"}`}
             >
-              <FiBookmark className="mr-2 inline" />
+              <FiBookmark className="mr-2 inline" fill={isBookmarked ? "currentColor" : "none"} />
               {isBookmarked ? "Saved" : "Save"}
             </button>
 

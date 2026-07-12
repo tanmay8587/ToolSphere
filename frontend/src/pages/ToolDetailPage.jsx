@@ -30,6 +30,7 @@ export default function ToolDetailPage() {
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [saveAnim, setSaveAnim] = useState(false);
   const [userReview, setUserReview] = useState(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
@@ -195,11 +196,13 @@ export default function ToolDetailPage() {
 
       if (data.success) {
         setIsBookmarked(data.bookmarked);
-        setFeedback(
-          data.bookmarked
-            ? 'Tool saved to bookmarks.'
-            : 'Tool removed from bookmarks.'
-        );
+        if (data.bookmarked) {
+          setSaveAnim(true);
+          setTimeout(() => setSaveAnim(false), 220);
+          addToast('Saved to your bookmarks', 'success');
+        } else {
+          addToast('Removed from bookmarks', 'info');
+        }
       } else {
         setFeedback(data.message || 'Unable to update bookmark.');
       }
@@ -388,9 +391,13 @@ export default function ToolDetailPage() {
           <button
             onClick={handleBookmark}
             disabled={bookmarkLoading}
-            className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 disabled:opacity-50"
+            className={`flex items-center gap-2 rounded-2xl px-4 py-3 transition-all duration-200 disabled:opacity-50 ${
+              isBookmarked
+                ? "bg-white border border-white text-slate-900 hover:bg-slate-100"
+                : "bg-slate-900/90 border border-white/10 text-white hover:bg-slate-800"
+            } ${saveAnim ? "scale-110" : "scale-100"}`}
           >
-            <FiBookmark />
+            <FiBookmark fill={isBookmarked ? "currentColor" : "none"} />
             {isBookmarked ? "Saved" : "Save"}
           </button>
 
@@ -430,9 +437,11 @@ export default function ToolDetailPage() {
             <button
               onClick={handleBookmark}
               disabled={bookmarkLoading}
-              className="flex flex-col items-center text-white text-xs disabled:opacity-50"
+              className={`flex flex-col items-center rounded-2xl px-3 py-1 text-xs disabled:opacity-50 transition-transform duration-200 ${
+                isBookmarked ? "bg-white text-slate-900" : "text-white"
+              } ${saveAnim ? "scale-110" : "scale-100"}`}
             >
-              <FiBookmark size={18} />
+              <FiBookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
               {isBookmarked ? "Saved" : "Save"}
             </button>
 
@@ -467,6 +476,7 @@ export default function ToolDetailPage() {
         tool={tool}
         isBookmarked={isBookmarked}
         bookmarkLoading={bookmarkLoading}
+        bookmarkAnim={saveAnim}
         onBookmark={handleBookmark}
         onShare={handleShare}
       />
