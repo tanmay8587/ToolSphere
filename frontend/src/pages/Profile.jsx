@@ -236,6 +236,9 @@ export default function Profile() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deletingReview, setDeletingReview] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("latest");
+  const [displayCount, setDisplayCount] = useState(6);
   const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
@@ -479,6 +482,109 @@ export default function Profile() {
   const favoriteCategoriesCount = useMemo(() => {
     return new Set(bookmarks.map((b) => b.category).filter(Boolean)).size;
   }, [bookmarks]);
+
+  // Filtered and sorted data for each tab
+  const filteredBookmarks = useMemo(() => {
+    let result = [...bookmarks];
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(tool => 
+        tool.name?.toLowerCase().includes(query) ||
+        tool.category?.toLowerCase().includes(query) ||
+        tool.description?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Sort
+    if (sortBy === "latest") {
+      result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === "oldest") {
+      result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sortBy === "alphabetical") {
+      result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
+    
+    return result;
+  }, [bookmarks, searchQuery, sortBy]);
+
+  const filteredSavedBlogs = useMemo(() => {
+    let result = [...savedBlogs];
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(blog => 
+        blog.title?.toLowerCase().includes(query) ||
+        blog.category?.toLowerCase().includes(query)
+      );
+    }
+    
+    if (sortBy === "latest") {
+      result.sort((a, b) => new Date(b.publishedAt || b.createdAt) - new Date(a.publishedAt || a.createdAt));
+    } else if (sortBy === "oldest") {
+      result.sort((a, b) => new Date(a.publishedAt || a.createdAt) - new Date(b.publishedAt || b.createdAt));
+    } else if (sortBy === "alphabetical") {
+      result.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+    }
+    
+    return result;
+  }, [savedBlogs, searchQuery, sortBy]);
+
+  const filteredLikedBlogs = useMemo(() => {
+    let result = [...likedBlogs];
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(blog => 
+        blog.title?.toLowerCase().includes(query) ||
+        blog.category?.toLowerCase().includes(query)
+      );
+    }
+    
+    if (sortBy === "latest") {
+      result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === "oldest") {
+      result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sortBy === "alphabetical") {
+      result.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+    }
+    
+    return result;
+  }, [likedBlogs, searchQuery, sortBy]);
+
+  const filteredReviews = useMemo(() => {
+    let result = [...reviews];
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(review => 
+        review.tool?.name?.toLowerCase().includes(query) ||
+        review.comment?.toLowerCase().includes(query)
+      );
+    }
+    
+    if (sortBy === "latest") {
+      result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === "oldest") {
+      result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sortBy === "alphabetical") {
+      result.sort((a, b) => (review.tool?.name || "").localeCompare(b.tool?.name || ""));
+    }
+    
+    return result;
+  }, [reviews, searchQuery, sortBy]);
+
+  // Paginated data
+  const displayedBookmarks = filteredBookmarks.slice(0, displayCount);
+  const displayedSavedBlogs = filteredSavedBlogs.slice(0, displayCount);
+  const displayedLikedBlogs = filteredLikedBlogs.slice(0, displayCount);
+  const displayedReviews = filteredReviews.slice(0, displayCount);
+
+  const hasMoreBookmarks = filteredBookmarks.length > displayCount;
+  const hasMoreSavedBlogs = filteredSavedBlogs.length > displayCount;
+  const hasMoreLikedBlogs = filteredLikedBlogs.length > displayCount;
+  const hasMoreReviews = filteredReviews.length > displayCount;
 
   if (!localUser && !loading) {
     navigate("/login");
@@ -950,6 +1056,41 @@ export default function Profile() {
 
           {/* Tab Content */}
           <div className="p-6 sm:p-8">
+            {/* Search and Sort Controls */}
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              {/* Search Input */}
+              <div className="relative flex-1 max-w-md">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400">
+                  <path fillRule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clipRule="evenodd" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder={`Search ${activeTab === "bookmarks" ? "tools" : activeTab === "saved-blogs" || activeTab === "liked-blogs" ? "blogs" : "reviews"}...`}
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setDisplayCount(6); // Reset pagination on new search
+                  }}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-800 py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                />
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="sort" className="text-sm text-slate-400">Sort by:</label>
+                <select
+                  id="sort"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="rounded-xl border border-slate-700 bg-slate-800 py-2.5 pl-3 pr-8 text-sm text-white focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                >
+                  <option value="latest">Latest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="alphabetical">Alphabetical</option>
+                </select>
+              </div>
+            </div>
+
             <AnimatePresence mode="wait">
               {activeTab === "bookmarks" && (
                 <motion.div
@@ -959,9 +1100,9 @@ export default function Profile() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {bookmarks.length ? (
+                  {displayedBookmarks.length ? (
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      {bookmarks.map((tool) => (
+                      {displayedBookmarks.map((tool) => (
                         <motion.div
                           key={tool._id}
                           whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
@@ -1043,6 +1184,20 @@ export default function Profile() {
                       onClick={() => navigate("/tools")}
                     />
                   )}
+                  
+                  {/* Load More Button */}
+                  {hasMoreBookmarks && (
+                    <div className="mt-8 flex justify-center">
+                      <motion.button
+                        whileHover={{ y: -2, boxShadow: "0 8px 20px -6px rgba(34,211,238,0.3)" }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setDisplayCount((prev) => prev + 6)}
+                        className="rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-300 transition-colors duration-300 hover:bg-cyan-500/20 hover:border-cyan-400/50"
+                      >
+                        Load More ({filteredBookmarks.length - displayCount} remaining)
+                      </motion.button>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -1061,9 +1216,9 @@ export default function Profile() {
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
                       </svg>
                     </div>
-                  ) : savedBlogs.length ? (
+                  ) : displayedSavedBlogs.length ? (
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      {savedBlogs.map((blog) => (
+                      {displayedSavedBlogs.map((blog) => (
                         <motion.div
                           key={blog._id}
                           whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
@@ -1147,6 +1302,20 @@ export default function Profile() {
                       onClick={() => navigate("/blog")}
                     />
                   )}
+                  
+                  {/* Load More Button */}
+                  {hasMoreSavedBlogs && (
+                    <div className="mt-8 flex justify-center">
+                      <motion.button
+                        whileHover={{ y: -2, boxShadow: "0 8px 20px -6px rgba(34,211,238,0.3)" }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setDisplayCount((prev) => prev + 6)}
+                        className="rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-300 transition-colors duration-300 hover:bg-cyan-500/20 hover:border-cyan-400/50"
+                      >
+                        Load More ({filteredSavedBlogs.length - displayCount} remaining)
+                      </motion.button>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -1165,9 +1334,9 @@ export default function Profile() {
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
                       </svg>
                     </div>
-                  ) : likedBlogs.length ? (
+                  ) : displayedLikedBlogs.length ? (
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                      {likedBlogs.map((blog) => (
+                      {displayedLikedBlogs.map((blog) => (
                         <motion.div
                           key={blog._id}
                           whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
@@ -1253,6 +1422,20 @@ export default function Profile() {
                       onClick={() => navigate("/blog")}
                     />
                   )}
+                  
+                  {/* Load More Button */}
+                  {hasMoreLikedBlogs && (
+                    <div className="mt-8 flex justify-center">
+                      <motion.button
+                        whileHover={{ y: -2, boxShadow: "0 8px 20px -6px rgba(34,211,238,0.3)" }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setDisplayCount((prev) => prev + 6)}
+                        className="rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-300 transition-colors duration-300 hover:bg-cyan-500/20 hover:border-cyan-400/50"
+                      >
+                        Load More ({filteredLikedBlogs.length - displayCount} remaining)
+                      </motion.button>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -1325,6 +1508,20 @@ export default function Profile() {
                       buttonText="Browse AI Tools"
                       onClick={() => navigate("/tools")}
                     />
+                  )}
+                  
+                  {/* Load More Button */}
+                  {hasMoreReviews && (
+                    <div className="mt-8 flex justify-center">
+                      <motion.button
+                        whileHover={{ y: -2, boxShadow: "0 8px 20px -6px rgba(34,211,238,0.3)" }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setDisplayCount((prev) => prev + 6)}
+                        className="rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-300 transition-colors duration-300 hover:bg-cyan-500/20 hover:border-cyan-400/50"
+                      >
+                        Load More ({filteredReviews.length - displayCount} remaining)
+                      </motion.button>
+                    </div>
                   )}
                 </motion.div>
               )}
