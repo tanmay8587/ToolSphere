@@ -19,6 +19,9 @@ import {
   generateToolOgTags,
   generateToolTwitterTags,
 } from '../utils/socialMeta';
+import {
+  getToolLogoProps,
+} from '../utils/imageOptimization';
 
 const RECENTLY_VIEWED_KEY = 'recentlyViewedTools';
 const MAX_RECENT_TOOLS = 8;
@@ -678,13 +681,13 @@ export default function ToolDetailPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <img
-                      src={relatedTool.logo || relatedTool.coverImage || "/default-logo.png"}
-                      alt={relatedTool.name}
-                      className="h-12 w-12 rounded-xl object-cover border border-white/10 bg-white/5"
+                      {...getToolLogoProps(
+                        relatedTool.logo || relatedTool.coverImage,
+                        relatedTool.name
+                      )}
                       onError={(e) => {
                         e.currentTarget.src = "/default-logo.png";
                       }}
-                      loading="lazy"
                     />
                     <span className="text-xs text-slate-400">
                       {relatedTool.category}
@@ -734,13 +737,13 @@ export default function ToolDetailPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <img
-                      src={recentTool.logo || recentTool.coverImage || "/default-logo.png"}
-                      alt={recentTool.name}
-                      className="h-12 w-12 rounded-xl object-cover border border-white/10 bg-white/5"
+                      {...getToolLogoProps(
+                        recentTool.logo || recentTool.coverImage,
+                        recentTool.name
+                      )}
                       onError={(e) => {
                         e.currentTarget.src = "/default-logo.png";
                       }}
-                      loading="lazy"
                     />
                     <span className="text-xs text-slate-400">
                       {recentTool.category}

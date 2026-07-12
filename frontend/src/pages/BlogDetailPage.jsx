@@ -21,6 +21,10 @@ import {
   generateBlogOgTags,
   generateBlogTwitterTags,
 } from "../utils/socialMeta";
+import {
+  getBlogCoverImageProps,
+  getRelatedBlogImageProps,
+} from "../utils/imageOptimization";
 
 /* =====================================
    HELPERS
@@ -678,13 +682,13 @@ export default function BlogDetailPage() {
           {/* Main Content */}
           <div>
             {blog.coverImage && (
-              <div className="mb-8 rounded-2xl overflow-hidden border border-white/10">
-                <img
-                  src={blog.coverImage}
-                  alt={blog.title}
-                  className="w-full h-64 sm:h-80 lg:h-96 object-cover"
-                  loading="lazy"
-                />
+              <div className="mb-8 rounded-2xl overflow-hidden border border-white/10 bg-slate-900">
+                <div className="relative w-full aspect-video">
+                  <img
+                    {...getBlogCoverImageProps(blog.coverImage, blog.title)}
+                    className="absolute inset-0 w-full h-full"
+                  />
+                </div>
               </div>
             )}
 
@@ -910,12 +914,10 @@ export default function BlogDetailPage() {
                       className="group rounded-2xl border border-white/10 bg-slate-900/70 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
                     >
                       {related.coverImage && (
-                        <div className="h-40 overflow-hidden">
+                        <div className="aspect-video overflow-hidden bg-slate-900">
                           <img
-                            src={related.coverImage}
-                            alt={related.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            loading="lazy"
+                            {...getRelatedBlogImageProps(related.coverImage, related.title)}
+                            className="absolute inset-0 w-full h-full"
                           />
                         </div>
                       )}
