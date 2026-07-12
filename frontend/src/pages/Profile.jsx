@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getProfile, updateNewsletterPreference, getLikedBlogs } from "../services/userApi";
-import { getSavedBlogs, removeBookmark } from "../services/blogInteractionService";
+import { getSavedBlogs, removeBookmark, saveBlog } from "../services/blogInteractionService";
 import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
 import ToggleSwitch from "../components/common/ToggleSwitch";
@@ -194,6 +194,17 @@ export default function Profile() {
       addToast("Bookmark removed successfully.", "success");
     } catch (err) {
       addToast(err.message || "Failed to remove bookmark.", "error");
+    }
+  };
+
+  const handleRemoveSavedBlog = async (blogId) => {
+    try {
+      await saveBlog(blogId); // Toggle off the save
+      // Remove the blog from the saved blogs state
+      setSavedBlogs((prev) => prev.filter((blog) => blog._id !== blogId));
+      addToast("Blog removed from saved list.", "success");
+    } catch (err) {
+      addToast(err.message || "Failed to remove saved blog.", "error");
     }
   };
 
@@ -864,9 +875,9 @@ export default function Profile() {
                           key={blog._id}
                           whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
                           transition={liftSpring}
-                          className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/40 shadow-lg transition-colors hover:border-cyan-500/30"
-                          onClick={() => navigate(`/blog/${blog.slug}`)}
+                          className="group flex flex-col overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/40 shadow-lg transition-colors hover:border-cyan-500/30"
                         >
+                          {/* Cover Image with Remove Button */}
                           <div className="relative h-40 w-full overflow-hidden bg-slate-800">
                             {blog.coverImage ? (
                               <img
@@ -881,25 +892,54 @@ export default function Profile() {
                                 </svg>
                               </div>
                             )}
+                            
+                            {/* Remove Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSavedBlog(blog._id);
+                              }}
+                              className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900/80 text-slate-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
+                              title="Remove from saved"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
+                              </svg>
+                            </button>
                           </div>
-                          <div className="flex flex-1 flex-col gap-2 p-4">
-                            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-cyan-300 transition-colors">
-                              {blog.title}
-                            </h3>
-                            <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-                              {blog.category && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-medium text-cyan-300">
-                                  {blog.category}
-                                </span>
-                              )}
-                              {blog.readingTime > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
-                                    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
-                                  </svg>
-                                  {blog.readingTime} min read
-                                </span>
-                              )}
+
+                          {/* Card Content */}
+                          <div
+                            className="flex flex-1 flex-col gap-2 p-4 cursor-pointer"
+                            onClick={() => navigate(`/blog/${blog.slug}`)}
+                          >
+                            <div className="flex-1">
+                              <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-cyan-300 transition-colors">
+                                {blog.title}
+                              </h3>
+                              <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                                {blog.category && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-medium text-cyan-300">
+                                    {blog.category}
+                                  </span>
+                                )}
+                                {blog.readingTime > 0 && (
+                                  <span className="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                                      <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+                                    </svg>
+                                    {blog.readingTime} min read
+                                  </span>
+                                )}
+                                {blog.publishedAt && (
+                                  <span className="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                                      <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75A2.25 2.25 0 0 1 21 6.75v12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18.75v-12A2.25 2.25 0 0 1 5.25 4.5H6V3a.75.75 0 0 1 .75-.75Zm-3 9a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 4.5a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z" clipRule="evenodd" />
+                                    </svg>
+                                    {new Date(blog.publishedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </motion.div>
