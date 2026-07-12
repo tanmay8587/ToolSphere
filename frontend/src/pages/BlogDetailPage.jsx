@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo, memo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { FiClock, FiEye, FiArrowLeft, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark, FiChevronDown, FiChevronRight, FiList } from "react-icons/fi";
@@ -121,6 +121,82 @@ const formatDate = (date) => {
     day: "numeric",
   });
 };
+
+/* =====================================
+   MEMOIZED COMPONENTS
+   ===================================== */
+
+// Memoized related blog card to prevent unnecessary re-renders
+const RelatedBlogCard = memo(({ blog, formatDate }) => {
+  return (
+    <Link
+      to={`/blog/${blog.slug}`}
+      className="group rounded-2xl border border-white/10 bg-slate-900/70 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
+    >
+      {blog.coverImage && (
+        <div className="aspect-video overflow-hidden bg-slate-900">
+          <img
+            {...getRelatedBlogImageProps(blog.coverImage, blog.title)}
+            className="absolute inset-0 w-full h-full"
+          />
+        </div>
+      )}
+      <div className="p-4 space-y-2">
+        {blog.category && (
+          <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
+            {blog.category}
+          </span>
+        )}
+        <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">
+          {blog.title}
+        </h3>
+        <p className="text-sm text-slate-400 line-clamp-2">
+          {blog.excerpt}
+        </p>
+        <div className="flex items-center gap-3 text-xs text-slate-500 pt-2 border-t border-slate-800">
+          <span className="flex items-center gap-1">
+            <FiClock size={12} />
+            {blog.readingTime || "5"} min
+          </span>
+          <span className="flex items-center gap-1">
+            <FiCalendar size={12} />
+            {formatDate(blog.publishedAt)}
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+});
+
+// Memoized navigation card for previous/next blogs
+const NavigationCard = memo(({ blog, type, formatDate }) => {
+  if (!blog) return <div />;
+  
+  return (
+    <Link
+      to={`/blog/${blog.slug}`}
+      className={`group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10 ${type === 'next' ? 'text-right' : ''}`}
+    >
+      <span className="text-xs font-medium text-slate-400 mb-2 block">
+        {type === 'previous' ? 'Previous Article' : 'Next Article'}
+      </span>
+      <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">
+        {blog.title}
+      </h3>
+      <div className={`flex items-center gap-3 text-xs text-slate-500 mt-3 ${type === 'next' ? 'justify-end' : ''}`}>
+        {blog.category && (
+          <span className="rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300">
+            {blog.category}
+          </span>
+        )}
+        <span className="flex items-center gap-1">
+          <FiCalendar size={12} />
+          {formatDate(blog.publishedAt)}
+        </span>
+      </div>
+    </Link>
+  );
+});
 
 /* =====================================
    PAGE
@@ -908,43 +984,11 @@ export default function BlogDetailPage() {
                 <h2 className="text-2xl font-bold text-white mb-6">Related Articles</h2>
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                   {relatedBlogs.map((related) => (
-                    <Link
-                      key={related._id}
-                      to={`/blog/${related.slug}`}
-                      className="group rounded-2xl border border-white/10 bg-slate-900/70 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
-                    >
-                      {related.coverImage && (
-                        <div className="aspect-video overflow-hidden bg-slate-900">
-                          <img
-                            {...getRelatedBlogImageProps(related.coverImage, related.title)}
-                            className="absolute inset-0 w-full h-full"
-                          />
-                        </div>
-                      )}
-                      <div className="p-4 space-y-2">
-                        {related.category && (
-                          <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
-                            {related.category}
-                          </span>
-                        )}
-                        <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">
-                          {related.title}
-                        </h3>
-                        <p className="text-sm text-slate-400 line-clamp-2">
-                          {related.excerpt}
-                        </p>
-                        <div className="flex items-center gap-3 text-xs text-slate-500 pt-2 border-t border-slate-800">
-                          <span className="flex items-center gap-1">
-                            <FiClock size={12} />
-                            {related.readingTime || "5"} min
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FiCalendar size={12} />
-                            {formatDate(related.publishedAt)}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
+                    <RelatedBlogCard 
+                      key={related._id} 
+                      blog={related} 
+                      formatDate={formatDate}
+                    />
                   ))}
                 </div>
               </div>
@@ -953,47 +997,16 @@ export default function BlogDetailPage() {
             {(previousBlog || nextBlog) && (
               <div className="mt-12 pt-8 border-t border-slate-800">
                 <div className="grid gap-6 md:grid-cols-2">
-                  {previousBlog ? (
-                    <Link
-                      to={`/blog/${previousBlog.slug}`}
-                      className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
-                    >
-                      <span className="text-xs font-medium text-slate-400 mb-2 block">Previous Article</span>
-                      <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">{previousBlog.title}</h3>
-                      <div className="flex items-center gap-3 text-xs text-slate-500 mt-3">
-                        {previousBlog.category && (
-                          <span className="rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300">{previousBlog.category}</span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <FiCalendar size={12} />
-                          {formatDate(previousBlog.publishedAt)}
-                        </span>
-                      </div>
-                    </Link>
-                  ) : (
-                    <div />
-                  )}
-
-                  {nextBlog ? (
-                    <Link
-                      to={`/blog/${nextBlog.slug}`}
-                      className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10 text-right"
-                    >
-                      <span className="text-xs font-medium text-slate-400 mb-2 block">Next Article</span>
-                      <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">{nextBlog.title}</h3>
-                      <div className="flex items-center justify-end gap-3 text-xs text-slate-500 mt-3">
-                        <span className="flex items-center gap-1">
-                          <FiCalendar size={12} />
-                          {formatDate(nextBlog.publishedAt)}
-                        </span>
-                        {nextBlog.category && (
-                          <span className="rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300">{nextBlog.category}</span>
-                        )}
-                      </div>
-                    </Link>
-                  ) : (
-                    <div />
-                  )}
+                  <NavigationCard 
+                    blog={previousBlog} 
+                    type="previous" 
+                    formatDate={formatDate}
+                  />
+                  <NavigationCard 
+                    blog={nextBlog} 
+                    type="next" 
+                    formatDate={formatDate}
+                  />
                 </div>
               </div>
             )}

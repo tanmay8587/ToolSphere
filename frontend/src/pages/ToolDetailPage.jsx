@@ -4,7 +4,7 @@ import ToolGallery from "../components/tool/ToolGallery";
 import ToolFeatures from "../components/tool/ToolFeatures";
 import ReportToolModal from "../components/tool/ReportToolModal";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag } from 'react-icons/fi';
@@ -27,7 +27,99 @@ const RECENTLY_VIEWED_KEY = 'recentlyViewedTools';
 const MAX_RECENT_TOOLS = 8;
 const DISPLAY_RECENT_TOOLS = 6;
 
+// Memoized related tool card
+const RelatedToolCard = memo(({ tool }) => {
+  return (
+    <Link
+      to={`/tools/${tool.slug}`}
+      className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img
+            {...getToolLogoProps(
+              tool.logo || tool.coverImage,
+              tool.name
+            )}
+            onError={(e) => {
+              e.currentTarget.src = "/default-logo.png";
+            }}
+          />
+          <span className="text-xs text-slate-400">
+            {tool.category}
+          </span>
+        </div>
 
+        <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
+          {tool.pricing}
+        </span>
+      </div>
+
+      <h3 className="mt-4 text-lg font-semibold text-white group-hover:text-cyan-300 transition">
+        {tool.name}
+      </h3>
+
+      <p className="mt-2 text-sm text-slate-400 line-clamp-2">
+        {tool.description}
+      </p>
+
+      <div className="mt-5 flex items-center justify-between">
+        <span className="text-xs text-slate-500">
+          ⭐ {tool.rating || 4.5}
+        </span>
+
+        <span className="text-xs text-cyan-400 group-hover:underline">
+          View Tool →
+        </span>
+      </div>
+    </Link>
+  );
+});
+
+// Memoized recently viewed tool card
+const RecentlyViewedCard = memo(({ tool }) => {
+  return (
+    <Link
+      to={`/tools/${tool.slug}`}
+      className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img
+            {...getToolLogoProps(
+              tool.logo || tool.coverImage,
+              tool.name
+            )}
+            onError={(e) => {
+              e.currentTarget.src = "/default-logo.png";
+            }}
+          />
+          <span className="text-xs text-slate-400">
+            {tool.category}
+          </span>
+        </div>
+
+        <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
+          {tool.pricing}
+        </span>
+      </div>
+
+      <h3 className="mt-4 text-lg font-semibold text-white group-hover:text-cyan-300 transition">
+        {tool.name}
+      </h3>
+
+      <p className="mt-2 text-sm text-slate-400 line-clamp-2">
+        {tool.description}
+      </p>
+
+      <div className="mt-5 flex items-center justify-between">
+        <span className="text-xs text-cyan-400 group-hover:underline">
+          View Tool →
+        </span>
+      </div>
+    </Link>
+  );
+});
 
 export default function ToolDetailPage() {
   const { slug } = useParams();
@@ -673,50 +765,10 @@ export default function ToolDetailPage() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {relatedTools.map((relatedTool) => (
-              <Link
-                key={relatedTool._id}
-                to={`/tools/${relatedTool.slug}`}
-                className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img
-                      {...getToolLogoProps(
-                        relatedTool.logo || relatedTool.coverImage,
-                        relatedTool.name
-                      )}
-                      onError={(e) => {
-                        e.currentTarget.src = "/default-logo.png";
-                      }}
-                    />
-                    <span className="text-xs text-slate-400">
-                      {relatedTool.category}
-                    </span>
-                  </div>
-
-                  <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
-                    {relatedTool.pricing}
-                  </span>
-                </div>
-
-                <h3 className="mt-4 text-lg font-semibold text-white group-hover:text-cyan-300 transition">
-                  {relatedTool.name}
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-400 line-clamp-2">
-                  {relatedTool.description}
-                </p>
-
-                <div className="mt-5 flex items-center justify-between">
-                  <span className="text-xs text-slate-500">
-                    ⭐ {relatedTool.rating || 4.5}
-                  </span>
-
-                  <span className="text-xs text-cyan-400 group-hover:underline">
-                    View Tool →
-                  </span>
-                </div>
-              </Link>
+              <RelatedToolCard 
+                key={relatedTool._id} 
+                tool={relatedTool} 
+              />
             ))}
           </div>
         )}
@@ -729,46 +781,10 @@ export default function ToolDetailPage() {
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {recentlyViewed.slice(0, DISPLAY_RECENT_TOOLS).map((recentTool) => (
-              <Link
-                key={recentTool._id}
-                to={`/tools/${recentTool.slug}`}
-                className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img
-                      {...getToolLogoProps(
-                        recentTool.logo || recentTool.coverImage,
-                        recentTool.name
-                      )}
-                      onError={(e) => {
-                        e.currentTarget.src = "/default-logo.png";
-                      }}
-                    />
-                    <span className="text-xs text-slate-400">
-                      {recentTool.category}
-                    </span>
-                  </div>
-
-                  <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
-                    {recentTool.pricing}
-                  </span>
-                </div>
-
-                <h3 className="mt-4 text-lg font-semibold text-white group-hover:text-cyan-300 transition">
-                  {recentTool.name}
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-400 line-clamp-2">
-                  {recentTool.description}
-                </p>
-
-                <div className="mt-5 flex items-center justify-between">
-                  <span className="text-xs text-cyan-400 group-hover:underline">
-                    View Tool →
-                  </span>
-                </div>
-              </Link>
+              <RecentlyViewedCard 
+                key={recentTool._id} 
+                tool={recentTool} 
+              />
             ))}
           </div>
         </div>

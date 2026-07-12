@@ -1,5 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
+import { withDeduplication } from "../utils/performance.js";
+
 /* ===========================
    SAFE REQUEST WRAPPER
 =========================== */
@@ -35,14 +37,26 @@ async function request(path) {
 =========================== */
 export async function getTools(params = {}) {
   const query = new URLSearchParams(params).toString();
-  return request(`/tools${query ? `?${query}` : ""}`);
+  const cacheKey = `tools:${query}`;
+  
+  return withDeduplication(
+    () => request(`/tools${query ? `?${query}` : ""}`),
+    cacheKey,
+    2 * 60 * 1000 // 2 minutes cache
+  );
 }
 
 /* ===========================
    FEATURED TOOLS
 =========================== */
 export async function getFeaturedTools() {
-  const data = await request("/tools/featured");
+  const cacheKey = "tools:featured";
+  
+  const data = await withDeduplication(
+    () => request("/tools/featured"),
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
 
   return {
     success: data?.success ?? false,
@@ -54,7 +68,13 @@ export async function getFeaturedTools() {
    CATEGORIES
 =========================== */
 export async function getCategories() {
-  const data = await request("/tools/categories");
+  const cacheKey = "tools:categories";
+  
+  const data = await withDeduplication(
+    () => request("/tools/categories"),
+    cacheKey,
+    10 * 60 * 1000 // 10 minutes cache
+  );
 
   return {
     success: data?.success ?? false,
@@ -66,7 +86,13 @@ export async function getCategories() {
    SINGLE TOOL BY SLUG
 =========================== */
 export async function getToolBySlug(slug) {
-  const data = await request(`/tools/${slug}`);
+  const cacheKey = `tool:${slug}`;
+  
+  const data = await withDeduplication(
+    () => request(`/tools/${slug}`),
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
 
   return {
     success: data?.success ?? false,
@@ -78,7 +104,13 @@ export async function getToolBySlug(slug) {
    RELATED TOOLS
 =========================== */
 export async function getRelatedTools(slug) {
-  const data = await request(`/tools/${slug}/related`);
+  const cacheKey = `tool:${slug}:related`;
+  
+  const data = await withDeduplication(
+    () => request(`/tools/${slug}/related`),
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
 
   return {
     success: data?.success ?? false,

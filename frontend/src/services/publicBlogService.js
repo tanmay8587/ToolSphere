@@ -2,6 +2,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 import { getVisitorId } from "../utils/visitorId.js";
 import { getToken } from "../utils/auth.js";
+import { withDeduplication, apiCache } from "../utils/performance.js";
 
 /* ===========================
    SAFE REQUEST WRAPPER (public)
@@ -34,28 +35,52 @@ export async function getPublicBlogs(params = {}) {
   if (params.page) query.set("page", params.page);
   if (params.limit) query.set("limit", params.limit);
   const qs = query.toString();
-  return request(`/blogs${qs ? `?${qs}` : ""}`);
+  const cacheKey = `blogs:${qs}`;
+  
+  return withDeduplication(
+    () => request(`/blogs${qs ? `?${qs}` : ""}`),
+    cacheKey,
+    2 * 60 * 1000 // 2 minutes cache
+  );
 }
 
 /* ===========================
    GET PUBLIC BLOG BY SLUG
    =========================== */
 export async function getPublicBlogBySlug(slug) {
-  return request(`/blogs/${slug}`);
+  const cacheKey = `blog:${slug}`;
+  
+  return withDeduplication(
+    () => request(`/blogs/${slug}`),
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
 }
 
 /* ===========================
    GET RELATED BLOGS
    =========================== */
 export async function getRelatedBlogs(slug) {
-  return request(`/blogs/${slug}/related`);
+  const cacheKey = `blog:${slug}:related`;
+  
+  return withDeduplication(
+    () => request(`/blogs/${slug}/related`),
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
 }
 
 /* ===========================
    GET ADJACENT BLOGS (PREVIOUS/NEXT)
    =========================== */
 export async function getAdjacentBlogs(slug) {
-  return request(`/blogs/${slug}/adjacent`);
+  const cacheKey = `blog:${slug}:adjacent`;
+  
+  return withDeduplication(
+    () => request(`/blogs/${slug}/adjacent`),
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
 }
 
 /* ===========================
@@ -95,5 +120,11 @@ export async function recordBlogView(slug) {
    GET TRENDING BLOGS (top 6 by views)
    =========================== */
 export async function getTrendingBlogs() {
-  return request(`/blogs/trending`);
+  const cacheKey = `blogs:trending`;
+  
+  return withDeduplication(
+    () => request(`/blogs/trending`),
+    cacheKey,
+    10 * 60 * 1000 // 10 minutes cache
+  );
 }
