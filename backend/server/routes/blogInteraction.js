@@ -6,7 +6,7 @@ import {
   bookmarkBlog,
   removeBookmark,
 } from "../controllers/blogInteractionController.js";
-import { verifyUser } from "../middleware/auth.js";
+import { verifyUser, optionalUser } from "../middleware/auth.js";
 
 /* ===========================
    BLOG INTERACTION ROUTES  (/api/blogs/:slug/...)
@@ -16,9 +16,12 @@ const router = express.Router();
 
 /**
  * GET /api/blogs/:slug/interaction
- * - Public-safe: returns like/bookmark counts + current user's state
+ * - Public-safe: returns like/bookmark counts + current user's state.
+ *   Uses optionalUser so a logged-in user's token is honored (populates
+ *   req.user) while guests fall back to anonymous — this keeps the Like/Save
+ *   button state correct after refresh and across login/logout.
  */
-router.get("/:slug/interaction", getInteractionState);
+router.get("/:slug/interaction", optionalUser, getInteractionState);
 
 /**
  * POST /api/blogs/:slug/like

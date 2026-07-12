@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { FiClock, FiEye, FiArrowLeft, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark, FiChevronDown } from "react-icons/fi";
@@ -6,12 +6,13 @@ import { getPublicBlogBySlug, getRelatedBlogs, getAdjacentBlogs, recordBlogView 
 import EmptyState from "../components/common/EmptyState";
 import BlogComments from "../components/blog/BlogComments";
 import SocialShare from "../components/blog/SocialShare";
+import { ToastContainer, useToast } from "../components/common/Toast";
 import {
   getBlogInteraction,
   likeBlog,
   unlikeBlog,
-  bookmarkBlog,
-  removeBookmark,
+  saveBlog,
+  getSavedBlogs,
 } from "../services/blogInteractionService";
 import { isLoggedIn } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
@@ -105,12 +106,15 @@ export default function BlogDetailPage() {
   const [bookmarks, setBookmarks] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [interactionLoading, setInteractionLoading] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [likeAnim, setLikeAnim] = useState(false);
   const [activeHeading, setActiveHeading] = useState("");
   const [mobileTocOpen, setMobileTocOpen] = useState(false);
   const [views, setViews] = useState(0);
   const contentRef = useRef(null);
   const navigate = useNavigate();
+  const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
     const loadBlog = async () => {
@@ -287,38 +291,82 @@ export default function BlogDetailPage() {
   };
 
   const handleLike = async () => {
-    if (!requireAuth()) return;
-    setInteractionLoading(true);
+    if (!requireAuth() || likeLoading) return;
+
+    // Optimistic update: flip UI immediately, then reconcile with the server.
+    const previousLiked = isLiked;
+    const previousLikes = likes;
+    const nextLiked = !isLiked;
+    const nextLikes = Math.max(0, likes + (nextLiked ? 1 : -1));
+
+    setIsLiked(nextLiked);
+    setLikes(nextLikes);
+    setLikeAnim(true);
+    setLikeLoading(true);
+
     try {
-      const data = isLiked
+      const data = previousLiked
         ? await unlikeBlog(slug)
         : await likeBlog(slug);
-      if (data.success) {
-        setLikes(data.likes || 0);
-        setIsLiked(!!data.isLiked);
+
+      if (data && data.success) {
+        // Reconcile with authoritative server values.
+        setLikes(typeof data.totalLikes === "number" ? data.totalLikes : nextLikes);
+        setIsLiked(typeof data.liked === "boolean" ? data.liked : nextLiked);
+        addToast(
+          data.liked ? "Liked!" : "Like removed",
+          "success",
+          2000
+        );
+      } else {
+        // Unexpected payload -> roll back.
+        setIsLiked(previousLiked);
+        setLikes(previousLikes);
+        addToast("Something went wrong", "error", 3000);
       }
     } catch {
-      // ignore network errors; state unchanged
+      // Network/API failure -> roll back to previous state.
+      setIsLiked(previousLiked);
+      setLikes(previousLikes);
+      addToast("Failed to update like. Please try again.", "error", 3000);
     } finally {
-      setInteractionLoading(false);
+      setLikeLoading(false);
+      setTimeout(() => setLikeAnim(false), 300);
     }
   };
 
   const handleBookmark = async () => {
-    if (!requireAuth()) return;
-    setInteractionLoading(true);
+    if (!requireAuth() || saveLoading) return;
+
+    // Optimistic update: flip the saved state immediately, then reconcile.
+    const previousBookmarked = isBookmarked;
+    const nextBookmarked = !isBookmarked;
+
+    setIsBookmarked(nextBookmarked);
+    setSaveLoading(true);
+
     try {
-      const data = isBookmarked
-        ? await removeBookmark(slug)
-        : await bookmarkBlog(slug);
-      if (data.success) {
-        setBookmarks(data.bookmarks || 0);
-        setIsBookmarked(!!data.isBookmarked);
+      const data = await saveBlog(slug);
+
+      if (data && data.success) {
+        // Reconcile with authoritative server state.
+        setIsBookmarked(typeof data.saved === "boolean" ? data.saved : nextBookmarked);
+        addToast(
+          data.saved ? "Blog saved!" : "Blog unsaved",
+          "success",
+          2000
+        );
+      } else {
+        // Unexpected payload -> roll back.
+        setIsBookmarked(previousBookmarked);
+        addToast("Something went wrong", "error", 3000);
       }
     } catch {
-      // ignore network errors; state unchanged
+      // Network/API failure -> roll back to previous state.
+      setIsBookmarked(previousBookmarked);
+      addToast("Failed to save. Please try again.", "error", 3000);
     } finally {
-      setInteractionLoading(false);
+      setSaveLoading(false);
     }
   };
 
@@ -428,6 +476,9 @@ export default function BlogDetailPage() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+
       {/* Reading Progress Bar */}
       <div
         className="pointer-events-none fixed top-0 left-0 z-50 h-1 w-full origin-left bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-transform duration-150 ease-out will-change-transform"
@@ -480,27 +531,36 @@ export default function BlogDetailPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleLike}
-                  disabled={interactionLoading}
+                  disabled={likeLoading}
                   aria-pressed={isLiked}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition disabled:opacity-60 ${
+                  aria-label={isLiked ? "Unlike this blog" : "Like this blog"}
+                  aria-busy={likeLoading}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed select-none ${
                     isLiked
                       ? "border-rose-500/40 bg-rose-500/10 text-rose-300"
-                      : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                      : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 active:scale-95"
                   }`}
                   title={isLiked ? "Unlike" : "Like"}
                 >
-                  <FiHeart size={15} className={isLiked ? "fill-rose-400 text-rose-400" : ""} />
-                  <span>{likes}</span>
+                  <FiHeart
+                    size={15}
+                    className={`transition-transform duration-200 ${
+                      isLiked ? "fill-rose-400 text-rose-400" : ""
+                    } ${likeAnim ? "scale-125" : "scale-100"}`}
+                  />
+                  <span className="tabular-nums">{likes}</span>
                 </button>
 
                 <button
                   onClick={handleBookmark}
-                  disabled={interactionLoading}
+                  disabled={saveLoading}
                   aria-pressed={isBookmarked}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition disabled:opacity-60 ${
+                  aria-label={isBookmarked ? "Remove bookmark" : "Save this blog"}
+                  aria-busy={saveLoading}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed select-none ${
                     isBookmarked
                       ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
-                      : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                      : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 active:scale-95"
                   }`}
                   title={isBookmarked ? "Remove bookmark" : "Save"}
                 >

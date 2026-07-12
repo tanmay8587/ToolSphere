@@ -610,8 +610,8 @@ export const resendVerificationEmail = async (req, res) => {
 };
 
 /* ==========================================
-   LOGOUT
-   ========================================== */
+    LOGOUT
+    ===================================== */
 
 export const logoutUser = async (req, res) => {
   try {
@@ -623,5 +623,37 @@ export const logoutUser = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ success: false, message: "Logout failed." });
+  }
+};
+
+/* ==========================================
+    GET SAVED BLOGS
+    GET /api/users/me/saved-blogs
+    Returns the current user's saved blogs (populated).
+    ===================================== */
+export const getSavedBlogs = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("savedBlogs").populate({
+      path: "savedBlogs",
+      match: { isDeleted: false, status: "published" },
+      select:
+        "title slug coverImage category excerpt readingTime publishedAt views",
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Filter out any nulls (e.g. blogs that were soft-deleted and not matched)
+    const savedBlogs = (user.savedBlogs || []).filter(Boolean);
+
+    return res.json({
+      success: true,
+      savedBlogs,
+      totalSaved: savedBlogs.length,
+    });
+  } catch (err) {
+    logger.error("[getSavedBlogs] Error fetching saved blogs:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch saved blogs." });
   }
 };

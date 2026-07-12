@@ -8,6 +8,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
+    // Blogs the user has saved/bookmarked (toggle save/unsave).
+    savedBlogs: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Blog" }],
+      default: [],
+    },
     email: {
       type: String,
       required: true,

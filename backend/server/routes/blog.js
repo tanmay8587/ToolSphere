@@ -14,6 +14,7 @@ import {
   unlikeBlog,
   bookmarkBlog,
   removeBookmark,
+  saveBlog,
   getRelatedBlogs,
   getAdjacentBlogs,
   viewBlog,
@@ -105,6 +106,13 @@ blogRouter.post("/:id/bookmark", verifyUser, bookmarkBlog);
  * - Remove bookmark (logged-in users only)
  */
 blogRouter.delete("/:id/bookmark", verifyUser, removeBookmark);
+
+/**
+ * POST /api/blogs/:id/save
+ * - Toggle save/unsave a blog (logged-in users only).
+ *   Stores the blog id in the user's savedBlogs array.
+ */
+blogRouter.post("/:id/save", verifyUser, saveBlog);
 
 /* ===========================
    ADMIN ROUTES  (/api/admin/blogs)

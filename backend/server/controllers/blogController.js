@@ -1,5 +1,7 @@
+import mongoose from "mongoose";
 import Blog from "../models/Blog.js";
 import BlogView from "../models/BlogView.js";
+import User from "../models/User.js";
 import { createSlug } from "../utils/slug.js";
 import { normalizeTags } from "../utils/validation.js";
 import { notifyNewBlog } from "../utils/newsletterEmail.js";
@@ -776,68 +778,94 @@ export const updateStatus = async (req, res) => {
 };
 
 /* =====================================
-    USER - LIKE BLOG
+   HELPER - resolve a blog by id OR slug
+   The like endpoints accept either the MongoDB
+   _id or the URL slug, so the same route works
+   for both admin ids and public-facing slugs.
+   ===================================== */
+const resolveBlogForInteraction = async (idOrSlug) => {
+  const filter = { isDeleted: false };
+  if (mongoose.Types.ObjectId.isValid(idOrSlug)) {
+    filter._id = idOrSlug;
+  } else {
+    filter.slug = idOrSlug;
+  }
+  return Blog.findOne(filter);
+};
+
+/* =====================================
+    USER - TOGGLE LIKE BLOG
+    POST /api/blogs/:id/like  (auth required)
+    Toggles the current user's like. Idempotent:
+    liking an already-liked blog removes the like.
+    Prevents duplicate likes. Returns { liked, totalLikes }.
     ===================================== */
 export const likeBlog = async (req, res) => {
   try {
-    const blog = await Blog.findOne({ _id: req.params.id, isDeleted: false });
+    const blog = await resolveBlogForInteraction(req.params.id);
 
     if (!blog) {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
-    const userId = req.user.id;
+    const userId = req.user.id.toString();
+    const alreadyLiked = blog.likedBy.some((uid) => uid.toString() === userId);
 
-    // Check if user already liked this blog
-    if (blog.likedBy.includes(userId)) {
-      return sendErrorResponse(res, 400, "You have already liked this blog");
+    if (alreadyLiked) {
+      // Toggle OFF
+      blog.likedBy = blog.likedBy.filter((uid) => uid.toString() !== userId);
+      blog.likes = Math.max(0, (blog.likes || 0) - 1);
+    } else {
+      // Toggle ON (guard prevents duplicate likes)
+      blog.likedBy.push(userId);
+      blog.likes = (blog.likes || 0) + 1;
     }
 
-    // Add user to likedBy array and increment likes count
-    blog.likedBy.push(userId);
-    blog.likes = (blog.likes || 0) + 1;
     await blog.save();
 
     return res.json({
       success: true,
-      message: "Blog liked successfully",
-      likes: blog.likes,
-      isLiked: true,
+      liked: !alreadyLiked,
+      totalLikes: blog.likes || 0,
     });
   } catch (err) {
-    logger.error("[likeBlog] Error liking blog:", err);
+    logger.error("[likeBlog] Error toggling like:", err);
     return sendErrorResponse(res, 500, "Failed to like blog");
   }
 };
 
 /* =====================================
     USER - UNLIKE BLOG
+    DELETE /api/blogs/:id/like  (auth required)
+    Explicit unlike (idempotent). Returns { liked, totalLikes }.
     ===================================== */
 export const unlikeBlog = async (req, res) => {
   try {
-    const blog = await Blog.findOne({ _id: req.params.id, isDeleted: false });
+    const blog = await resolveBlogForInteraction(req.params.id);
 
     if (!blog) {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
-    const userId = req.user.id;
+    const userId = req.user.id.toString();
 
-    // Check if user has liked this blog
-    if (!blog.likedBy.includes(userId)) {
-      return sendErrorResponse(res, 400, "You have not liked this blog");
+    if (!blog.likedBy.some((uid) => uid.toString() === userId)) {
+      // Not liked -> nothing to change, return current state
+      return res.json({
+        success: true,
+        liked: false,
+        totalLikes: blog.likes || 0,
+      });
     }
 
-    // Remove user from likedBy array and decrement likes count
-    blog.likedBy = blog.likedBy.filter(id => id.toString() !== userId.toString());
+    blog.likedBy = blog.likedBy.filter((uid) => uid.toString() !== userId);
     blog.likes = Math.max(0, (blog.likes || 0) - 1);
     await blog.save();
 
     return res.json({
       success: true,
-      message: "Blog unliked successfully",
-      likes: blog.likes,
-      isLiked: false,
+      liked: false,
+      totalLikes: blog.likes || 0,
     });
   } catch (err) {
     logger.error("[unlikeBlog] Error unliking blog:", err);
@@ -910,6 +938,50 @@ export const removeBookmark = async (req, res) => {
   } catch (err) {
     logger.error("[removeBookmark] Error removing bookmark:", err);
     return sendErrorResponse(res, 500, "Failed to remove bookmark");
+  }
+};
+
+/* =====================================
+    USER - TOGGLE SAVE BLOG
+    POST /api/blogs/:id/save  (auth required)
+    Toggles the current user's saved-blog state. Stores the
+    blog id in User.savedBlogs. Idempotent: saving an already
+    saved blog removes it. Returns { saved, totalSaved }.
+    ===================================== */
+export const saveBlog = async (req, res) => {
+  try {
+    const blog = await resolveBlogForInteraction(req.params.id);
+
+    if (!blog) {
+      return sendErrorResponse(res, 404, "Blog not found");
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return sendErrorResponse(res, 404, "User not found");
+    }
+
+    const blogId = blog._id.toString();
+    const alreadySaved = user.savedBlogs.some((id) => id.toString() === blogId);
+
+    if (alreadySaved) {
+      // Unsave
+      user.savedBlogs = user.savedBlogs.filter((id) => id.toString() !== blogId);
+    } else {
+      // Save (guard prevents duplicate entries)
+      user.savedBlogs.push(blog._id);
+    }
+
+    await user.save();
+
+    return res.json({
+      success: true,
+      saved: !alreadySaved,
+      totalSaved: user.savedBlogs.length,
+    });
+  } catch (err) {
+    logger.error("[saveBlog] Error toggling save:", err);
+    return sendErrorResponse(res, 500, "Failed to save blog");
   }
 };
 

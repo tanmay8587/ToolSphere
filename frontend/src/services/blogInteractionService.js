@@ -27,11 +27,18 @@ async function authRequest(path, options = {}) {
 }
 
 /* ===============================
-   Public-safe interaction state
-   =============================== */
+    Public-safe interaction state
+    Sends the auth token when present so the backend
+    can report the current user's like/bookmark state.
+    =============================== */
 export async function getBlogInteraction(slug) {
+  const headers = {};
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
   const response = await fetch(
-    `${API_BASE}/blogs/${encodeURIComponent(slug)}/interaction`
+    `${API_BASE}/blogs/${encodeURIComponent(slug)}/interaction`,
+    { headers }
   );
   const data = await response.json().catch(() => null);
   if (!response.ok) {
@@ -67,5 +74,23 @@ export async function bookmarkBlog(slug) {
 export async function removeBookmark(slug) {
   return authRequest(`/blogs/${encodeURIComponent(slug)}/bookmark`, {
     method: "DELETE",
+  });
+}
+
+/* ===============================
+   Save / Unsave (toggle)
+   =============================== */
+export async function saveBlog(slug) {
+  return authRequest(`/blogs/${encodeURIComponent(slug)}/save`, {
+    method: "POST",
+  });
+}
+
+/* ===============================
+   Get current user's saved blogs
+   =============================== */
+export async function getSavedBlogs() {
+  return authRequest(`/users/me/saved-blogs`, {
+    method: "GET",
   });
 }

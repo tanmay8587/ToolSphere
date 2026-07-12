@@ -1,4 +1,5 @@
 import Blog from "../models/Blog.js";
+import User from "../models/User.js";
 import logger from "../utils/logger.js";
 import { sendErrorResponse } from "../utils/errorResponse.js";
 
@@ -11,13 +12,19 @@ const resolveBlogBySlug = async (slug) => {
   return Blog.findOne({ slug, isDeleted: false, status: "published" });
 };
 
-// Build the interaction payload returned to the client
-const buildInteractionState = (blog, userId) => ({
+// Build the interaction payload returned to the client.
+// `savedBlogIds` is the current user's savedBlogs array (or null for guests),
+// since saved blogs are now stored on the User model rather than on the blog.
+const buildInteractionState = (blog, userId, savedBlogIds) => ({
   success: true,
   likes: blog.likes || 0,
   bookmarks: blog.bookmarkedBy?.length || 0,
   isLiked: !!(userId && blog.likedBy?.some((id) => id.toString() === userId)),
-  isBookmarked: !!(userId && blog.bookmarkedBy?.some((id) => id.toString() === userId)),
+  isBookmarked: !!(
+    userId &&
+    savedBlogIds &&
+    savedBlogIds.some((id) => id.toString() === blog._id.toString())
+  ),
 });
 
 /* =====================================
@@ -35,7 +42,15 @@ export const getInteractionState = async (req, res) => {
     }
 
     const userId = req.user?.id || null;
-    return res.json(buildInteractionState(blog, userId));
+
+    // Load the current user's saved blogs so we can report the saved state.
+    let savedBlogIds = null;
+    if (userId) {
+      const user = await User.findById(userId).select("savedBlogs").lean();
+      savedBlogIds = user?.savedBlogs || [];
+    }
+
+    return res.json(buildInteractionState(blog, userId, savedBlogIds));
   } catch (err) {
     logger.error("[getInteractionState] Error:", err);
     return sendErrorResponse(res, 500, "Failed to fetch interaction state");
