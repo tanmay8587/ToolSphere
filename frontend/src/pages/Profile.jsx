@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getProfile, updateNewsletterPreference, getLikedBlogs } from "../services/userApi";
-import { getSavedBlogs, removeBookmark, saveBlog } from "../services/blogInteractionService";
+import { getSavedBlogs, removeBookmark, saveBlog, unlikeBlog } from "../services/blogInteractionService";
 import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
 import ToggleSwitch from "../components/common/ToggleSwitch";
@@ -205,6 +205,17 @@ export default function Profile() {
       addToast("Blog removed from saved list.", "success");
     } catch (err) {
       addToast(err.message || "Failed to remove saved blog.", "error");
+    }
+  };
+
+  const handleUnlikeBlog = async (blogId) => {
+    try {
+      await unlikeBlog(blogId);
+      // Remove the blog from the liked blogs state
+      setLikedBlogs((prev) => prev.filter((blog) => blog._id !== blogId));
+      addToast("Blog unliked successfully.", "success");
+    } catch (err) {
+      addToast(err.message || "Failed to unlike blog.", "error");
     }
   };
 
@@ -979,9 +990,9 @@ export default function Profile() {
                           key={blog._id}
                           whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
                           transition={liftSpring}
-                          className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/40 shadow-lg transition-colors hover:border-pink-500/30"
-                          onClick={() => navigate(`/blog/${blog.slug}`)}
+                          className="group flex flex-col overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/40 shadow-lg transition-colors hover:border-pink-500/30"
                         >
+                          {/* Cover Image with Unlike Button */}
                           <div className="relative h-40 w-full overflow-hidden bg-slate-800">
                             {blog.coverImage ? (
                               <img
@@ -996,25 +1007,56 @@ export default function Profile() {
                                 </svg>
                               </div>
                             )}
+                            
+                            {/* Unlike Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUnlikeBlog(blog._id);
+                              }}
+                              className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900/80 text-slate-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
+                              title="Remove like"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                <path d="M11.645 20.91l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488-.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488-.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0Z" clipRule="evenodd" />
+                              </svg>
+                            </button>
                           </div>
-                          <div className="flex flex-1 flex-col gap-2 p-4">
-                            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-pink-300 transition-colors">
-                              {blog.title}
-                            </h3>
-                            <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-                              {blog.category && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-pink-500/10 px-2.5 py-0.5 text-xs font-medium text-pink-300">
-                                  {blog.category}
+
+                          {/* Card Content */}
+                          <div
+                            className="flex flex-1 flex-col gap-2 p-4 cursor-pointer"
+                            onClick={() => navigate(`/blog/${blog.slug}`)}
+                          >
+                            <div className="flex-1">
+                              <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-pink-300 transition-colors">
+                                {blog.title}
+                              </h3>
+                              <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                                {blog.category && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-pink-500/10 px-2.5 py-0.5 text-xs font-medium text-pink-300">
+                                    {blog.category}
+                                  </span>
+                                )}
+                                {blog.readingTime > 0 && (
+                                  <span className="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                                      <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+                                    </svg>
+                                    {blog.readingTime} min read
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {/* Like Date */}
+                              <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                                  <path d="M11.645 20.91l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488-.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488-.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0Z" clipRule="evenodd" />
+                                </svg>
+                                <span>
+                                  Liked {blog.createdAt ? new Date(blog.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "recently"}
                                 </span>
-                              )}
-                              {blog.readingTime > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
-                                    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
-                                  </svg>
-                                  {blog.readingTime} min read
-                                </span>
-                              )}
+                              </div>
                             </div>
                           </div>
                         </motion.div>
