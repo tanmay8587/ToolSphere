@@ -26,6 +26,27 @@ const calculateReadingTime = (html = "") => {
   return Math.max(1, Math.ceil(words / 200));
 };
 
+/**
+ * Calculate the total word count from HTML content.
+ */
+const getWordCount = (html = "") => {
+  const text = html.replace(/<[^>]*>/g, "");
+  return text.trim().split(/\s+/).filter(Boolean).length;
+};
+
+/**
+ * Format remaining reading time into a human-friendly string.
+ * Returns "Completed" when progress >= 100%.
+ */
+const formatRemainingTime = (progress, totalWords) => {
+  if (progress >= 100) return "Completed";
+  const remainingWords = totalWords * (1 - progress / 100);
+  const remainingMinutes = Math.ceil(remainingWords / 200);
+  if (remainingMinutes < 1) return "Less than 1 min left";
+  if (remainingMinutes === 1) return "About 1 min left";
+  return `About ${remainingMinutes} min left`;
+};
+
 const decodeHtmlEntities = (str = "") => {
   if (typeof document === "undefined") {
     return str
@@ -104,7 +125,9 @@ export default function BlogDetailPage() {
   const [previousBlog, setPreviousBlog] = useState(null);
   const [nextBlog, setNextBlog] = useState(null);
   const [readingProgress, setReadingProgress] = useState(0);
+  const [remainingTime, setRemainingTime] = useState("");
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showResume, setShowResume] = useState(false);
   const [likes, setLikes] = useState(0);
   const [bookmarks, setBookmarks] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -187,25 +210,88 @@ export default function BlogDetailPage() {
     loadRelated();
   }, [slug]);
 
-  // Reading progress + back-to-top — throttled with rAF
+  // Reading progress + remaining time + back-to-top — throttled with rAF.
+  // Progress is 0% when the top of the article content reaches the top of the
+  // viewport (just below the navbar), and 100% when the bottom of the article
+  // content reaches the bottom of the viewport. The bar is hidden (opacity 0)
+  // before the article enters the viewport.
   useEffect(() => {
     let rafId = null;
+    const navbar = document.querySelector("header");
+    const navHeight = navbar ? navbar.offsetHeight : 64;
+
+    // Cache total word count so we don't recompute on every frame
+    let totalWords = 0;
+    // Throttle localStorage writes — only persist every 500ms of scrolling
+    let lastPersist = 0;
+
     const update = () => {
       rafId = null;
       const scrollTop = window.scrollY;
       setShowBackToTop(scrollTop > 400);
+
       const el = contentRef.current;
       if (!el) {
         setReadingProgress(0);
+        setRemainingTime("");
         return;
       }
-      const articleTop = el.getBoundingClientRect().top + scrollTop;
-      const scrollable = el.offsetHeight - window.innerHeight;
-      const read = scrollTop - articleTop;
-      const progress =
-        scrollable > 0 ? Math.min(Math.max((read / scrollable) * 100, 0), 100) : 0;
+
+      // Compute total words once and cache
+      if (totalWords === 0) {
+        totalWords = getWordCount(blog?.content || "");
+      }
+
+      const rect = el.getBoundingClientRect();
+      const articleTop = rect.top + scrollTop;
+      const articleBottom = articleTop + el.offsetHeight;
+
+      // The "start" is when the article's top edge reaches the navbar bottom
+      const start = articleTop - navHeight - 20;
+      // The "end" is when the article's bottom edge reaches the viewport bottom
+      const end = articleBottom - window.innerHeight;
+
+      let progress;
+      if (scrollTop <= start) {
+        // Before the article starts — hide the bar
+        progress = 0;
+      } else if (scrollTop >= end) {
+        // Past the end of the article — exactly 100%
+        progress = 100;
+      } else {
+        // Within the article — interpolate linearly
+        progress = ((scrollTop - start) / (end - start)) * 100;
+        progress = Math.min(Math.max(progress, 0), 100);
+      }
+
       setReadingProgress(progress);
+      setRemainingTime(formatRemainingTime(progress, totalWords));
+
+      // Persist reading position to localStorage (throttled)
+      const now = Date.now();
+      if (progress > 0 && progress < 100 && now - lastPersist > 500) {
+        lastPersist = now;
+        try {
+          const scrollY = window.scrollY;
+          localStorage.setItem(
+            `blog_progress_${slug}`,
+            JSON.stringify({ scrollY, progress, updatedAt: now })
+          );
+        } catch {
+          // localStorage may be full or unavailable
+        }
+      }
+
+      // Clear saved progress when article is completed
+      if (progress >= 100) {
+        try {
+          localStorage.removeItem(`blog_progress_${slug}`);
+        } catch {
+          // noop
+        }
+      }
     };
+
     const handleScroll = () => {
       if (rafId === null) rafId = requestAnimationFrame(update);
     };
@@ -215,7 +301,7 @@ export default function BlogDetailPage() {
       window.removeEventListener("scroll", handleScroll);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [blog?.content, slug]);
 
   // Assign heading IDs after content renders
   useEffect(() => {
@@ -230,7 +316,7 @@ export default function BlogDetailPage() {
     });
   }, [blog?.content]);
 
-  // Scroll to heading on initial hash load
+  // Scroll to heading on initial hash load — highest priority
   useEffect(() => {
     if (!blog?.content || !contentRef.current) return;
     const hash = window.location.hash;
@@ -247,6 +333,43 @@ export default function BlogDetailPage() {
       }
     });
   }, [blog?.content]);
+
+  // Check for saved reading position on load (only if no URL hash is present)
+  useEffect(() => {
+    if (!blog?.content || !contentRef.current) return;
+    // If there's a URL hash, the hash handler above takes priority — skip resume
+    if (window.location.hash) return;
+
+    try {
+      const saved = localStorage.getItem(`blog_progress_${slug}`);
+      if (saved) {
+        const data = JSON.parse(saved);
+        // Only show resume if progress is between 5% and 95%
+        if (data.progress > 5 && data.progress < 95) {
+          setShowResume(true);
+        }
+      }
+    } catch {
+      // Invalid or missing data — noop
+    }
+  }, [blog?.content, slug]);
+
+  // Handle resume — scroll to saved position
+  const handleResume = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(`blog_progress_${slug}`);
+      if (saved) {
+        const data = JSON.parse(saved);
+        const navbar = document.querySelector("header");
+        const offset = navbar ? navbar.offsetHeight + 20 : 80;
+        const targetY = Math.max(0, data.scrollY - offset);
+        window.scrollTo({ top: targetY, behavior: "smooth" });
+      }
+    } catch {
+      // noop
+    }
+    setShowResume(false);
+  }, [slug]);
 
   // Active heading via IntersectionObserver — stable callback
   useEffect(() => {
@@ -514,10 +637,13 @@ export default function BlogDetailPage() {
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
-      {/* Reading Progress Bar */}
+      {/* Reading Progress Bar — fixed at top, hidden before article starts */}
       <div
-        className="pointer-events-none fixed top-0 left-0 z-50 h-1 w-full origin-left bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-transform duration-150 ease-out will-change-transform"
-        style={{ transform: `scaleX(${readingProgress / 100})` }}
+        className="pointer-events-none fixed top-0 left-0 z-50 h-1 w-full origin-left bg-gradient-to-r from-cyan-500 via-blue-500 to-fuchsia-500 shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-150 ease-out will-change-transform"
+        style={{
+          transform: `scaleX(${readingProgress / 100})`,
+          opacity: readingProgress > 0 ? 1 : 0,
+        }}
       />
 
       <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -640,6 +766,19 @@ export default function BlogDetailPage() {
               <p className="text-lg text-slate-300 mb-8 leading-relaxed border-l-4 border-cyan-500 pl-4 italic">
                 {blog.excerpt}
               </p>
+            )}
+
+            {/* Resume Reading button */}
+            {showResume && (
+              <div className="mb-6 animate-fadeIn">
+                <button
+                  onClick={handleResume}
+                  className="group inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/5 px-4 py-2.5 text-sm font-medium text-cyan-300 transition-all duration-200 hover:bg-cyan-500/10 hover:border-cyan-400/50 hover:shadow-sm hover:shadow-cyan-500/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                >
+                  <FiArrowLeft size={14} className="rotate-180 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                  Resume Reading
+                </button>
+              </div>
             )}
 
             <div
@@ -840,6 +979,42 @@ export default function BlogDetailPage() {
           <aside className="hidden lg:block space-y-6" aria-label="Table of Contents">
             {toc.length >= 2 && (
               <div className="sticky top-[100px] rounded-xl border border-white/[0.06] bg-slate-950/80 p-5 backdrop-blur-sm shadow-lg shadow-black/10">
+                {/* Reading progress indicator */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500">Reading Progress</span>
+                    <span
+                      className="text-[12px] font-semibold tabular-nums transition-all duration-200"
+                      style={{
+                        color: readingProgress >= 100 ? "#22d3ee" : readingProgress > 0 ? "#94a3b8" : "#64748b",
+                      }}
+                    >
+                      {Math.round(readingProgress)}%
+                    </span>
+                  </div>
+                  <div className="h-1 w-full rounded-full bg-slate-800/60 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-150 ease-out"
+                      style={{
+                        width: `${Math.min(readingProgress, 100)}%`,
+                        opacity: readingProgress > 0 ? 1 : 0,
+                      }}
+                    />
+                  </div>
+                  {/* Estimated time remaining */}
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <FiClock size={11} className="text-slate-500 shrink-0" />
+                    <span
+                      className="text-[11px] font-medium transition-all duration-200"
+                      style={{
+                        color: remainingTime === "Completed" ? "#22d3ee" : "#94a3b8",
+                      }}
+                    >
+                      {remainingTime || "—"}
+                    </span>
+                  </div>
+                </div>
+
                 <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 flex items-center gap-2">
                   <FiList size={14} className="text-cyan-400" />
                   On this page
