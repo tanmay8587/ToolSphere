@@ -14,6 +14,11 @@ import { isLoggedIn } from '../utils/auth';
 import EmptyState from '../components/common/EmptyState';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/common/Toast';
+import {
+  getToolImage,
+  generateToolOgTags,
+  generateToolTwitterTags,
+} from '../utils/socialMeta';
 
 const RECENTLY_VIEWED_KEY = 'recentlyViewedTools';
 const MAX_RECENT_TOOLS = 8;
@@ -293,13 +298,19 @@ export default function ToolDetailPage() {
   }
 
   const toolUrl = window.location.href;
+  
+  // Generate social meta tags
+  const ogTags = generateToolOgTags(tool);
+  const twitterTags = generateToolTwitterTags(tool);
+  const toolImage = getToolImage(tool);
+  
   const toolJsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": tool.name,
     "description": tool.seoDescription || tool.description,
     "url": tool.website || toolUrl,
-    "image": tool.ogImage || tool.coverImage || tool.logo,
+    "image": toolImage,
     "applicationCategory": tool.category || "AI Tool",
     "operatingSystem": "Web-based",
     "offers": {
@@ -355,63 +366,80 @@ export default function ToolDetailPage() {
         {/* Open Graph */}
         <meta
           property="og:title"
-          content={tool.seoTitle || tool.name}
+          content={ogTags.title}
         />
 
         <meta
           property="og:description"
-          content={
-            tool.seoDescription ||
-            tool.description?.substring(0, 160)
-          }
+          content={ogTags.description}
         />
 
         <meta
           property="og:image"
-          content={
-            tool.ogImage ||
-            tool.coverImage ||
-            tool.logo
-          }
+          content={ogTags.image}
+        />
+
+        <meta
+          property="og:image:width"
+          content={ogTags.imageWidth}
+        />
+
+        <meta
+          property="og:image:height"
+          content={ogTags.imageHeight}
+        />
+
+        <meta
+          property="og:image:alt"
+          content={ogTags.title}
         />
 
         <meta
           property="og:type"
-          content="website"
+          content={ogTags.type}
         />
 
         <meta
           property="og:url"
-          content={window.location.href}
+          content={ogTags.url}
         />
 
-        {/* Twitter */}
+        <meta
+          property="og:site_name"
+          content={ogTags.siteName}
+        />
+
+        {/* Twitter Card */}
         <meta
           name="twitter:card"
-          content="summary_large_image"
+          content={twitterTags.card}
         />
 
         <meta
           name="twitter:title"
-          content={tool.seoTitle || tool.name}
+          content={twitterTags.title}
         />
 
         <meta
           name="twitter:description"
-          content={
-            tool.seoDescription ||
-            tool.description?.substring(0, 160)
-          }
+          content={twitterTags.description}
         />
 
         <meta
           name="twitter:image"
-          content={
-            tool.ogImage ||
-            tool.coverImage ||
-            tool.logo
-          }
+          content={twitterTags.image}
         />
+
+        <meta
+          name="twitter:image:alt"
+          content={twitterTags.imageAlt}
+        />
+
+        <meta
+          name="twitter:site"
+          content={twitterTags.site}
+        />
+
         <script type="application/ld+json">
           {JSON.stringify(toolJsonLd)}
         </script>

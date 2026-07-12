@@ -16,6 +16,11 @@ import {
 } from "../services/blogInteractionService";
 import { isLoggedIn } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
+import {
+  getBlogImage,
+  generateBlogOgTags,
+  generateBlogTwitterTags,
+} from "../utils/socialMeta";
 
 /* =====================================
    HELPERS
@@ -596,12 +601,17 @@ export default function BlogDetailPage() {
   const readingTime = blog.readingTime ?? calculateReadingTime(blog.content ?? "");
   const blogUrl = window.location.origin + "/blog/" + blog.slug;
 
+  // Generate social meta tags
+  const ogTags = generateBlogOgTags(blog);
+  const twitterTags = generateBlogTwitterTags(blog);
+  const blogImage = getBlogImage(blog);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: blog.seoTitle || blog.title,
     description: blog.seoDescription || blog.excerpt,
-    image: blog.coverImage || blog.ogImage,
+    image: blogImage,
     datePublished: blog.publishedAt,
     dateModified: blog.updatedAt,
     author: { "@type": "Person", name: blog.author || "ToolSphere" },
@@ -617,21 +627,33 @@ export default function BlogDetailPage() {
         <meta name="description" content={blog.seoDescription || blog.excerpt || ""} />
         {blog.seoKeywords?.length > 0 && <meta name="keywords" content={blog.seoKeywords.join(", ")} />}
         {blog.canonicalUrl && <link rel="canonical" href={blog.canonicalUrl} />}
-        <meta property="og:title" content={blog.seoTitle || blog.title} />
-        <meta property="og:description" content={blog.seoDescription || blog.excerpt || ""} />
-        <meta property="og:image" content={blog.ogImage || blog.coverImage || ""} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={blogUrl} />
-        <meta property="og:site_name" content="ToolSphere" />
-        <meta property="article:published_time" content={blog.publishedAt} />
-        <meta property="article:author" content={blog.author || "ToolSphere"} />
-        {blog.tags?.map((tag) => (
+        
+        {/* Open Graph */}
+        <meta property="og:title" content={ogTags.title} />
+        <meta property="og:description" content={ogTags.description} />
+        <meta property="og:image" content={ogTags.image} />
+        <meta property="og:image:width" content={ogTags.imageWidth} />
+        <meta property="og:image:height" content={ogTags.imageHeight} />
+        <meta property="og:image:alt" content={ogTags.title} />
+        <meta property="og:type" content={ogTags.type} />
+        <meta property="og:url" content={ogTags.url} />
+        <meta property="og:site_name" content={ogTags.siteName} />
+        <meta property="article:published_time" content={ogTags.publishedTime} />
+        <meta property="article:modified_time" content={ogTags.modifiedTime} />
+        <meta property="article:author" content={ogTags.author} />
+        {ogTags.tags.map((tag) => (
           <meta key={tag} property="article:tag" content={tag} />
         ))}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={blog.seoTitle || blog.title} />
-        <meta name="twitter:description" content={blog.seoDescription || blog.excerpt || ""} />
-        <meta name="twitter:image" content={blog.ogImage || blog.coverImage || ""} />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content={twitterTags.card} />
+        <meta name="twitter:title" content={twitterTags.title} />
+        <meta name="twitter:description" content={twitterTags.description} />
+        <meta name="twitter:image" content={twitterTags.image} />
+        <meta name="twitter:image:alt" content={twitterTags.imageAlt} />
+        <meta name="twitter:site" content={twitterTags.site} />
+        {twitterTags.creator && <meta name="twitter:creator" content={twitterTags.creator} />}
+        
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
