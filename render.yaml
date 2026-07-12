@@ -1,0 +1,76 @@
+services:
+  # ============================================================
+  # Backend API — Render Web Service
+  # ============================================================
+  - type: web
+    name: toolbox-api
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+  # ============================================================
+  # Frontend — Render Static Site
+  # ============================================================
+  - type: static
+    name: toolbox-frontend
+    env: static
+    region: singapore
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    pullRequestPreviewsEnabled: true
+
+    # ----------------------------------------------------------
+    # Cache-Control Headers
+    # ----------------------------------------------------------
+    headers:
+      # Never cache index.html — ensures users always get the
+      # latest app shell after every deployment.
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+
+      # Aggressively cache hashed assets (Vite embeds content
+      # hashes in filenames, so they are immutable).
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+    # ----------------------------------------------------------
+    # SPA Rewrite Rule (React Router)
+    # ----------------------------------------------------------
+    routes:
+      # All client-side routes fall through to index.html so
+      # React Router can resolve them on the client.
+      - type: rewrite
+        source: /*
+        destination: /index.html
