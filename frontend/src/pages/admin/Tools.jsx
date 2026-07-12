@@ -347,23 +347,50 @@ export default function Tools() {
                     className="h-4 w-4 rounded border-slate-600 bg-slate-800"
                   />
                 </th>
-                <th 
+                <th
+                  role="button"
+                  tabIndex={0}
+                  aria-sort={filters.sortBy === "name" ? (filters.sortOrder === "asc" ? "ascending" : "descending") : "none"}
                   className="px-4 py-3 font-semibold text-slate-400 cursor-pointer hover:text-white"
                   onClick={() => handleSort("name")}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSort("name");
+                    }
+                  }}
                 >
                   Name
                 </th>
                 <th className="px-4 py-3 font-semibold text-slate-400">Category</th>
-                <th 
+                <th
+                  role="button"
+                  tabIndex={0}
+                  aria-sort={filters.sortBy === "status" ? (filters.sortOrder === "asc" ? "ascending" : "descending") : "none"}
                   className="px-4 py-3 font-semibold text-slate-400 cursor-pointer hover:text-white"
                   onClick={() => handleSort("status")}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSort("status");
+                    }
+                  }}
                 >
                   Status
                 </th>
                 <th className="px-4 py-3 font-semibold text-slate-400">Featured</th>
-                <th 
+                <th
+                  role="button"
+                  tabIndex={0}
+                  aria-sort={filters.sortBy === "createdAt" ? (filters.sortOrder === "asc" ? "ascending" : "descending") : "none"}
                   className="px-4 py-3 font-semibold text-slate-400 cursor-pointer hover:text-white"
                   onClick={() => handleSort("createdAt")}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSort("createdAt");
+                    }
+                  }}
                 >
                   Created
                 </th>

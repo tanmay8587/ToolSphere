@@ -176,10 +176,20 @@ export default function Topbar() {
                       {searchResults.tools.slice(0, 5).map((tool) => (
                         <div
                           key={tool._id}
+                          role="button"
+                          tabIndex={0}
                           onClick={() => {
                             navigate(`/admin/tools/${tool._id}/edit`);
                             setShowSearchResults(false);
                             setSearchQuery("");
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              navigate(`/admin/tools/${tool._id}/edit`);
+                              setShowSearchResults(false);
+                              setSearchQuery("");
+                            }
                           }}
                           className="cursor-pointer rounded-lg px-2 py-2 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                         >

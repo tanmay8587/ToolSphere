@@ -160,10 +160,20 @@ const [dashboardRes, toolsRes, categoriesRes, usersRes] = await Promise.all([
                     {searchResults.tools.slice(0, 5).map((tool) => (
                       <div
                         key={tool._id}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => {
                           navigate(`/admin/tools/${tool._id}/edit`);
                           setShowSearch(false);
                           setSearchQuery("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            navigate(`/admin/tools/${tool._id}/edit`);
+                            setShowSearch(false);
+                            setSearchQuery("");
+                          }
                         }}
                         className="cursor-pointer rounded-lg px-2 py-2 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                       >
@@ -307,9 +317,17 @@ const [dashboardRes, toolsRes, categoriesRes, usersRes] = await Promise.all([
                 </div>
               ) : (
                 recentTools.map((tool) => (
-                  <div 
-                    key={tool._id} 
+                  <div
+                    key={tool._id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => navigate(`/admin/tools/${tool._id}/edit`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate(`/admin/tools/${tool._id}/edit`);
+                      }
+                    }}
                     className="group flex cursor-pointer flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3.5 transition-all hover:border-cyan-500/30 hover:bg-slate-900"
                   >
                     <div className="flex-1 min-w-0">

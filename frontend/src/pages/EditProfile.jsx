@@ -213,7 +213,19 @@ export default function EditProfile() {
             {/* Profile Photo */}
             <div className="flex flex-col items-center gap-4">
               <p className="text-sm font-medium text-slate-400">Profile Photo</p>
-              <div className="relative cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Change profile photo"
+                className="relative cursor-pointer group"
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+              >
                 <div className="h-28 w-28 rounded-full bg-gradient-to-br from-cyan-400 via-indigo-500 to-purple-600 p-[3px] shadow-lg shadow-cyan-500/30 transition-transform duration-300 group-hover:scale-105">
                   <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-900">
                     {avatarPreview ? (

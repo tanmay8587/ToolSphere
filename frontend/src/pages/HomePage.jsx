@@ -306,14 +306,23 @@ export default function HomePage() {
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-white/10 bg-slate-900 shadow-xl z-50">
                   {suggestions.map((tool) => (
-                    <div
-                      key={tool._id || tool.name}
-                      onClick={() => {
-                        setShowSuggestions(false);
-                        navigate(`/tools/${tool.slug}`);
-                      }}
-                      className="cursor-pointer px-4 py-3 hover:bg-slate-800"
-                    >
+                      <div
+                        key={tool._id || tool.name}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          setShowSuggestions(false);
+                          navigate(`/tools/${tool.slug}`);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setShowSuggestions(false);
+                            navigate(`/tools/${tool.slug}`);
+                          }
+                        }}
+                        className="cursor-pointer px-4 py-3 hover:bg-slate-800"
+                      >
                       <div className="font-medium">{tool.name}</div>
                       <div className="text-xs text-slate-400">{tool.category}</div>
                     </div>

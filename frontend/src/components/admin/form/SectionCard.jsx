@@ -13,9 +13,18 @@ export default function SectionCard({
 
   return (
     <div className={`rounded-2xl border border-slate-800 bg-slate-950/50 ${className}`}>
-      <div 
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
         className="flex items-center justify-between p-6 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
       >
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5">

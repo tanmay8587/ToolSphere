@@ -14,6 +14,7 @@ import { getSocialLinks } from '../services/socialService';
 import { getBrandingSettings } from '../services/websiteBrandingService';
 import { getAnalyticsSettings } from '../services/analyticsService';
 import { getMaintenanceStatus } from '../services/maintenanceService';
+import { ARIA_LABELS, getAccessibleButtonProps, focusManagement } from '../utils/accessibility';
 
 const navItems = [
   { name: 'Home', path: '/' },
@@ -275,8 +276,7 @@ export default function Layout() {
       {/* SKIP TO CONTENT */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-cyan-500 focus:px-4 focus:py-2 focus:text-white"
-      >
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left
         Skip to main content
       </a>
 

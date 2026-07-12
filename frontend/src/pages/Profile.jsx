@@ -1310,8 +1310,17 @@ export default function Profile() {
 
                           {/* Card Content */}
                           <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`View ${tool.name}`}
                             className="flex flex-1 flex-col gap-2 px-5 pb-5 cursor-pointer"
                             onClick={() => navigate(`/tools/${tool.slug}`)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                navigate(`/tools/${tool.slug}`);
+                              }
+                            }}
                           >
                             <div className="flex-1">
                               <h3 className="line-clamp-1 font-semibold text-white group-hover:text-cyan-300 transition-colors">
@@ -1427,8 +1436,17 @@ export default function Profile() {
 
                           {/* Card Content */}
                           <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`View ${blog.title}`}
                             className="flex flex-1 flex-col gap-2 p-4 cursor-pointer"
                             onClick={() => navigate(`/blog/${blog.slug}`)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                navigate(`/blog/${blog.slug}`);
+                              }
+                            }}
                           >
                             <div className="flex-1">
                               <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-cyan-300 transition-colors">
@@ -1545,8 +1563,17 @@ export default function Profile() {
 
                           {/* Card Content */}
                           <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`View ${blog.title}`}
                             className="flex flex-1 flex-col gap-2 p-4 cursor-pointer"
                             onClick={() => navigate(`/blog/${blog.slug}`)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                navigate(`/blog/${blog.slug}`);
+                              }
+                            }}
                           >
                             <div className="flex-1">
                               <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-pink-300 transition-colors">
@@ -1627,8 +1654,17 @@ export default function Profile() {
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`View ${review.tool?.name || 'review'}`}
                               className="flex-1 min-w-0 cursor-pointer"
                               onClick={() => navigate(`/tools/${review.tool?.slug}`)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  navigate(`/tools/${review.tool?.slug}`);
+                                }
+                              }}
                             >
                               <h3 className="font-semibold text-white truncate hover:text-amber-300 transition-colors">
                                 {review.tool?.name || 'Tool review'}
