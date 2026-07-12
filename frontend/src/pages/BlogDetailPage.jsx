@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { FiClock, FiEye, FiArrowLeft, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark, FiChevronDown } from "react-icons/fi";
+import { FiClock, FiEye, FiArrowLeft, FiChevronUp, FiCalendar, FiUser, FiTag, FiHeart, FiBookmark, FiChevronDown, FiChevronRight, FiList } from "react-icons/fi";
 import { getPublicBlogBySlug, getRelatedBlogs, getAdjacentBlogs, recordBlogView } from "../services/publicBlogService";
 import EmptyState from "../components/common/EmptyState";
 import BlogComments from "../components/blog/BlogComments";
@@ -26,14 +26,8 @@ const calculateReadingTime = (html = "") => {
   return Math.max(1, Math.ceil(words / 200));
 };
 
-/**
- * Decode common HTML entities (e.g. &nbsp;, &#39;, &) into plain text.
- * Used to produce clean heading text for the Table of Contents and to keep
- * anchor ids consistent with the rendered (decoded) DOM headings.
- */
 const decodeHtmlEntities = (str = "") => {
   if (typeof document === "undefined") {
-    // Fallback for non-DOM environments (e.g. SSR/tests)
     return str
       .replace(/&nbsp;/g, " ")
       .replace(/&#39;/g, "'")
@@ -49,11 +43,6 @@ const decodeHtmlEntities = (str = "") => {
   return txt.value;
 };
 
-/**
- * Convert a heading's text into a stable, URL-safe slug used for anchor ids.
- * Decodes HTML entities first so it matches the decoded textContent of the
- * rendered DOM heading (which is what scrollToHeading targets).
- */
 const slugifyHeading = (text = "") => {
   return decodeHtmlEntities(text)
     .toLowerCase()
@@ -78,6 +67,20 @@ const generateTableOfContents = (html) => {
     });
   }
   return headings;
+};
+
+const groupTocBySections = (toc) => {
+  const sections = [];
+  let currentSection = null;
+  for (const item of toc) {
+    if (item.level === 2) {
+      currentSection = { h2: item, children: [] };
+      sections.push(currentSection);
+    } else if (currentSection) {
+      currentSection.children.push(item);
+    }
+  }
+  return sections;
 };
 
 const formatDate = (date) => {
@@ -111,6 +114,7 @@ export default function BlogDetailPage() {
   const [likeAnim, setLikeAnim] = useState(false);
   const [activeHeading, setActiveHeading] = useState("");
   const [mobileTocOpen, setMobileTocOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState(new Set());
   const [views, setViews] = useState(0);
   const contentRef = useRef(null);
   const navigate = useNavigate();
@@ -138,7 +142,6 @@ export default function BlogDetailPage() {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  // Record a view via the existing View API when the blog opens
   useEffect(() => {
     if (!slug) return;
     recordBlogView(slug)
@@ -147,12 +150,9 @@ export default function BlogDetailPage() {
           setViews(data.views || 0);
         }
       })
-      .catch(() => {
-        // Non-blocking: keep the views loaded from the blog payload
-      });
+      .catch(() => {});
   }, [slug]);
 
-  // Load like/bookmark state for the current user
   useEffect(() => {
     if (!slug) return;
     getBlogInteraction(slug)
@@ -164,14 +164,9 @@ export default function BlogDetailPage() {
           setIsBookmarked(!!data.isBookmarked);
         }
       })
-      .catch(() => {
-        // Non-blocking: counts simply stay at 0
-      });
+      .catch(() => {});
   }, [slug]);
 
-  /**
-   * Load related blogs and prev/next navigation
-   */
   useEffect(() => {
     const loadRelated = async () => {
       if (!slug) return;
@@ -187,25 +182,18 @@ export default function BlogDetailPage() {
           setPreviousBlog(adjacentRes.previousBlog);
           setNextBlog(adjacentRes.nextBlog);
         }
-      } catch (err) {
-        // Non-blocking
-      }
+      } catch (err) {}
     };
     loadRelated();
   }, [slug]);
 
-  // Reading progress (article-based) + back-to-top visibility.
-  // Scroll work is throttled to one update per animation frame so the bar
-  // stays smooth and lightweight even during fast scrolling.
+  // Reading progress + back-to-top — throttled with rAF
   useEffect(() => {
     let rafId = null;
     const update = () => {
       rafId = null;
       const scrollTop = window.scrollY;
       setShowBackToTop(scrollTop > 400);
-
-      // Progress reflects how much of the ARTICLE body has been read,
-      // not the whole page (which also includes comments, related, prev/next).
       const el = contentRef.current;
       if (!el) {
         setReadingProgress(0);
@@ -222,54 +210,88 @@ export default function BlogDetailPage() {
       if (rafId === null) rafId = requestAnimationFrame(update);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    update(); // initialize once content is present
+    update();
     return () => {
       window.removeEventListener("scroll", handleScroll);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
 
-  // Add IDs to headings for table of contents
+  // Assign heading IDs after content renders
   useEffect(() => {
     if (!blog?.content || !contentRef.current) return;
     const container = contentRef.current;
     container.querySelectorAll("h2, h3, h4").forEach((heading) => {
-      const text = heading.textContent || "";
-      const id = slugifyHeading(text);
-      if (id) heading.id = id;
+      if (!heading.id) {
+        const text = heading.textContent || "";
+        const id = slugifyHeading(text);
+        if (id) heading.id = id;
+      }
     });
   }, [blog?.content]);
 
-  // Active TOC highlighting via IntersectionObserver (lightweight, no scroll listener)
+  // Scroll to heading on initial hash load
+  useEffect(() => {
+    if (!blog?.content || !contentRef.current) return;
+    const hash = window.location.hash;
+    if (!hash) return;
+    const id = hash.slice(1);
+    requestAnimationFrame(() => {
+      const element = document.getElementById(id);
+      if (element) {
+        const navbar = document.querySelector("header");
+        const offset = navbar ? navbar.offsetHeight + 20 : 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+      }
+    });
+  }, [blog?.content]);
+
+  // Active heading via IntersectionObserver — stable callback
   useEffect(() => {
     if (!blog?.content || !contentRef.current) return;
     const headings = Array.from(contentRef.current.querySelectorAll("h2, h3, h4"));
     if (!headings.length) return;
 
-    const visible = new Set();
     const navbar = document.querySelector("header");
     const navHeight = navbar ? navbar.offsetHeight : 64;
+    const visibleMap = new Map();
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) visible.add(entry.target.id);
-          else visible.delete(entry.target.id);
+          visibleMap.set(entry.target.id, entry.isIntersecting);
         });
-        // Highlight the first heading (in document order) currently in view
-        let active = headings.find((h) => visible.has(h.id));
-        // If nothing is in the active band but we've reached the bottom,
-        // keep the last heading highlighted for the final section.
+
+        let active = null;
+        for (const h of headings) {
+          if (visibleMap.get(h.id)) {
+            active = h;
+            break;
+          }
+        }
+
+        if (!active) {
+          for (let i = headings.length - 1; i >= 0; i--) {
+            const rect = headings[i].getBoundingClientRect();
+            if (rect.top < navHeight + 20) {
+              active = headings[i];
+              break;
+            }
+          }
+        }
+
         if (!active && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
           active = headings[headings.length - 1];
         }
+
         if (active) {
           setActiveHeading((prev) => (prev === active.id ? prev : active.id));
         }
       },
       {
-        // Activate a heading once it sits just below the fixed navbar,
-        // and deactivate it once it scrolls past the upper ~30% of the viewport.
-        rootMargin: `-${navHeight + 16}px 0px -70% 0px`,
+        rootMargin: `-${navHeight + 20}px 0px -70% 0px`,
         threshold: 0,
       }
     );
@@ -278,22 +300,42 @@ export default function BlogDetailPage() {
     return () => observer.disconnect();
   }, [blog?.content]);
 
-  // NOTE: `toc` and `readingTime` are derived from `blog` and are computed
-  // AFTER the loading/error guards below, so `blog` is guaranteed non-null.
+  // Auto-expand active section
+  const toc = useMemo(() => generateTableOfContents(blog?.content || ""), [blog?.content]);
+  const tocSections = useMemo(() => groupTocBySections(toc), [toc]);
 
-  // Redirect unauthenticated users to login before interacting
-  const requireAuth = () => {
+  useEffect(() => {
+    if (!toc.length) return;
+    const sections = groupTocBySections(toc);
+    const nextExpanded = new Set();
+
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+      if (section.h2.id === activeHeading || section.children.some((c) => c.id === activeHeading)) {
+        nextExpanded.add(i);
+      }
+    }
+
+    if (nextExpanded.size === 0) return;
+
+    setExpandedSections((prev) => {
+      const merged = new Set(prev);
+      for (const idx of nextExpanded) merged.add(idx);
+      return merged;
+    });
+  }, [activeHeading, toc]);
+
+  // Stable callbacks — no unnecessary re-renders
+  const requireAuth = useCallback(() => {
     if (!isLoggedIn()) {
       navigate("/login");
       return false;
     }
     return true;
-  };
+  }, [navigate]);
 
-  const handleLike = async () => {
+  const handleLike = useCallback(async () => {
     if (!requireAuth() || likeLoading) return;
-
-    // Optimistic update: flip UI immediately, then reconcile with the server.
     const previousLiked = isLiked;
     const previousLikes = likes;
     const nextLiked = !isLiked;
@@ -305,27 +347,17 @@ export default function BlogDetailPage() {
     setLikeLoading(true);
 
     try {
-      const data = previousLiked
-        ? await unlikeBlog(slug)
-        : await likeBlog(slug);
-
+      const data = previousLiked ? await unlikeBlog(slug) : await likeBlog(slug);
       if (data && data.success) {
-        // Reconcile with authoritative server values.
         setLikes(typeof data.totalLikes === "number" ? data.totalLikes : nextLikes);
         setIsLiked(typeof data.liked === "boolean" ? data.liked : nextLiked);
-        addToast(
-          data.liked ? "Liked!" : "Like removed",
-          "success",
-          2000
-        );
+        addToast(data.liked ? "Liked!" : "Like removed", "success", 2000);
       } else {
-        // Unexpected payload -> roll back.
         setIsLiked(previousLiked);
         setLikes(previousLikes);
         addToast("Something went wrong", "error", 3000);
       }
     } catch {
-      // Network/API failure -> roll back to previous state.
       setIsLiked(previousLiked);
       setLikes(previousLikes);
       addToast("Failed to update like. Please try again.", "error", 3000);
@@ -333,12 +365,10 @@ export default function BlogDetailPage() {
       setLikeLoading(false);
       setTimeout(() => setLikeAnim(false), 300);
     }
-  };
+  }, [requireAuth, likeLoading, isLiked, likes, slug, addToast]);
 
-  const handleBookmark = async () => {
+  const handleBookmark = useCallback(async () => {
     if (!requireAuth() || saveLoading) return;
-
-    // Optimistic update: flip the saved state immediately, then reconcile.
     const previousBookmarked = isBookmarked;
     const nextBookmarked = !isBookmarked;
 
@@ -347,44 +377,63 @@ export default function BlogDetailPage() {
 
     try {
       const data = await saveBlog(slug);
-
       if (data && data.success) {
-        // Reconcile with authoritative server state.
         setIsBookmarked(typeof data.saved === "boolean" ? data.saved : nextBookmarked);
-        addToast(
-          data.saved ? "Blog saved!" : "Blog unsaved",
-          "success",
-          2000
-        );
+        addToast(data.saved ? "Blog saved!" : "Blog unsaved", "success", 2000);
       } else {
-        // Unexpected payload -> roll back.
         setIsBookmarked(previousBookmarked);
         addToast("Something went wrong", "error", 3000);
       }
     } catch {
-      // Network/API failure -> roll back to previous state.
       setIsBookmarked(previousBookmarked);
       addToast("Failed to save. Please try again.", "error", 3000);
     } finally {
       setSaveLoading(false);
     }
-  };
+  }, [requireAuth, saveLoading, isBookmarked, slug, addToast]);
 
-  const scrollToHeading = (id) => {
+  const scrollToHeading = useCallback((id) => {
     const element = document.getElementById(id);
     if (element) {
-      // Dynamically measure the fixed/sticky navbar height so the heading
-      // lands just below it. Falls back to 80px if no header is found.
+      history.replaceState(null, "", `#${id}`);
       const navbar = document.querySelector("header");
-      const offset = navbar ? navbar.offsetHeight + 16 : 80;
+      const offset = navbar ? navbar.offsetHeight + 20 : 80;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
+      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
     }
-  };
+  }, []);
+
+  const toggleSection = useCallback((sectionIdx, h2Id) => {
+    scrollToHeading(h2Id);
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionIdx)) next.delete(sectionIdx);
+      else next.add(sectionIdx);
+      return next;
+    });
+  }, [scrollToHeading]);
+
+  // Keyboard handler for TOC items
+  const handleTocKeyDown = useCallback(
+    (id) => (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        scrollToHeading(id);
+      }
+    },
+    [scrollToHeading]
+  );
+
+  const handleSectionKeyDown = useCallback(
+    (sectionIdx, h2Id) => (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleSection(sectionIdx, h2Id);
+      }
+    },
+    [toggleSection]
+  );
 
   if (loading) {
     return (
@@ -421,11 +470,7 @@ export default function BlogDetailPage() {
     );
   }
 
-  // Derived values that depend on `blog` are computed ONLY after the guards
-  // above, so `blog` is guaranteed to be a non-null object here.
-  const toc = generateTableOfContents(blog.content);
   const readingTime = blog.readingTime ?? calculateReadingTime(blog.content ?? "");
-
   const blogUrl = window.location.origin + "/blog/" + blog.slug;
 
   const jsonLd = {
@@ -436,14 +481,8 @@ export default function BlogDetailPage() {
     image: blog.coverImage || blog.ogImage,
     datePublished: blog.publishedAt,
     dateModified: blog.updatedAt,
-    author: {
-      "@type": "Person",
-      name: blog.author || "ToolSphere",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "ToolSphere",
-    },
+    author: { "@type": "Person", name: blog.author || "ToolSphere" },
+    publisher: { "@type": "Organization", name: "ToolSphere" },
     mainEntityOfPage: { "@type": "WebPage", "@id": blogUrl },
     wordCount: blog.content ? blog.content.replace(/<[^>]*>/g, "").split(/\s+/).filter(Boolean).length : 0,
   };
@@ -455,7 +494,6 @@ export default function BlogDetailPage() {
         <meta name="description" content={blog.seoDescription || blog.excerpt || ""} />
         {blog.seoKeywords?.length > 0 && <meta name="keywords" content={blog.seoKeywords.join(", ")} />}
         {blog.canonicalUrl && <link rel="canonical" href={blog.canonicalUrl} />}
-        {/* OpenGraph */}
         <meta property="og:title" content={blog.seoTitle || blog.title} />
         <meta property="og:description" content={blog.seoDescription || blog.excerpt || ""} />
         <meta property="og:image" content={blog.ogImage || blog.coverImage || ""} />
@@ -467,16 +505,13 @@ export default function BlogDetailPage() {
         {blog.tags?.map((tag) => (
           <meta key={tag} property="article:tag" content={tag} />
         ))}
-        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={blog.seoTitle || blog.title} />
         <meta name="twitter:description" content={blog.seoDescription || blog.excerpt || ""} />
         <meta name="twitter:image" content={blog.ogImage || blog.coverImage || ""} />
-        {/* Breadcrumb */}
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
-      {/* Toast notifications */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
       {/* Reading Progress Bar */}
@@ -486,8 +521,7 @@ export default function BlogDetailPage() {
       />
 
       <article className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        {/* Back link */}
-        <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 mb-8 transition">
+        <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 mb-8 transition-colors duration-200">
           <FiArrowLeft size={16} />
           Back to Blog
         </Link>
@@ -495,7 +529,6 @@ export default function BlogDetailPage() {
         <div className="grid gap-10 lg:grid-cols-[1fr_280px]">
           {/* Main Content */}
           <div>
-            {/* Cover Image */}
             {blog.coverImage && (
               <div className="mb-8 rounded-2xl overflow-hidden border border-white/10">
                 <img
@@ -507,10 +540,9 @@ export default function BlogDetailPage() {
               </div>
             )}
 
-            {/* Category & Meta */}
             <div className="flex flex-wrap items-center gap-3 mb-4">
               {blog.category && (
-                <Link to={`/blog?category=${encodeURIComponent(blog.category)}`} className="rounded-full bg-cyan-500/10 px-4 py-1.5 text-sm font-medium text-cyan-300 hover:bg-cyan-500/20 transition">
+                <Link to={`/blog?category=${encodeURIComponent(blog.category)}`} className="rounded-full bg-cyan-500/10 px-4 py-1.5 text-sm font-medium text-cyan-300 hover:bg-cyan-500/20 transition-colors duration-200">
                   {blog.category}
                 </Link>
               )}
@@ -527,7 +559,6 @@ export default function BlogDetailPage() {
                 {views} views
               </span>
 
-              {/* Like / Bookmark */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleLike}
@@ -535,19 +566,14 @@ export default function BlogDetailPage() {
                   aria-pressed={isLiked}
                   aria-label={isLiked ? "Unlike this blog" : "Like this blog"}
                   aria-busy={likeLoading}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed select-none ${
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                     isLiked
                       ? "border-rose-500/40 bg-rose-500/10 text-rose-300"
                       : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 active:scale-95"
                   }`}
                   title={isLiked ? "Unlike" : "Like"}
                 >
-                  <FiHeart
-                    size={15}
-                    className={`transition-transform duration-200 ${
-                      isLiked ? "fill-rose-400 text-rose-400" : ""
-                    } ${likeAnim ? "scale-125" : "scale-100"}`}
-                  />
+                  <FiHeart size={15} className={`transition-transform duration-200 ${isLiked ? "fill-rose-400 text-rose-400" : ""} ${likeAnim ? "scale-125" : "scale-100"}`} />
                   <span className="tabular-nums">{likes}</span>
                 </button>
 
@@ -557,7 +583,7 @@ export default function BlogDetailPage() {
                   aria-pressed={isBookmarked}
                   aria-label={isBookmarked ? "Remove bookmark" : "Save this blog"}
                   aria-busy={saveLoading}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed select-none ${
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                     isBookmarked
                       ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
                       : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 active:scale-95"
@@ -570,12 +596,10 @@ export default function BlogDetailPage() {
               </div>
             </div>
 
-            {/* Title */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
               {blog.title}
             </h1>
 
-            {/* Reading Information Section */}
             <div className="flex flex-wrap items-center gap-4 mb-8 p-4 rounded-2xl border border-white/10 bg-slate-900/50">
               <div className="flex items-center gap-2 text-sm text-slate-300">
                 <FiClock size={16} className="text-cyan-400" />
@@ -612,21 +636,18 @@ export default function BlogDetailPage() {
               )}
             </div>
 
-            {/* Excerpt */}
             {blog.excerpt && (
               <p className="text-lg text-slate-300 mb-8 leading-relaxed border-l-4 border-cyan-500 pl-4 italic">
                 {blog.excerpt}
               </p>
             )}
 
-            {/* Content */}
             <div
               ref={contentRef}
               className="blog-content prose prose-invert prose-lg max-w-none prose-headings:text-white prose-headings:scroll-mt-24 prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-cyan-500 prose-blockquote:text-slate-300 prose-img:rounded-xl prose-img:mx-auto prose-pre:bg-transparent prose-pre:p-0 prose-pre:border-0 prose-code:text-cyan-300 prose-code:before:content-none prose-code:after:content-none"
               dangerouslySetInnerHTML={{ __html: blog.content }}
             />
 
-            {/* Tags */}
             {blog.tags?.length > 0 && (
               <div className="mt-10 pt-8 border-t border-slate-800">
                 <div className="flex items-center gap-2 mb-3">
@@ -638,7 +659,7 @@ export default function BlogDetailPage() {
                     <Link
                       key={tag}
                       to={`/blog?search=${encodeURIComponent(tag)}`}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300 hover:bg-white/10 hover:text-cyan-300 transition"
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300 hover:bg-white/10 hover:text-cyan-300 transition-colors duration-200"
                     >
                       {tag}
                     </Link>
@@ -647,37 +668,57 @@ export default function BlogDetailPage() {
               </div>
             )}
 
-            {/* Mobile Table of Contents Accordion */}
+            {/* Mobile TOC */}
             {toc.length >= 2 && (
               <div className="lg:hidden mt-10 pt-8 border-t border-slate-800">
                 <button
                   onClick={() => setMobileTocOpen(!mobileTocOpen)}
-                  className="w-full flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-left transition hover:border-cyan-500/50 hover:bg-slate-900"
+                  className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-slate-900/70 p-4 text-left transition-all duration-200 hover:border-cyan-500/50 hover:bg-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                   aria-expanded={mobileTocOpen}
+                  aria-controls="mobile-toc-panel"
                 >
-                  <span className="text-sm font-semibold text-white">Table of Contents</span>
+                  <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                    <FiList size={16} className="text-cyan-400" />
+                    Table of Contents
+                  </span>
                   {mobileTocOpen ? <FiChevronUp size={18} className="text-cyan-400" /> : <FiChevronDown size={18} className="text-slate-400" />}
                 </button>
-                {mobileTocOpen && (
-                  <div className="mt-3 rounded-2xl border border-white/10 bg-slate-900/70 p-4">
-                    <nav className="space-y-1">
+                <div
+                  id="mobile-toc-panel"
+                  role="region"
+                  aria-label="Table of Contents"
+                  className={`grid transition-all duration-300 ease-in-out ${
+                    mobileTocOpen ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <div className="overflow-hidden rounded-xl border border-white/10 bg-slate-900/70">
+                    <nav className="p-3 space-y-0.5">
                       {toc.map((heading, i) => (
                         <button
                           key={i}
-                          onClick={() => scrollToHeading(heading.id)}
-                          className={`group relative flex w-full items-center rounded-lg py-2 pl-4 pr-2 text-left text-sm transition-all duration-200 ${
+                          onClick={() => {
+                            scrollToHeading(heading.id);
+                            setMobileTocOpen(false);
+                          }}
+                          onKeyDown={handleTocKeyDown(heading.id)}
+                          tabIndex={0}
+                          role="link"
+                          aria-current={activeHeading === heading.id ? "true" : undefined}
+                          className={`group relative flex w-full items-center rounded-lg py-2 pl-4 pr-3 text-left text-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-inset ${
                             activeHeading === heading.id
                               ? "bg-cyan-500/10 font-medium text-cyan-300"
                               : heading.level === 2
-                              ? "text-slate-300 hover:bg-white/5 hover:text-cyan-300"
+                              ? "text-slate-300 hover:bg-white/[0.04] hover:text-cyan-200"
                               : heading.level === 3
-                              ? "pl-7 text-slate-400 hover:bg-white/5 hover:text-cyan-300"
-                              : "pl-10 text-slate-500 hover:bg-white/5 hover:text-cyan-300"
+                              ? "pl-7 text-slate-400 hover:bg-white/[0.04] hover:text-cyan-200"
+                              : "pl-10 text-slate-500 hover:bg-white/[0.04] hover:text-cyan-200"
                           }`}
                         >
                           <span
-                            className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-cyan-400 transition-opacity duration-200 ${
-                              activeHeading === heading.id ? "opacity-100" : "opacity-0"
+                            className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full transition-all duration-200 ${
+                              activeHeading === heading.id
+                                ? "bg-cyan-400 opacity-100 scale-y-100"
+                                : "bg-cyan-400/40 opacity-0 scale-y-0 group-hover:opacity-60 group-hover:scale-y-75"
                             }`}
                           />
                           {heading.text}
@@ -685,21 +726,18 @@ export default function BlogDetailPage() {
                       ))}
                     </nav>
                   </div>
-                )}
+                </div>
               </div>
             )}
 
-            {/* Updated date */}
             {blog.updatedAt && blog.updatedAt !== blog.publishedAt && (
               <p className="mt-6 text-sm text-slate-500">
                 Last updated: {formatDate(blog.updatedAt)}
               </p>
             )}
 
-            {/* Social Share */}
             <SocialShare url={blogUrl} title={blog.title} text={blog.excerpt} />
 
-            {/* Related Articles */}
             {relatedBlogs.length > 0 && (
               <div className="mt-16 pt-10 border-t border-slate-800">
                 <h2 className="text-2xl font-bold text-white mb-6">Related Articles</h2>
@@ -749,7 +787,6 @@ export default function BlogDetailPage() {
               </div>
             )}
 
-            {/* Previous / Next Navigation */}
             {(previousBlog || nextBlog) && (
               <div className="mt-12 pt-8 border-t border-slate-800">
                 <div className="grid gap-6 md:grid-cols-2">
@@ -759,14 +796,10 @@ export default function BlogDetailPage() {
                       className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
                     >
                       <span className="text-xs font-medium text-slate-400 mb-2 block">Previous Article</span>
-                      <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">
-                        {previousBlog.title}
-                      </h3>
+                      <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">{previousBlog.title}</h3>
                       <div className="flex items-center gap-3 text-xs text-slate-500 mt-3">
                         {previousBlog.category && (
-                          <span className="rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300">
-                            {previousBlog.category}
-                          </span>
+                          <span className="rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300">{previousBlog.category}</span>
                         )}
                         <span className="flex items-center gap-1">
                           <FiCalendar size={12} />
@@ -774,7 +807,9 @@ export default function BlogDetailPage() {
                         </span>
                       </div>
                     </Link>
-                  ) : <div />}
+                  ) : (
+                    <div />
+                  )}
 
                   {nextBlog ? (
                     <Link
@@ -782,56 +817,126 @@ export default function BlogDetailPage() {
                       className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10 text-right"
                     >
                       <span className="text-xs font-medium text-slate-400 mb-2 block">Next Article</span>
-                      <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">
-                        {nextBlog.title}
-                      </h3>
+                      <h3 className="text-base font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2">{nextBlog.title}</h3>
                       <div className="flex items-center justify-end gap-3 text-xs text-slate-500 mt-3">
                         <span className="flex items-center gap-1">
                           <FiCalendar size={12} />
                           {formatDate(nextBlog.publishedAt)}
                         </span>
                         {nextBlog.category && (
-                          <span className="rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300">
-                            {nextBlog.category}
-                          </span>
+                          <span className="rounded-full bg-cyan-500/10 px-2 py-1 text-cyan-300">{nextBlog.category}</span>
                         )}
                       </div>
                     </Link>
-                  ) : <div />}
+                  ) : (
+                    <div />
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Sidebar (Desktop) */}
-          <aside className="hidden lg:block space-y-6">
-            {/* Table of Contents */}
+          {/* Sidebar — Desktop TOC */}
+          <aside className="hidden lg:block space-y-6" aria-label="Table of Contents">
             {toc.length >= 2 && (
-              <div className="sticky top-24 rounded-2xl border border-white/10 bg-slate-950/70 p-5 backdrop-blur-sm">
-                <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">Table of Contents</h3>
-                <nav className="max-h-[calc(100vh-8rem)] space-y-1 overflow-y-auto pr-1">
-                  {toc.map((heading, i) => (
-                    <button
-                      key={i}
-                      onClick={() => scrollToHeading(heading.id)}
-                      className={`group relative flex w-full items-center rounded-lg py-2 pl-4 pr-2 text-left text-sm transition-all duration-200 ${
-                        activeHeading === heading.id
-                          ? "bg-cyan-500/10 font-medium text-cyan-300"
-                          : heading.level === 2
-                          ? "text-slate-300 hover:bg-white/5 hover:text-cyan-300"
-                          : heading.level === 3
-                          ? "pl-7 text-slate-400 hover:bg-white/5 hover:text-cyan-300"
-                          : "pl-10 text-slate-500 hover:bg-white/5 hover:text-cyan-300"
-                      }`}
-                    >
-                      <span
-                        className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-cyan-400 transition-opacity duration-200 ${
-                          activeHeading === heading.id ? "opacity-100" : "opacity-0"
-                        }`}
-                      />
-                      {heading.text}
-                    </button>
-                  ))}
+              <div className="sticky top-[100px] rounded-xl border border-white/[0.06] bg-slate-950/80 p-5 backdrop-blur-sm shadow-lg shadow-black/10">
+                <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 flex items-center gap-2">
+                  <FiList size={14} className="text-cyan-400" />
+                  On this page
+                </h3>
+                <nav
+                  className="max-h-[calc(100vh-148px)] space-y-0.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-600/50 transition-colors"
+                  role="list"
+                  aria-label="Section navigation"
+                >
+                  {tocSections.map((section, sectionIdx) => {
+                    const isExpanded = expandedSections.has(sectionIdx);
+                    const hasChildren = section.children.length > 0;
+                    const isH2Active = activeHeading === section.h2.id;
+                    const isChildActive = section.children.some((c) => c.id === activeHeading);
+
+                    return (
+                      <div key={section.h2.id} className="overflow-hidden">
+                        {/* H2 section header */}
+                        <div className="mb-px">
+                          <button
+                            onClick={() => toggleSection(sectionIdx, section.h2.id)}
+                            onKeyDown={handleSectionKeyDown(sectionIdx, section.h2.id)}
+                            tabIndex={0}
+                            role="listitem"
+                            aria-current={isH2Active ? "true" : undefined}
+                            aria-expanded={hasChildren ? isExpanded : undefined}
+                            className={`group relative flex w-full items-center rounded-lg px-3 py-2 text-left text-[13px] font-medium leading-snug transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-inset ${
+                              isH2Active
+                                ? "bg-cyan-500/[0.08] text-cyan-300"
+                                : isChildActive
+                                ? "text-cyan-200/80"
+                                : "text-slate-300 hover:bg-white/[0.03] hover:text-slate-200"
+                            }`}
+                          >
+                            {/* Active indicator bar */}
+                            <span
+                              className={`absolute left-0 top-1/2 h-[18px] w-[3px] -translate-y-1/2 rounded-r-full transition-all duration-300 ${
+                                isH2Active
+                                  ? "bg-cyan-400 opacity-100 scale-y-100"
+                                  : isChildActive
+                                  ? "bg-cyan-400/50 opacity-100 scale-y-75"
+                                  : "bg-cyan-400/30 opacity-0 scale-y-0 group-hover:opacity-60 group-hover:scale-y-75"
+                              }`}
+                            />
+                            <span className="flex-1 truncate">{section.h2.text}</span>
+                            {hasChildren && (
+                              <FiChevronRight
+                                size={11}
+                                className={`ml-1.5 shrink-0 transition-all duration-300 ${
+                                  isExpanded ? "rotate-90 text-cyan-400" : "text-slate-500 group-hover:text-slate-400"
+                                }`}
+                              />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Nested H3/H4 children with animation */}
+                        <div
+                          className={`grid transition-all duration-300 ease-in-out ${
+                            isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                          }`}
+                        >
+                          <div className="overflow-hidden">
+                            {section.children.map((child) => {
+                              const isActive = activeHeading === child.id;
+                              return (
+                                <button
+                                  key={child.id}
+                                  onClick={() => scrollToHeading(child.id)}
+                                  onKeyDown={handleTocKeyDown(child.id)}
+                                  tabIndex={0}
+                                  role="listitem"
+                                  aria-current={isActive ? "true" : undefined}
+                                  className={`group relative flex w-full items-center rounded-lg py-[7px] pr-3 text-left text-[13px] leading-snug transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-inset ${
+                                    isActive
+                                      ? "bg-cyan-500/[0.06] font-medium text-cyan-300"
+                                      : child.level === 3
+                                      ? "pl-[30px] text-slate-400 hover:bg-white/[0.03] hover:text-slate-300"
+                                      : "pl-[42px] text-slate-500 hover:bg-white/[0.03] hover:text-slate-300"
+                                  }`}
+                                >
+                                  <span
+                                    className={`absolute left-[18px] top-1/2 h-3 w-[2px] -translate-y-1/2 rounded-r-full transition-all duration-200 ${
+                                      isActive
+                                        ? "bg-cyan-400/70 opacity-100 scale-y-100"
+                                        : "bg-cyan-400/30 opacity-0 scale-y-0 group-hover:opacity-60 group-hover:scale-y-75"
+                                    }`}
+                                  />
+                                  {child.text}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </nav>
               </div>
             )}
@@ -842,14 +947,14 @@ export default function BlogDetailPage() {
         {showBackToTop && (
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-white shadow-lg hover:bg-cyan-600 transition shadow-cyan-500/25"
+            aria-label="Scroll to top"
+            className="fixed bottom-6 right-6 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:bg-cyan-400 hover:shadow-cyan-400/30 active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
-            <FiChevronUp size={20} />
+            <FiChevronUp size={18} />
           </button>
         )}
       </article>
 
-      {/* Comments & Replies */}
       {blog && <BlogComments slug={blog.slug} />}
     </>
   );
