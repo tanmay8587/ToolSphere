@@ -105,47 +105,51 @@ export default function ComparePage() {
   // Show fields that every selected tool has (like-for-like comparison), plus
   // any rows explicitly marked `always` (e.g. Features) which are compared
   // side-by-side with graceful placeholders for missing values.
+  const displayTools = compareTools.slice(0, maxCompare);
+
   const commonRows = ROWS.filter(
-    (row) => row.always || compareTools.every((tool) => row.present(tool))
+    (row) => row.always || displayTools.every((tool) => row.present(tool))
   );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white">Compare Tools</h1>
           <p className="mt-2 text-sm text-slate-400">
             Comparing {compareTools.length} of {maxCompare} selected tools.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleCopyLink}
-          className="self-start rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-        >
-          {copied ? "Link copied!" : "Copy link"}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            className="self-start rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+          >
+            {copied ? "Link copied!" : "Copy link"}
+          </button>
 
-        <button
-          type="button"
-          onClick={clearCompare}
-          className="self-start rounded-xl border border-white/10 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5"
-        >
-          Clear all
-        </button>
+          <button
+            type="button"
+            onClick={clearCompare}
+            className="self-start rounded-xl border border-white/10 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5"
+          >
+            Clear all
+          </button>
+        </div>
       </div>
 
       <div className="mt-8 overflow-x-auto">
         <table className="w-full border-separate border-spacing-0">
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 w-40 bg-slate-950 p-4 text-left align-bottom text-sm font-semibold text-slate-400">
+              <th className="sticky left-0 z-10 w-28 bg-slate-950 p-3 text-left align-bottom text-sm font-semibold text-slate-400 sm:w-40 sm:p-4">
                 Feature
               </th>
-              {compareTools.map((tool) => (
+              {displayTools.map((tool) => (
                 <th
                   key={tool._id}
-                  className="min-w-[220px] border-b border-white/10 bg-slate-950 p-4 text-left align-bottom"
+                  className="min-w-[160px] border-b border-white/10 bg-slate-950 p-3 text-left align-bottom sm:min-w-[220px] sm:p-4"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3">
@@ -157,7 +161,7 @@ export default function ComparePage() {
                         onError={(e) => {
                           e.currentTarget.src = "/default-logo.png";
                         }}
-                        className="h-10 w-10 rounded-xl object-cover border border-white/10 bg-white/5"
+                        className="h-9 w-9 rounded-xl object-cover border border-white/10 bg-white/5 sm:h-10 sm:w-10"
                       />
                       <div>
                         <Link
@@ -188,7 +192,7 @@ export default function ComparePage() {
             {commonRows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={compareTools.length + 1}
+                   colSpan={displayTools.length + 1}
                   className="border-b border-white/10 bg-slate-900/40 p-6 text-center text-sm text-slate-400"
                 >
                   No common fields available to compare for the selected tools.
@@ -197,10 +201,10 @@ export default function ComparePage() {
             ) : (
               commonRows.map((row) => (
                 <tr key={row.label}>
-                  <td className="sticky left-0 z-10 border-b border-white/10 bg-slate-950 p-4 text-sm font-medium text-slate-300">
+                  <td className="sticky left-0 z-10 w-28 border-b border-white/10 bg-slate-950 p-3 text-sm font-medium text-slate-300 sm:w-40 sm:p-4">
                     {row.label}
                   </td>
-                  {compareTools.map((tool) => {
+                  {displayTools.map((tool) => {
                     const value = row.get(tool);
                     return (
                       <td
@@ -252,15 +256,22 @@ export default function ComparePage() {
         </table>
       </div>
 
-      <div className="mt-8 flex justify-center">
-        <Link
-          to="/tools"
-          className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20"
-        >
-          <FiColumns size={16} />
-          Add more tools
-        </Link>
-      </div>
+      {displayTools.length < maxCompare ? (
+        <div className="mt-8 flex justify-center">
+          <Link
+            to="/tools"
+            className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20"
+          >
+            <FiColumns size={16} />
+            Add more tools
+          </Link>
+        </div>
+      ) : (
+        <p className="mt-8 text-center text-sm text-slate-500">
+          You've reached the maximum of {maxCompare} tools. Remove one to
+          compare another.
+        </p>
+      )}
     </div>
   );
 }
