@@ -1,7 +1,44 @@
-import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+
+import { getTools } from "../services/toolsService";
 
 const MAX_COMPARE = 3;
 const STORAGE_KEY = "toolsphere:compare";
+
+// Query-param key used to make a comparison shareable via the URL.
+const COMPARE_URL_PARAM = "tools";
+
+// Read the list of tool IDs encoded in the current URL (?tools=id1,id2,id3).
+function readIdsFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get(COMPARE_URL_PARAM);
+    if (!raw) return [];
+    return raw
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean)
+      .slice(0, MAX_COMPARE);
+  } catch {
+    return [];
+  }
+}
+
+// Encode the selected tool IDs into the URL (without a history entry) so the
+// current comparison can be copied/shared.
+function writeIdsToUrl(ids) {
+  try {
+    const url = new URL(window.location.href);
+    if (ids.length > 0) {
+      url.searchParams.set(COMPARE_URL_PARAM, ids.join(","));
+    } else {
+      url.searchParams.delete(COMPARE_URL_PARAM);
+    }
+    window.history.replaceState({}, "", url.toString());
+  } catch {
+    /* ignore URL write failures (e.g. unsupported environments) */
+  }
+}
 
 const ComparisonContext = createContext(null);
 
@@ -27,6 +64,46 @@ export function ComparisonProvider({ children }) {
     } catch {
       /* ignore quota / serialization errors */
     }
+  }, [compareTools]);
+
+  // Load a comparison shared via the URL (?tools=id1,id2,id3) on first mount,
+  // so a visitor opening a shared link sees the exact same tools.
+  useEffect(() => {
+    const ids = readIdsFromUrl();
+    if (ids.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await getTools({ limit: 1000 });
+        const allTools = data?.tools || [];
+        const byId = new Map(allTools.map((t) => [t._id, t]));
+        const selected = ids
+          .map((id) => byId.get(id))
+          .filter(Boolean)
+          .slice(0, MAX_COMPARE);
+        if (!cancelled && selected.length > 0) {
+          setCompareTools(selected);
+        }
+      } catch {
+        /* ignore — keep any existing selection from localStorage */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Keep the URL in sync with the current selection so it stays shareable.
+  // Skip the initial mount so the URL-load effect above owns the first sync.
+  const isFirstSync = useRef(true);
+  useEffect(() => {
+    if (isFirstSync.current) {
+      isFirstSync.current = false;
+      return;
+    }
+    writeIdsToUrl(compareTools.map((t) => t._id));
   }, [compareTools]);
 
   const isComparing = useCallback(

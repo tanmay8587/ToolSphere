@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { FiX, FiArrowRight, FiColumns, FiStar } from "react-icons/fi";
 import { useComparison } from "../context/ComparisonContext";
@@ -62,6 +63,18 @@ const ROWS = [
 export default function ComparePage() {
   const { compareTools, removeFromCompare, clearCompare, maxCompare } = useComparison();
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard may be unavailable; the URL is still in the address bar */
+    }
+  };
+
   if (compareTools.length === 0) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -102,6 +115,14 @@ export default function ComparePage() {
             Comparing {compareTools.length} of {maxCompare} selected tools.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={handleCopyLink}
+          className="self-start rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+        >
+          {copied ? "Link copied!" : "Copy link"}
+        </button>
+
         <button
           type="button"
           onClick={clearCompare}
