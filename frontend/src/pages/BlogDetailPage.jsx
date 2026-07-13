@@ -513,8 +513,8 @@ export default function BlogDetailPage() {
   const tocSections = useMemo(() => groupTocBySections(toc), [toc]);
 
   useEffect(() => {
-    if (!toc.length) return;
-    const sections = groupTocBySections(toc);
+    if (!tocSections.length) return;
+    const sections = tocSections;
     const nextExpanded = new Set();
 
     for (let i = 0; i < sections.length; i++) {
@@ -531,7 +531,7 @@ export default function BlogDetailPage() {
       for (const idx of nextExpanded) merged.add(idx);
       return merged;
     });
-  }, [activeHeading, toc]);
+  }, [activeHeading, tocSections]);
 
   // Stable callbacks — no unnecessary re-renders
   const requireAuth = useCallback(() => {
@@ -678,27 +678,39 @@ export default function BlogDetailPage() {
     );
   }
 
-  const readingTime = blog.readingTime ?? calculateReadingTime(blog.content ?? "");
-  const blogUrl = window.location.origin + "/blog/" + blog.slug;
+  const readingTime = useMemo(
+    () => blog.readingTime ?? calculateReadingTime(blog.content ?? ""),
+    [blog]
+  );
+  const blogUrl = useMemo(
+    () => window.location.origin + "/blog/" + blog.slug,
+    [blog]
+  );
 
-  // Generate social meta tags
-  const ogTags = generateBlogOgTags(blog);
-  const twitterTags = generateBlogTwitterTags(blog);
-  const blogImage = getBlogImage(blog);
+  // Generate social meta tags — memoized so they aren't recomputed on every
+  // scroll-driven re-render (readingProgress / remainingTime updates).
+  const ogTags = useMemo(() => generateBlogOgTags(blog), [blog]);
+  const twitterTags = useMemo(() => generateBlogTwitterTags(blog), [blog]);
+  const blogImage = useMemo(() => getBlogImage(blog), [blog]);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: blog.seoTitle || blog.title,
-    description: blog.seoDescription || blog.excerpt,
-    image: blogImage,
-    datePublished: blog.publishedAt,
-    dateModified: blog.updatedAt,
-    author: { "@type": "Person", name: blog.author || "ToolSphere" },
-    publisher: { "@type": "Organization", name: "ToolSphere" },
-    mainEntityOfPage: { "@type": "WebPage", "@id": blogUrl },
-    wordCount: blog.content ? blog.content.replace(/<[^>]*>/g, "").split(/\s+/).filter(Boolean).length : 0,
-  };
+  const jsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: blog.seoTitle || blog.title,
+      description: blog.seoDescription || blog.excerpt,
+      image: blogImage,
+      datePublished: blog.publishedAt,
+      dateModified: blog.updatedAt,
+      author: { "@type": "Person", name: blog.author || "ToolSphere" },
+      publisher: { "@type": "Organization", name: "ToolSphere" },
+      mainEntityOfPage: { "@type": "WebPage", "@id": blogUrl },
+      wordCount: blog.content
+        ? blog.content.replace(/<[^>]*>/g, "").split(/\s+/).filter(Boolean).length
+        : 0,
+    }),
+    [blog, blogImage, blogUrl]
+  );
 
   return (
     <>

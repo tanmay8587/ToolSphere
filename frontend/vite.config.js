@@ -8,5 +8,22 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:5000'
     }
+  },
+  build: {
+    // Split large, rarely-changing vendor libraries into their own long-cacheable
+    // chunks. This shrinks the initial app chunk, lets the browser cache vendors
+    // independently of app code, and lets chunks download in parallel.
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-icons') || id.includes('lucide-react')) {
+              return 'icons';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
   }
 });

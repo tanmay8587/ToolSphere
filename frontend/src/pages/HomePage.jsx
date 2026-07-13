@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { FiArrowRight, FiSearch, FiStar, FiZap, FiLoader, FiCheck } from 'react-icons/fi';
 import { Link, useNavigate } from "react-router-dom";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { getFeaturedTools, getCategories, getTools } from "../services/toolsService";
 import { subscribeToNewsletter } from "../services/newsletterService";
 import { getStatistics } from "../services/statisticsService";
@@ -12,6 +12,12 @@ import CategoryIcon from "../components/common/CategoryIcon";
 import EmptyState from "../components/common/EmptyState";
 import BlogCard from "../components/blog/BlogCard";
 import { isLoggedIn } from "../utils/auth";
+
+// Memoized so the toast container (and its Toast children, which reset their
+// auto-dismiss timers on every re-render) does NOT re-render on unrelated
+// HomePage state changes such as typing in the search box. `toasts` and
+// `removeToast` are stable references between toast changes, so memo is safe.
+const MemoizedToastContainer = memo(ToastContainer);
 
 const trendingTools = [
   {
@@ -792,7 +798,7 @@ export default function HomePage() {
       </section>
 
       {/* Toast Container */}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <MemoizedToastContainer toasts={toasts} removeToast={removeToast} />
 
     </div>
   );

@@ -9,14 +9,13 @@
  */
 export const generateSrcSet = (imageUrl, sizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840]) => {
   if (!imageUrl) return undefined;
-  
-  // If it's already an absolute URL, use it as-is
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return sizes.map(size => `${imageUrl}?w=${size} ${size}w`).join(', ');
-  }
-  
-  // For relative URLs, generate srcset
-  return sizes.map(size => `${imageUrl}?w=${size} ${size}w`).join(', ');
+
+  // Use "?" to start the query string, or "&" to append when the URL
+  // already contains query parameters. Appending a second "?" would
+  // produce a malformed URL and break responsive image loading.
+  const separator = imageUrl.includes('?') ? '&' : '?';
+
+  return sizes.map(size => `${imageUrl}${separator}w=${size} ${size}w`).join(', ');
 };
 
 /**

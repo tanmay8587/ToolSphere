@@ -1,11 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, lazy, Suspense, memo } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { FiMenu, FiSearch, FiX, FiUser, FiUserPlus } from 'react-icons/fi';
 import { Mail, MapPin, Clock, Zap, ArrowRight } from 'lucide-react';
 import { SiX, SiGithub, SiInstagram, SiYoutube, SiDiscord, SiTelegram, SiFacebook } from 'react-icons/si';
 import { FaLinkedin } from 'react-icons/fa6';
-import SearchModal from '../components/common/SearchModal';
+// Lazily load the search modal: it is only rendered when the user opens search,
+// yet Layout is the always-mounted root, so eager-importing it would bundle its
+// code (and its debounce hook / tools service) into every page load.
+const SearchModal = lazy(() => import('../components/common/SearchModal'));
 import UserMenu from '../components/common/UserMenu';
 import { ToastContainer, useToast } from '../components/common/Toast';
 import { isLoggedIn, getUser, logout as logoutUser } from '../utils/auth';
@@ -53,6 +56,127 @@ const SocialIcon = ({ platform, className }) => {
   const Icon = icons[platform];
   return Icon ? <Icon className={className} /> : null;
 };
+
+// Memoized navbar (header). It only depends on branding/auth/menu state, so it
+// will NOT re-render when unrelated Layout state changes (e.g. toggling the
+// search modal via `searchOpen`), preventing an unnecessary re-render of the
+// entire header/navigation every time the search modal opens or closes.
+const Navbar = memo(function Navbar({ brandingSettings, authUser, menuOpen, setMenuOpen, setSearchOpen }) {
+  return (
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/60 backdrop-blur-2xl supports-[backdrop-filter]:bg-slate-950/40">
+
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-3 text-lg font-semibold tracking-wide">
+          {brandingSettings.logo ? (
+            <img
+              src={brandingSettings.logo}
+              alt={brandingSettings.site_name || "Logo"}
+              className="h-10 w-auto rounded-xl object-contain"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-fuchsia-500 text-lg font-bold shadow-lg shadow-cyan-500/20">
+              AI
+            </div>
+          )}
+          <span>{brandingSettings.site_name || "ToolSphere"}</span>
+        </Link>
+
+        {/* Navigation */}
+        <nav className="hidden items-center gap-6 md:flex" aria-label="Main navigation">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `relative text-sm font-medium transition duration-200 ${isActive
+                  ? "text-cyan-300 after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:w-full after:bg-cyan-400"
+                  : "text-slate-300 hover:text-white hover:translate-y-[-1px]"
+                }`
+              }
+              aria-current={({ isActive }) => isActive ? "page" : undefined}
+            >
+              {item.name}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+
+          {/* Auth UI - Desktop & Mobile */}
+          {authUser ? (
+            <UserMenu user={authUser} />
+          ) : (
+            <>
+              {/* Text labels - desktop & tablet */}
+              <div className="hidden items-center gap-2 md:flex">
+                <Link
+                  to="/login"
+                  className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                >
+                  Register
+                </Link>
+              </div>
+
+              {/* Icon-only - mobile */}
+              <div className="flex items-center gap-2 md:hidden">
+                <Link
+                  to="/login"
+                  aria-label="Login"
+                  className="flex items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-3 text-cyan-300 transition hover:bg-cyan-500/20"
+                >
+                  <FiUser className="h-5 w-5" />
+                </Link>
+                <Link
+                  to="/register"
+                  aria-label="Register"
+                  className="flex items-center justify-center rounded-full bg-cyan-500 p-3 text-white transition hover:bg-cyan-600"
+                >
+                  <FiUserPlus className="h-5 w-5" />
+                </Link>
+              </div>
+            </>
+          )}
+
+          {/* Search Icon - Desktop & Mobile */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-3 text-cyan-300 transition hover:bg-cyan-500/20"
+            aria-label="Search tools"
+          >
+            <FiSearch className="h-5 w-5" />
+          </button>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-sm font-medium text-cyan-300 md:hidden"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+          >
+            {menuOpen ? (
+              <FiX className="h-5 w-5" />
+            ) : (
+              <FiMenu className="h-5 w-5" />
+            )}
+          </button>
+
+        </div>
+
+      </div>
+    </header>
+  );
+});
 
 export default function Layout() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -250,7 +374,11 @@ export default function Layout() {
     }
   }, [brandingSettings]);
 
-  const organizationJsonLd = {
+  // Memoize the JSON-LD object so it is only rebuilt when its inputs change.
+  // Previously it was recreated on every Layout render (e.g. when toggling the
+  // mobile menu or search modal), causing unnecessary work and a new object
+  // reference passed into <Helmet> on each render.
+  const organizationJsonLd = useMemo(() => ({
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": brandingSettings.site_name || "ToolSphere",
@@ -268,7 +396,7 @@ export default function Layout() {
       "email": footerSettings.footer_email || "hello@toolsphere.ai",
       "contactType": "customer service"
     }
-  };
+  }), [brandingSettings, footerSettings, socialLinks]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -282,118 +410,13 @@ export default function Layout() {
       </a>
 
       {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/60 backdrop-blur-2xl supports-[backdrop-filter]:bg-slate-950/40">
-
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 text-lg font-semibold tracking-wide">
-            {brandingSettings.logo ? (
-              <img 
-                src={brandingSettings.logo} 
-                alt={brandingSettings.site_name || "Logo"} 
-                className="h-10 w-auto rounded-xl object-contain"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-fuchsia-500 text-lg font-bold shadow-lg shadow-cyan-500/20">
-                AI
-              </div>
-            )}
-            <span>{brandingSettings.site_name || "ToolSphere"}</span>
-          </Link>
-
-          {/* Navigation */}
-          <nav className="hidden items-center gap-6 md:flex" aria-label="Main navigation">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `relative text-sm font-medium transition duration-200 ${isActive
-                    ? "text-cyan-300 after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:w-full after:bg-cyan-400"
-                    : "text-slate-300 hover:text-white hover:translate-y-[-1px]"
-                  }`
-                }
-                aria-current={({ isActive }) => isActive ? "page" : undefined}
-              >
-                {item.name}
-              </NavLink>
-            ))}
-          </nav>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-
-            {/* Auth UI - Desktop & Mobile */}
-            {authUser ? (
-              <UserMenu user={authUser} />
-            ) : (
-              <>
-                {/* Text labels - desktop & tablet */}
-                <div className="hidden items-center gap-2 md:flex">
-                  <Link
-                    to="/login"
-                    className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="rounded-full bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
-                  >
-                    Register
-                  </Link>
-                </div>
-
-                {/* Icon-only - mobile */}
-                <div className="flex items-center gap-2 md:hidden">
-                  <Link
-                    to="/login"
-                    aria-label="Login"
-                    className="flex items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-3 text-cyan-300 transition hover:bg-cyan-500/20"
-                  >
-                    <FiUser className="h-5 w-5" />
-                  </Link>
-                  <Link
-                    to="/register"
-                    aria-label="Register"
-                    className="flex items-center justify-center rounded-full bg-cyan-500 p-3 text-white transition hover:bg-cyan-600"
-                  >
-                    <FiUserPlus className="h-5 w-5" />
-                  </Link>
-                </div>
-              </>
-            )}
-
-            {/* Search Icon - Desktop & Mobile */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/10 p-3 text-cyan-300 transition hover:bg-cyan-500/20"
-              aria-label="Search tools"
-            >
-              <FiSearch className="h-5 w-5" />
-            </button>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-sm font-medium text-cyan-300 md:hidden"
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
-            >
-              {menuOpen ? (
-                <FiX className="h-5 w-5" />
-              ) : (
-                <FiMenu className="h-5 w-5" />
-              )}
-            </button>
-
-          </div>
-
-        </div>
-      </header>
+      <Navbar
+        brandingSettings={brandingSettings}
+        authUser={authUser}
+        menuOpen={menuOpen}
+        setMenuOpen={setMenuOpen}
+        setSearchOpen={setSearchOpen}
+      />
 
       {/* Mobile Menu */}
       {menuOpen && (
@@ -478,7 +501,9 @@ export default function Layout() {
       )}
 
       {/* Search Modal */}
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <Suspense fallback={null}>
+        <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      </Suspense>
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
