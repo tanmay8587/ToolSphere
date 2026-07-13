@@ -11,6 +11,7 @@ import { FaLinkedin } from 'react-icons/fa6';
 const SearchModal = lazy(() => import('../components/common/SearchModal'));
 import UserMenu from '../components/common/UserMenu';
 import { ToastContainer, useToast } from '../components/common/Toast';
+import ComparisonBar from '../components/tool/ComparisonBar';
 import { isLoggedIn, getUser, logout as logoutUser } from '../utils/auth';
 import { getContactSettings } from '../services/contactSettingService';
 import { getSocialLinks } from '../services/socialService';
@@ -506,6 +507,8 @@ export default function Layout() {
       </Suspense>
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+
+      <ComparisonBar />
 
       <Helmet>
         <script type="application/ld+json">

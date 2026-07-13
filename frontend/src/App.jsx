@@ -47,6 +47,7 @@ const VerifyContact = lazy(() => import("./pages/VerifyContact"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
 const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
+const ComparePage = lazy(() => import("./pages/ComparePage"));
 const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
 
 /* Admin Pages - Lazy Loaded */
@@ -90,6 +91,7 @@ function App() {
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="tools" element={<ToolsPage />} />
             <Route path="tools/:slug" element={<ToolDetailPage />} />
+            <Route path="compare" element={<ComparePage />} />
             <Route path="blog" element={<BlogPage />} />
             <Route path="blog/:slug" element={<BlogDetailPage />} />
             <Route path="about" element={<AboutPage />} />

@@ -7,7 +7,7 @@ import ReportToolModal from "../components/tool/ReportToolModal";
 import { useEffect, useState, memo } from 'react';
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag, FiFolder, FiX } from 'react-icons/fi';
+import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag, FiFolder, FiX, FiColumns } from 'react-icons/fi';
 import { getToolBySlug, getRelatedTools } from '../services/toolsService';
 import { bookmarkTool, getProfile, reviewTool } from '../services/userApi';
 import { addViewedTool } from '../services/recentlyViewedService';
@@ -16,6 +16,7 @@ import { isLoggedIn } from '../utils/auth';
 import EmptyState from '../components/common/EmptyState';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/common/Toast';
+import { useComparison } from '../context/ComparisonContext';
 import CollectionSelector from '../components/collection/CollectionSelector';
 import {
   getToolImage,
@@ -172,6 +173,7 @@ export default function ToolDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { isComparing, toggleCompare, maxCompare } = useComparison();
   const [tool, setTool] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
@@ -467,6 +469,20 @@ export default function ToolDetailPage() {
     }
   };
 
+  const handleCompareToggle = () => {
+    if (!tool) return;
+    const result = toggleCompare(tool);
+    if (result === "max") {
+      addToast(`You can compare up to ${maxCompare} tools.`, "error");
+    } else if (result === "added") {
+      addToast(`Added "${tool.name}" to comparison.`, "success");
+    } else if (result === "removed") {
+      addToast(`Removed "${tool.name}" from comparison.`, "info");
+    }
+  };
+
+  const comparing = tool ? isComparing(tool._id) : false;
+
   const handleSubmitReview = async (event) => {
     event.preventDefault();
 
@@ -699,6 +715,20 @@ export default function ToolDetailPage() {
             Save
           </button>
 
+          <button
+            onClick={handleCompareToggle}
+            className={`flex items-center gap-2 rounded-2xl border px-4 py-3 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+              comparing
+                ? "bg-cyan-500 border-cyan-400 text-white hover:bg-cyan-600"
+                : "bg-slate-900/90 border-white/10 text-white hover:bg-slate-800"
+            }`}
+            aria-label={comparing ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+            aria-pressed={comparing}
+          >
+            <FiColumns />
+            {comparing ? "Comparing" : "Compare"}
+          </button>
+
           {tool?.website && (
             <a
               href={tool.website}
@@ -755,6 +785,18 @@ export default function ToolDetailPage() {
             >
               <FiFolder size={18} />
               Save
+            </button>
+
+            <button
+              onClick={handleCompareToggle}
+              className={`flex flex-col items-center text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                comparing ? "text-cyan-300" : "text-white"
+              }`}
+              aria-label={comparing ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+              aria-pressed={comparing}
+            >
+              <FiGitCompare size={18} />
+              Compare
             </button>
 
             {tool?.website && (

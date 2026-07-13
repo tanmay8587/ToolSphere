@@ -6,6 +6,9 @@ import { Link } from "react-router-dom";
 import Pagination from "../components/common/Pagination";
 import EmptyState from "../components/common/EmptyState";
 import ToggleSwitch from "../components/common/ToggleSwitch";
+import { useComparison } from "../context/ComparisonContext";
+import { useToast } from "../components/common/Toast";
+import { FiColumns, FiCheck } from "react-icons/fi";
 
 export default function ToolsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,6 +38,22 @@ export default function ToolsPage() {
     searchParams.get("featured") === "true"
   );
   const [loading, setLoading] = useState(false);
+
+  const { isComparing, toggleCompare, maxCompare } = useComparison();
+  const { addToast } = useToast();
+
+  const handleCompareToggle = (tool, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const result = toggleCompare(tool);
+    if (result === "max") {
+      addToast(`You can compare up to ${maxCompare} tools.`, "error");
+    } else if (result === "added") {
+      addToast(`Added "${tool.name}" to comparison.`, "success");
+    } else if (result === "removed") {
+      addToast(`Removed "${tool.name}" from comparison.`, "info");
+    }
+  };
 
   // Load categories dynamically
   useEffect(() => {
@@ -217,56 +236,79 @@ export default function ToolsPage() {
 
         ) : (
 
-          displayedTools.map((tool) => (
-            <Link
-              key={tool._id}
-              to={`/tools/${tool.slug}`}
-              className="group rounded-2xl border border-white/10 bg-slate-900/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
-            >
+          displayedTools.map((tool) => {
+            const comparing = isComparing(tool._id);
+            return (
+              <div
+                key={tool._id}
+                className="group relative rounded-2xl border border-white/10 bg-slate-900/70 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
+              >
+                <button
+                  type="button"
+                  onClick={(e) => handleCompareToggle(tool, e)}
+                  aria-pressed={comparing}
+                  aria-label={comparing ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+                  title={comparing ? "Remove from comparison" : "Add to comparison"}
+                  className={`absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                    comparing
+                      ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
+                      : "border-white/10 bg-slate-800/80 text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+                  }`}
+                >
+                  {comparing ? <FiCheck size={13} /> : <FiColumns size={13} />}
+                  {comparing ? "Comparing" : "Compare"}
+                </button>
 
-              <div className="flex items-center justify-between">
+                <Link
+                  to={`/tools/${tool.slug}`}
+                  className="block rounded-2xl p-5"
+                >
 
-                <div className="flex items-center gap-3">
-                  <img
-                    src={tool.logo || tool.coverImage || "/default-logo.png"}
-                    alt={tool.name}
-                    className="h-12 w-12 rounded-xl object-cover border border-white/10 bg-white/5"
-                    onError={(e) => {
-                      e.currentTarget.src = "/default-logo.png";
-                    }}
-                    loading="lazy"
-                  />
+                  <div className="flex items-center justify-between">
 
-                  <span className="text-xs text-slate-400">
-                    {tool.category}
-                  </span>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={tool.logo || tool.coverImage || "/default-logo.png"}
+                        alt={tool.name}
+                        className="h-12 w-12 rounded-xl object-cover border border-white/10 bg-white/5"
+                        onError={(e) => {
+                          e.currentTarget.src = "/default-logo.png";
+                        }}
+                        loading="lazy"
+                      />
 
-                <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
-                  {tool.pricing}
-                </span>
+                      <span className="text-xs text-slate-400">
+                        {tool.category}
+                      </span>
+                    </div>
+
+                    <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
+                      {tool.pricing}
+                    </span>
+                  </div>
+
+                  <h2 className="mt-4 text-lg font-semibold text-white group-hover:text-cyan-300 transition">
+                    {tool.name}
+                  </h2>
+
+                  <p className="mt-2 text-sm text-slate-400 line-clamp-2">
+                    {tool.description}
+                  </p>
+
+                  <div className="mt-5 flex items-center justify-between">
+                    <span className="text-xs text-slate-500">
+                      ⭐ {tool.rating || 4.5}
+                    </span>
+
+                    <span className="text-xs text-cyan-400 group-hover:underline">
+                      View Tool →
+                    </span>
+                  </div>
+
+                </Link>
               </div>
-
-              <h2 className="mt-4 text-lg font-semibold text-white group-hover:text-cyan-300 transition">
-                {tool.name}
-              </h2>
-
-              <p className="mt-2 text-sm text-slate-400 line-clamp-2">
-                {tool.description}
-              </p>
-
-              <div className="mt-5 flex items-center justify-between">
-                <span className="text-xs text-slate-500">
-                  ⭐ {tool.rating || 4.5}
-                </span>
-
-                <span className="text-xs text-cyan-400 group-hover:underline">
-                  View Tool →
-                </span>
-              </div>
-
-            </Link>
-          ))
+            );
+          })
         )}
 
       </div>
