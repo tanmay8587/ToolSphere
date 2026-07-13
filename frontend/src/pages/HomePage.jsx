@@ -7,6 +7,7 @@ import { getFeaturedTools, getCategories, getTools } from "../services/toolsServ
 import { subscribeToNewsletter } from "../services/newsletterService";
 import { getStatistics } from "../services/statisticsService";
 import { getTrendingBlogs } from "../services/publicBlogService";
+import { getHomeSettings } from "../services/homeSettingsService";
 import { ToastContainer, useToast } from "../components/common/Toast";
 import CategoryIcon from "../components/common/CategoryIcon";
 import EmptyState from "../components/common/EmptyState";
@@ -19,29 +20,33 @@ import { isLoggedIn } from "../utils/auth";
 // `removeToast` are stable references between toast changes, so memo is safe.
 const MemoizedToastContainer = memo(ToastContainer);
 
-const trendingTools = [
-  {
-    name: 'ChatGPT',
-    category: 'Writing',
-    rating: 4.9,
-    pricing: 'Freemium',
-    description: 'A versatile conversational AI assistant for brainstorming and writing.'
-  },
-  {
-    name: 'Midjourney',
-    category: 'Image',
-    rating: 4.8,
-    pricing: 'Paid',
-    description: 'Create stunning visuals with text prompts and style control.'
-  },
-  {
-    name: 'Notion AI',
-    category: 'Productivity',
-    rating: 4.7,
-    pricing: 'Freemium',
-    description: 'Enhance your workspace with AI-powered summaries and writing.'
-  }
-];
+// Fallback values used when no Home Settings exist yet (mirrors the previous
+// hard-coded "Trending now" card so the UI never breaks).
+const FALLBACK_HERO_TRENDING = {
+  title: "Trending now",
+  subtitle: "AI Design Stack",
+  icon: "FiZap",
+  tools: [
+    {
+      name: 'ChatGPT',
+      category: 'Writing',
+      rating: 4.9,
+      description: 'A versatile conversational AI assistant for brainstorming and writing.'
+    },
+    {
+      name: 'Midjourney',
+      category: 'Image',
+      rating: 4.8,
+      description: 'Create stunning visuals with text prompts and style control.'
+    },
+    {
+      name: 'Notion AI',
+      category: 'Productivity',
+      rating: 4.7,
+      description: 'Enhance your workspace with AI-powered summaries and writing.'
+    }
+  ]
+};
 
 export default function HomePage() {
 
@@ -67,6 +72,10 @@ export default function HomePage() {
   const [trendingBlogs, setTrendingBlogs] = useState([]);
   const [trendingLoading, setTrendingLoading] = useState(true);
   const [trendingError, setTrendingError] = useState(null);
+
+  // Hero "Trending now" card state (dynamic, from Home Settings API)
+  const [heroTrending, setHeroTrending] = useState(FALLBACK_HERO_TRENDING);
+  const [heroTrendingLoading, setHeroTrendingLoading] = useState(true);
 
   // Newsletter form state
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -230,6 +239,35 @@ export default function HomePage() {
     loadTrendingBlogs();
   }, []);
 
+  // Fetch the dynamic "Trending now" hero card from Home Settings.
+  // Falls back to the default values if the request fails or no settings exist.
+  useEffect(() => {
+    let active = true;
+
+    async function loadHeroTrending() {
+      try {
+        setHeroTrendingLoading(true);
+
+        const data = await getHomeSettings();
+
+        if (active && data?.success && data?.settings?.heroTrending) {
+          setHeroTrending(data.settings.heroTrending);
+        }
+      } catch (err) {
+        // Keep the fallback defaults on error (non-blocking).
+        console.error("Error loading hero trending settings:", err);
+      } finally {
+        if (active) setHeroTrendingLoading(false);
+      }
+    }
+
+    loadHeroTrending();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     let active = true;
 
@@ -371,7 +409,7 @@ export default function HomePage() {
               </>
             ) : (
               <>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-200">100+ curated tools</span>
+                <span className="rounded-full border border-white/10 bg-white/5 text-slate-200">100+ curated tools</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Real ratings</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">New releases weekly</span>
               </>
@@ -383,39 +421,67 @@ export default function HomePage() {
         {/* RIGHT SIDE CARD */}
         <div className="rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-800/60 p-6 shadow-xl">
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-300">Trending now</p>
-              <h2 className="mt-1 text-2xl font-semibold">AI Design Stack</h2>
-            </div>
-            <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 p-2 text-cyan-300">
-              <FiZap className="h-5 w-5" />
-            </div>
-          </div>
-
-          <div className="mt-6 space-y-3">
-            {trendingTools.map((tool, index) => (
-              <div key={tool.name || index} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{tool.name}</p>
-                    <p className="text-sm text-slate-300">{tool.category}</p>
-                  </div>
-
-                  <div className="flex items-center gap-1 text-amber-400">
-                    <FiStar className="h-4 w-4" />
-                    <span className="text-sm">{tool.rating}</span>
-                  </div>
+          {heroTrendingLoading ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-300">Trending now</p>
+                  <h2 className="mt-1 text-2xl font-semibold">AI Design Stack</h2>
                 </div>
-
-                <p className="mt-2 text-sm text-slate-300">
-                  {tool.description}
-                </p>
-
+                <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 p-2 text-cyan-300">
+                  <FiZap className="h-5 w-5" />
+                </div>
               </div>
-            ))}
-          </div>
+              <div className="mt-6 space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="animate-pulse rounded-2xl border border-white/10 bg-white/5 p-4"
+                  >
+                    <div className="h-4 w-1/2 rounded bg-slate-800" />
+                    <div className="mt-2 h-3 w-1/3 rounded bg-slate-800" />
+                    <div className="mt-3 h-3 w-full rounded bg-slate-800" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-300">{heroTrending.title}</p>
+                  <h2 className="mt-1 text-2xl font-semibold">{heroTrending.subtitle}</h2>
+                </div>
+                <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 p-2 text-cyan-300">
+                  <FiZap className="h-5 w-5" />
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                {(heroTrending.tools || []).map((tool, index) => (
+                  <div key={tool.name || index} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{tool.name}</p>
+                        <p className="text-sm text-slate-300">{tool.category}</p>
+                      </div>
+
+                      <div className="flex items-center gap-1 text-amber-400">
+                        <FiStar className="h-4 w-4" />
+                        <span className="text-sm">{tool.rating}</span>
+                      </div>
+                    </div>
+
+                    <p className="mt-2 text-sm text-slate-300">
+                      {tool.description}
+                    </p>
+
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
         </div>
 
@@ -750,7 +816,6 @@ export default function HomePage() {
         </div>
 
         <form onSubmit={handleNewsletterSubmit} className="relative mx-auto mt-8 flex max-w-xl flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-3">
-
           {!isLoggedIn() && (
             <input
               type="email"
