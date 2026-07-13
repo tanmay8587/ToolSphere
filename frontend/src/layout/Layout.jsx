@@ -276,7 +276,8 @@ export default function Layout() {
       {/* SKIP TO CONTENT */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left"
+      >
         Skip to main content
       </a>
 

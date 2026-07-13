@@ -91,19 +91,3 @@ export const getRelatedBlogImageProps = (imageUrl, alt) => {
   };
 };
 
-/**
- * Prevent layout shift by providing aspect ratio container.
- */
-export const AspectRatioContainer = ({ 
-  children, 
-  ratio = '16/9', 
-  className = '' 
-}) => {
-  const ratioClass = getAspectRatioClass(ratio);
-  
-  return (
-    <div className={`${ratioClass} ${className}`}>
-      {children}
-    </div>
-  );
-};
