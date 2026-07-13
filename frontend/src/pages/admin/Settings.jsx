@@ -1500,12 +1500,12 @@ const loadData = async () => {
                 </div>
               ) : (
                 <div className="space-y-8">
-                  {/* Trending Now Card */}
+                  {/* Hero Trending Card */}
                   <section className="space-y-4">
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Trending Now Card</h3>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Hero Trending Card</h3>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Title</label>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Trending Label</label>
                       <input
                         type="text"
                         value={homeSettings.heroTrending.title}
@@ -1521,7 +1521,7 @@ const loadData = async () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Subtitle</label>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Card Title</label>
                       <input
                         type="text"
                         value={homeSettings.heroTrending.subtitle}
@@ -1537,7 +1537,7 @@ const loadData = async () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Icon</label>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Card Icon</label>
                       <input
                         type="text"
                         value={homeSettings.heroTrending.icon}
@@ -1633,7 +1633,7 @@ const loadData = async () => {
               )}
 
               <p className="text-sm text-slate-500 mt-4">
-                Manage the homepage "Trending now" hero card content. Click "Save Changes" to publish updates.
+                Manage the homepage Hero Trending Card content. Click "Save Changes" to publish updates.
               </p>
             </div>
           )}
