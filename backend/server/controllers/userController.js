@@ -843,3 +843,86 @@ export const deleteAccount = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to delete account. Please try again." });
   }
 };
+
+/* ==========================================
+     RECENTLY VIEWED TOOLS
+     ===================================== */
+
+/**
+ * POST /api/users/me/viewed-tools
+ * - Adds a tool to the user's recently viewed tools list
+ * - Keeps only the last 10 viewed tools
+ */
+export const addViewedTool = async (req, res) => {
+  try {
+    const { toolId } = req.body;
+    
+    if (!toolId) {
+      return res.status(400).json({ success: false, message: "Tool ID is required." });
+    }
+
+    // Verify tool exists
+    const tool = await Tool.findById(toolId);
+    if (!tool) {
+      return res.status(404).json({ success: false, message: "Tool not found." });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Remove the tool ID if it already exists (to avoid duplicates)
+    user.recentlyViewedTools = user.recentlyViewedTools.filter(
+      (id) => id.toString() !== toolId.toString()
+    );
+
+    // Add the tool ID to the beginning of the array
+    user.recentlyViewedTools.unshift(toolId);
+
+    // Keep only the last 10 viewed tools
+    if (user.recentlyViewedTools.length > 10) {
+      user.recentlyViewedTools = user.recentlyViewedTools.slice(0, 10);
+    }
+
+    await user.save();
+
+    res.json({ success: true, message: "Tool added to recently viewed." });
+  } catch (err) {
+    logger.error("[addViewedTool] Error adding viewed tool:", err);
+    res.status(500).json({ success: false, message: "Failed to add viewed tool." });
+  }
+};
+
+/**
+ * GET /api/users/me/recently-viewed-tools
+ * - Returns the current user's recently viewed tools (populated)
+ */
+export const getRecentlyViewedTools = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select("recentlyViewedTools")
+      .populate({
+        path: "recentlyViewedTools",
+        match: { isDeleted: false, status: "active", approved: true },
+        select:
+          "name slug category description pricing rating logo coverImage",
+      });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Filter out any nulls (e.g. tools that were soft-deleted or not approved)
+    const recentlyViewedTools = (user.recentlyViewedTools || []).filter(Boolean);
+
+    return res.json({
+      success: true,
+      recentlyViewedTools,
+      total: recentlyViewedTools.length,
+    });
+  } catch (err) {
+    logger.error("[getRecentlyViewedTools] Error fetching recently viewed tools:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch recently viewed tools." });
+  }
+};

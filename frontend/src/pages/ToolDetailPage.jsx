@@ -10,6 +10,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag } from 'react-icons/fi';
 import { getToolBySlug, getRelatedTools } from '../services/toolsService';
 import { bookmarkTool, getProfile, reviewTool } from '../services/userApi';
+import { addViewedTool } from '../services/recentlyViewedService';
 import { isLoggedIn } from '../utils/auth';
 import EmptyState from '../components/common/EmptyState';
 import { Link } from 'react-router-dom';
@@ -166,8 +167,14 @@ export default function ToolDetailPage() {
   useEffect(() => {
     if (!tool) return;
 
-    const addToRecentlyViewed = () => {
+    const addToRecentlyViewed = async () => {
       try {
+        // If user is logged in, save to backend
+        if (isLoggedIn()) {
+          await addViewedTool(tool._id);
+        }
+
+        // Also save to localStorage for guest users and quick access
         const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
         let history = stored ? JSON.parse(stored) : [];
 

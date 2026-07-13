@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getProfile, updateNewsletterPreference, getLikedBlogs, changePassword, deleteAccount } from "../services/userApi";
 import { getSavedBlogs, removeBookmark, saveBlog, unlikeBlog } from "../services/blogInteractionService";
+import { getRecentlyViewedTools } from "../services/recentlyViewedService";
 import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
 import ToggleSwitch from "../components/common/ToggleSwitch";
@@ -234,9 +235,11 @@ export default function Profile() {
   const [reviews, setReviews] = useState([]);
   const [savedBlogs, setSavedBlogs] = useState([]);
   const [likedBlogs, setLikedBlogs] = useState([]);
+  const [recentlyViewedTools, setRecentlyViewedTools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savedBlogsLoading, setSavedBlogsLoading] = useState(true);
   const [likedBlogsLoading, setLikedBlogsLoading] = useState(true);
+  const [recentlyViewedLoading, setRecentlyViewedLoading] = useState(true);
   const [error, setError] = useState("");
   const [newsletterEnabled, setNewsletterEnabled] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
@@ -317,6 +320,21 @@ export default function Profile() {
     };
 
     loadLikedBlogs();
+
+    const loadRecentlyViewed = async () => {
+      try {
+        const data = await getRecentlyViewedTools();
+        if (data.success) {
+          setRecentlyViewedTools(data.recentlyViewedTools || []);
+        }
+      } catch (err) {
+        // Silently fail - recently viewed is optional content
+      } finally {
+        setRecentlyViewedLoading(false);
+      }
+    };
+
+    loadRecentlyViewed();
   }, []);
 
   const handleLogout = () => {
@@ -1216,6 +1234,44 @@ export default function Profile() {
                   />
                 )}
               </button>
+
+              <button
+                onClick={() => setActiveTab("recently-viewed")}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveTab("recently-viewed");
+                  }
+                }}
+                role="tab"
+                aria-selected={activeTab === "recently-viewed"}
+                aria-controls="tab-panel"
+                tabIndex={activeTab === "recently-viewed" ? 0 : -1}
+                className={`relative flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors duration-300 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-slate-900 rounded-t-lg ${
+                  activeTab === "recently-viewed"
+                    ? "text-purple-300"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 1 .75.75v6c0 .414.336.75.75.75h4.5a.75.75 0 0 1 0 1.5h-3.75V6a.75.75 0 0 1 .75-.75Zm0 15a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-1.5 0V18a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                </svg>
+                <span>Recently Viewed</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${
+                  activeTab === "recently-viewed"
+                    ? "bg-purple-500/20 text-purple-300"
+                    : "bg-slate-800 text-slate-400"
+                }`}>
+                  {recentlyViewedTools.length}
+                </span>
+                {activeTab === "recently-viewed" && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-400"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </button>
             </div>
           </div>
 
@@ -1727,6 +1783,104 @@ export default function Profile() {
                         Load More ({filteredReviews.length - displayCount} remaining)
                       </motion.button>
                     </div>
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === "recently-viewed" && (
+                <motion.div
+                  key="recently-viewed"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {recentlyViewedLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <svg className="h-6 w-6 animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
+                      </svg>
+                    </div>
+                  ) : recentlyViewedTools.length ? (
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {recentlyViewedTools.map((tool) => (
+                        <motion.div
+                          key={tool._id}
+                          whileHover={{ y: -4, boxShadow: "0 18px 40px -12px rgba(34,211,238,0.25)" }}
+                          transition={liftSpring}
+                          className="group flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60 shadow-lg transition-colors hover:border-purple-500/30"
+                        >
+                          {/* Card Header with Logo */}
+                          <div className="relative flex items-start gap-4 p-5 pb-4">
+                            {/* Logo */}
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-900/50 overflow-hidden">
+                              {tool.logo ? (
+                                <img
+                                  src={tool.logo}
+                                  alt={tool.name}
+                                  loading="lazy"
+                                  decoding="async"
+                                  className="h-full w-full object-contain p-1.5"
+                                />
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 text-slate-500">
+                                  <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Card Content */}
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`View ${tool.name}`}
+                            className="flex flex-1 flex-col gap-2 px-5 pb-5 cursor-pointer"
+                            onClick={() => navigate(`/tools/${tool.slug}`)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                navigate(`/tools/${tool.slug}`);
+                              }
+                            }}
+                          >
+                            <div className="flex-1">
+                              <h3 className="line-clamp-1 font-semibold text-white group-hover:text-purple-300 transition-colors">
+                                {tool.name}
+                              </h3>
+                              {tool.category && (
+                                <span className="mt-1.5 inline-flex items-center rounded-full bg-purple-500/10 px-2.5 py-0.5 text-xs font-medium text-purple-300">
+                                  {tool.category}
+                                </span>
+                              )}
+                              {tool.description && (
+                                <p className="mt-2 line-clamp-2 text-sm text-slate-400">
+                                  {tool.description}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                              <span className="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+                                  <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 1 .75.75v6c0 .414.336.75.75.75h4.5a.75.75 0 0 1 0 1.5h-3.75V6a.75.75 0 0 1 .75-.75Zm0 15a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-1.5 0V18a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                                </svg>
+                                Recently Viewed
+                              </span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      icon="bookmark"
+                      title="No recently viewed tools yet."
+                      description="Tools you view will appear here for quick access."
+                      buttonText="Browse AI Tools"
+                      onClick={() => navigate("/tools")}
+                    />
                   )}
                 </motion.div>
               )}

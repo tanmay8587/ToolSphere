@@ -8,6 +8,7 @@ import { subscribeToNewsletter } from "../services/newsletterService";
 import { getStatistics } from "../services/statisticsService";
 import { getTrendingBlogs } from "../services/publicBlogService";
 import { getHomeSettings } from "../services/homeSettingsService";
+import { getRecentlyViewedTools } from "../services/recentlyViewedService";
 import { ToastContainer, useToast } from "../components/common/Toast";
 import CategoryIcon from "../components/common/CategoryIcon";
 import EmptyState from "../components/common/EmptyState";
@@ -120,6 +121,10 @@ export default function HomePage() {
     secondaryButtonLink: "/categories"
   });
   const [ctaSectionLoading, setCtaSectionLoading] = useState(true);
+
+  // Recently Viewed Tools state
+  const [recentlyViewedTools, setRecentlyViewedTools] = useState([]);
+  const [recentlyViewedLoading, setRecentlyViewedLoading] = useState(true);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -482,6 +487,38 @@ export default function HomePage() {
     };
   }, []);
 
+  // Fetch recently viewed tools for logged-in users
+  useEffect(() => {
+    let active = true;
+
+    async function loadRecentlyViewed() {
+      if (!isLoggedIn()) {
+        setRecentlyViewedLoading(false);
+        return;
+      }
+
+      try {
+        setRecentlyViewedLoading(true);
+        const data = await getRecentlyViewedTools();
+
+        if (active && data?.success) {
+          setRecentlyViewedTools(data.recentlyViewedTools || []);
+        }
+      } catch (err) {
+        // Silently fail - recently viewed is optional content
+        console.error("Error loading recently viewed tools:", err);
+      } finally {
+        if (active) setRecentlyViewedLoading(false);
+      }
+    }
+
+    loadRecentlyViewed();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     let active = true;
 
@@ -806,6 +843,86 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      {/* RECENTLY VIEWED TOOLS */}
+      {isLoggedIn() && (
+        <section>
+          <div className="mb-6 flex items-end justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">
+                History
+              </p>
+              <h2 className="text-2xl font-semibold">Recently Viewed Tools</h2>
+            </div>
+          </div>
+
+          {recentlyViewedLoading ? (
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-6 animate-pulse space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="h-12 w-12 rounded-2xl bg-slate-800" />
+                    <div className="h-6 w-20 rounded-full bg-slate-800" />
+                  </div>
+                  <div className="h-5 w-3/4 bg-slate-800 rounded" />
+                  <div className="h-3 w-full bg-slate-800 rounded" />
+                  <div className="h-3 w-2/3 bg-slate-800 rounded" />
+                  <div className="h-9 w-full bg-slate-800 rounded-full" />
+                </div>
+              ))}
+            </div>
+          ) : recentlyViewedTools.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-8 text-center">
+              <p className="text-sm text-slate-300">No recently viewed tools yet. Start exploring to build your history!</p>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {recentlyViewedTools.map((tool) => (
+                <div key={tool._id} className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-slate-950/40">
+                  <div className="flex items-center justify-between">
+                    <img
+                      src={tool.logo || tool.coverImage || "/default-logo.png"}
+                      alt={tool.name}
+                      className="h-12 w-12 rounded-2xl object-cover border border-white/10 bg-white/5"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/default-logo.png";
+                      }}
+                      loading="lazy"
+                    />
+                    <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
+                      {tool.pricing}
+                    </span>
+                  </div>
+
+                  <h3 className="mt-5 text-xl font-semibold">{tool.name}</h3>
+                  <p className="mt-2 text-sm text-slate-300 line-clamp-2">{tool.description}</p>
+
+                  <div className="mt-4 flex items-center justify-between text-sm text-slate-300">
+                    <span>{tool.category}</span>
+                    {tool.rating && (
+                      <span className="flex items-center gap-1 text-amber-400">
+                        <FiStar className="h-4 w-4" /> {tool.rating}
+                      </span>
+                    )}
+                  </div>
+
+                  <Link
+                    to={`/tools/${tool.slug}`}
+                    className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                  >
+                    View Details
+                    <FiArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* CATEGORIES */}
       {featuredCategories.enabled && (

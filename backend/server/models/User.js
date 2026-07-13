@@ -70,6 +70,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    recentlyViewedTools: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tool" }],
+      default: [],
+    },
   },
   {
     timestamps: true,
