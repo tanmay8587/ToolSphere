@@ -245,7 +245,7 @@ export default function Sidebar() {
         <button
           onClick={handleLogout}
           className={`
-            flex w-full items-center justify-center gap-3 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500 hover:text-white
+            flex w-full items-center justify-center gap-3 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500 hover:text-white focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900
             ${collapsed ? "px-3" : ""}
           `}
           aria-label="Logout"

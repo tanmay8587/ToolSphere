@@ -164,7 +164,7 @@ export default function Topbar() {
 
           {/* Search Results Dropdown */}
           {showSearchResults && searchQuery && (
-            <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-2xl border border-slate-800 bg-slate-950 shadow-xl">
+            <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-2xl border border-slate-800 bg-slate-950 shadow-xl" role="listbox" aria-label="Search results">
               {searchLoading ? (
                 <div className="flex items-center justify-center px-5 py-8">
                   <FiRefreshCw className="animate-spin text-cyan-400" size={20} />
@@ -178,7 +178,7 @@ export default function Topbar() {
                       {searchResults.tools.slice(0, 5).map((tool) => (
                         <div
                           key={tool._id}
-                          role="button"
+                          role="option"
                           tabIndex={0}
                           onClick={() => {
                             navigate(`/admin/tools/${tool._id}/edit`);

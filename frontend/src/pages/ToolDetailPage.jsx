@@ -542,7 +542,7 @@ export default function ToolDetailPage() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
 
         {/* Desktop Sticky Actions */}
-        <div className="hidden lg:flex fixed right-6 top-1/3 z-50 flex-col gap-3">
+        <div className="hidden lg:flex fixed right-6 top-1/3 z-50 flex-col gap-3" role="toolbar" aria-label="Tool actions">
           <button
             onClick={handleBookmark}
             disabled={bookmarkLoading}
@@ -551,6 +551,8 @@ export default function ToolDetailPage() {
                 ? "bg-white border border-white text-slate-900 hover:bg-slate-100"
                 : "bg-slate-900/90 border border-white/10 text-white hover:bg-slate-800"
             } ${saveAnim ? "scale-110" : "scale-100"}`}
+            aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this tool"}
+            aria-pressed={isBookmarked}
           >
             <FiBookmark fill={isBookmarked ? "currentColor" : "none"} />
             {isBookmarked ? "Saved" : "Save"}
@@ -559,6 +561,7 @@ export default function ToolDetailPage() {
           <button
             onClick={handleShare}
             className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            aria-label="Share this tool"
           >
             <FiShare2 />
             Share
@@ -568,8 +571,9 @@ export default function ToolDetailPage() {
             <a
               href={tool.website}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-4 py-3 text-white font-semibold"
+              aria-label={`Visit ${tool.name} website (opens in new tab)`}
             >
               <FiArrowRight />
               Visit
@@ -579,6 +583,7 @@ export default function ToolDetailPage() {
           <button
             onClick={() => setShowReportModal(true)}
             className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            aria-label="Report this tool"
           >
             <FiFlag />
             Report
@@ -587,7 +592,7 @@ export default function ToolDetailPage() {
 
         {/* Mobile Bottom Bar */}
         {!loading && tool && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-900/95 backdrop-blur flex justify-around py-3">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-900/95 backdrop-blur flex justify-around py-3" role="toolbar" aria-label="Tool actions">
 
             <button
               onClick={handleBookmark}
@@ -595,6 +600,8 @@ export default function ToolDetailPage() {
               className={`flex flex-col items-center rounded-2xl px-3 py-1 text-xs disabled:opacity-50 transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                 isBookmarked ? "bg-white text-slate-900" : "text-white"
               } ${saveAnim ? "scale-110" : "scale-100"}`}
+              aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this tool"}
+              aria-pressed={isBookmarked}
             >
               <FiBookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
               {isBookmarked ? "Saved" : "Save"}
@@ -603,6 +610,7 @@ export default function ToolDetailPage() {
             <button
               onClick={handleShare}
               className="flex flex-col items-center text-white text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+              aria-label="Share this tool"
             >
               <FiShare2 size={18} />
               Share
@@ -612,8 +620,9 @@ export default function ToolDetailPage() {
               <a
                 href={tool.website}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex flex-col items-center text-xs text-cyan-400"
+                aria-label={`Visit ${tool.name} website (opens in new tab)`}
               >
                 <FiArrowRight size={18} />
                 Visit

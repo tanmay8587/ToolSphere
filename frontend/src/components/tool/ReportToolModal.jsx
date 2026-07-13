@@ -62,16 +62,22 @@ export default function ReportToolModal({ isOpen, onClose, tool }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Report Tool"
+    >
       <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
         {/* Close Button */}
-        <button
-          onClick={handleClose}
-          disabled={loading}
-          className="absolute right-4 top-4 rounded-full p-1 text-slate-400 transition hover:text-white disabled:opacity-50"
-        >
-          <FiX size={20} />
-        </button>
+          <button
+            onClick={handleClose}
+            disabled={loading}
+            className="absolute right-4 top-4 rounded-full p-1 text-slate-400 transition hover:text-white disabled:opacity-50"
+            aria-label="Close report modal"
+          >
+            <FiX size={20} />
+          </button>
 
         {/* Header */}
         <div className="mb-6">

@@ -44,6 +44,22 @@ body {
 }
 
 /* =========================
+   FOCUS VISIBILITY
+   ========================= */
+
+/* Global focus-visible outline for keyboard users */
+:focus-visible {
+  outline: 2px solid #06b6d4;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove default focus outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* =========================
    SCROLLBAR (PRO LOOK)
 ========================= */
 

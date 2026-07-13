@@ -86,6 +86,8 @@ export default function ToolHero({
                   ? "bg-white border-white text-slate-900 hover:bg-slate-100"
                   : "border-white/10 bg-slate-800 text-white hover:bg-slate-700"
               } ${bookmarkAnim ? "scale-110" : "scale-100"}`}
+              aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this tool"}
+              aria-pressed={isBookmarked}
             >
               <FiBookmark className="mr-2 inline" fill={isBookmarked ? "currentColor" : "none"} />
               {isBookmarked ? "Saved" : "Save"}
@@ -94,21 +96,23 @@ export default function ToolHero({
             <button
               onClick={onShare}
               className="rounded-2xl border border-white/10 bg-slate-800 px-5 py-3 text-white transition hover:bg-slate-700"
+              aria-label="Share this tool"
             >
               <FiShare2 className="mr-2 inline" />
               Share
             </button>
 
             {tool.website && (
-              <a
-                href={tool.website}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-2xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-6 py-3 font-semibold text-white transition hover:scale-105"
-              >
-                Visit Website
-                <FiArrowRight className="ml-2 inline" />
-              </a>
+                <a
+                  href={tool.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-2xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-6 py-3 font-semibold text-white transition hover:scale-105"
+                  aria-label={`Visit ${tool.name} website (opens in new tab)`}
+                >
+                  Visit Website
+                  <FiArrowRight className="ml-2 inline" />
+                </a>
             )}
 
           </div>

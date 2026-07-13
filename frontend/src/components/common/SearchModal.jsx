@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { FiSearch, FiX, FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { getTools } from "../../services/toolsService";
@@ -50,17 +50,25 @@ export default function SearchModal({ isOpen, onClose }) {
   }, [debouncedSearch]);
 
   const handleKeyDown = (e) => {
+    if (e.key === "Escape") {
+      onClose();
+      return;
+    }
+
     if (!suggestions.length) return;
 
     if (e.key === "ArrowDown") {
+      e.preventDefault();
       setActiveIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
     }
 
     if (e.key === "ArrowUp") {
+      e.preventDefault();
       setActiveIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
     }
 
     if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
       const selected = suggestions[activeIndex];
       navigate(`/tools/${selected.slug}`);
       onClose();
@@ -75,7 +83,12 @@ export default function SearchModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-950/80 backdrop-blur-sm pt-20 px-4">
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-950/80 backdrop-blur-sm pt-20 px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Search AI tools"
+    >
       <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/40">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 p-6">
@@ -91,7 +104,7 @@ export default function SearchModal({ isOpen, onClose }) {
 
         {/* Search Input */}
         <div className="p-6">
-          <div className="relative">
+        <div className="relative">
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <input
               ref={inputRef}
@@ -103,6 +116,12 @@ export default function SearchModal({ isOpen, onClose }) {
               onKeyDown={handleKeyDown}
               placeholder="Search tools, categories, tags..."
               className="w-full rounded-2xl border border-white/10 bg-slate-950/50 py-4 pl-12 pr-4 text-white placeholder:text-slate-400 outline-none focus:border-cyan-500"
+              aria-label="Search query"
+              aria-autocomplete="list"
+              aria-controls="search-suggestions"
+              aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
+              role="combobox"
+              aria-expanded={suggestions.length > 0}
             />
           </div>
         </div>
@@ -124,7 +143,7 @@ export default function SearchModal({ isOpen, onClose }) {
           )}
 
           {!loading && suggestions.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-2" id="search-suggestions" role="listbox" aria-label="Search suggestions">
               {suggestions.map((tool, index) => (
                 <button
                   key={tool._id}
@@ -132,6 +151,9 @@ export default function SearchModal({ isOpen, onClose }) {
                   className={`flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/50 p-4 text-left transition-all hover:border-cyan-500 hover:bg-slate-900 ${
                     index === activeIndex ? "border-cyan-500 bg-slate-900" : ""
                   }`}
+                  role="option"
+                  aria-selected={index === activeIndex}
+                  id={`suggestion-${index}`}
                 >
                   <img
                     src={tool.logo || "/default-logo.png"}

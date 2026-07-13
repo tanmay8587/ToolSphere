@@ -301,15 +301,23 @@ export default function HomePage() {
                 }}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
                 placeholder="Search AI tools, categories, tags..."
+                aria-label="Search AI tools"
+                role="combobox"
+                aria-expanded={showSuggestions && suggestions.length > 0}
+                aria-controls="home-search-suggestions"
+                aria-autocomplete="list"
+                aria-activedescendant={selectedIndex >= 0 ? `home-suggestion-${selectedIndex}` : undefined}
               />
 
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-white/10 bg-slate-900 shadow-xl z-50">
-                  {suggestions.map((tool) => (
+                <div className="absolute left-0 right-0 top-full mt-2 rounded-xl border border-white/10 bg-slate-900 shadow-xl z-50" id="home-search-suggestions" role="listbox" aria-label="Search suggestions">
+                  {suggestions.map((tool, index) => (
                       <div
                         key={tool._id || tool.name}
-                        role="button"
-                        tabIndex={0}
+                        role="option"
+                        aria-selected={selectedIndex === index}
+                        id={`home-suggestion-${index}`}
+                        tabIndex={-1}
                         onClick={() => {
                           setShowSuggestions(false);
                           navigate(`/tools/${tool.slug}`);
@@ -321,7 +329,7 @@ export default function HomePage() {
                             navigate(`/tools/${tool.slug}`);
                           }
                         }}
-                        className="cursor-pointer px-4 py-3 hover:bg-slate-800"
+                        className={`cursor-pointer px-4 py-3 hover:bg-slate-800 ${selectedIndex === index ? 'bg-slate-800' : ''}`}
                       >
                       <div className="font-medium">{tool.name}</div>
                       <div className="text-xs text-slate-300">{tool.category}</div>
@@ -745,12 +753,12 @@ export default function HomePage() {
               disabled={newsletterLoading}
               className="w-full rounded-full border border-white/20 bg-white/10 px-5 py-3.5 text-white placeholder:text-slate-300 backdrop-blur-md transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/70 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:flex-1"
               placeholder="you@example.com"
+              aria-label="Email for newsletter subscription"
             />
           )}
 
           <button
             type="submit"
-            onClick={handleNewsletterSubmit}
             disabled={newsletterLoading}
             className="w-[220px] rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-3.5 font-semibold text-white shadow-lg shadow-blue-500/30 transition duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 flex-shrink-0"
           >

@@ -53,6 +53,7 @@ export default function Toast({ message, type = "info", duration = 4000, onClose
           setTimeout(onClose, 300);
         }}
         className="ml-auto rounded-full p-1 hover:bg-white/10 transition"
+        aria-label="Dismiss notification"
       >
         <FiX className="h-4 w-4" />
       </button>
