@@ -138,6 +138,9 @@ export default function HomePage() {
   });
   const [ctaSectionLoading, setCtaSectionLoading] = useState(true);
 
+  // CTA Section collapsible open state (mirrors faqPreviewOpen pattern)
+  const [ctaSectionOpen, setCtaSectionOpen] = useState(true);
+
   // Recently Viewed Tools state
   const [recentlyViewedTools, setRecentlyViewedTools] = useState([]);
   const [recentlyViewedLoading, setRecentlyViewedLoading] = useState(true);
