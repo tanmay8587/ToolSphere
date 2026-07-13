@@ -37,14 +37,14 @@ export default function EmptyState({
   return (
     <div className={`flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-700 bg-slate-900/30 p-12 text-center ${className}`}>
       <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-white/10 bg-slate-800">
-        <Icon className="h-10 w-10 text-slate-400" />
+        <Icon className="h-10 w-10 text-slate-300" />
       </div>
       
       <h3 className="mb-2 text-2xl font-semibold text-white">
         {title || defaultTitles[type]}
       </h3>
       
-      <p className="mb-6 max-w-md text-slate-400">
+      <p className="mb-6 max-w-md text-slate-300">
         {description || defaultDescriptions[type]}
       </p>
 

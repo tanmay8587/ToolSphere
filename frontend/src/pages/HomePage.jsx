@@ -276,7 +276,7 @@ export default function HomePage() {
             <h1 className="text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
               Find the best AI tools for every workflow.
             </h1>
-            <p className="max-w-2xl text-lg text-slate-300 sm:text-xl">
+            <p className="max-w-2xl text-lg text-slate-200 sm:text-xl">
               Explore curated AI platforms for writing, coding, design, marketing, and more — all in one place.
             </p>
           </div>
@@ -285,7 +285,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/70 p-3 shadow-lg sm:flex-row">
 
             <div className="relative flex flex-1 items-center gap-3 rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3">
-              <FiSearch className="h-5 w-5 text-slate-400" />
+              <FiSearch className="h-5 w-5 text-slate-300" />
               <input
                 value={search}
                 onChange={(e) => {
@@ -324,7 +324,7 @@ export default function HomePage() {
                         className="cursor-pointer px-4 py-3 hover:bg-slate-800"
                       >
                       <div className="font-medium">{tool.name}</div>
-                      <div className="text-xs text-slate-400">{tool.category}</div>
+                      <div className="text-xs text-slate-300">{tool.category}</div>
                     </div>
                   ))}
                 </div>
@@ -340,7 +340,7 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-3 text-sm text-slate-400">
+          <div className="flex flex-wrap gap-3 text-sm text-slate-300">
             {statsLoading ? (
               <>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Loading...</span>
@@ -357,7 +357,7 @@ export default function HomePage() {
               </>
             ) : (
               <>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">100+ curated tools</span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-200">100+ curated tools</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Real ratings</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">New releases weekly</span>
               </>
@@ -371,7 +371,7 @@ export default function HomePage() {
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Trending now</p>
+              <p className="text-sm text-slate-300">Trending now</p>
               <h2 className="mt-1 text-2xl font-semibold">AI Design Stack</h2>
             </div>
             <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 p-2 text-cyan-300">
@@ -386,7 +386,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{tool.name}</p>
-                    <p className="text-sm text-slate-400">{tool.category}</p>
+                    <p className="text-sm text-slate-300">{tool.category}</p>
                   </div>
 
                   <div className="flex items-center gap-1 text-amber-400">
@@ -395,7 +395,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <p className="mt-2 text-sm text-slate-400">
+                <p className="mt-2 text-sm text-slate-300">
                   {tool.description}
                 </p>
 
@@ -483,9 +483,9 @@ export default function HomePage() {
                 </div>
 
                 <h3 className="mt-5 text-xl font-semibold">{tool.name}</h3>
-                <p className="mt-2 text-sm text-slate-400 line-clamp-2">{tool.description}</p>
+                <p className="mt-2 text-sm text-slate-300 line-clamp-2">{tool.description}</p>
 
-                <div className="mt-4 flex items-center justify-between text-sm text-slate-400">
+                <div className="mt-4 flex items-center justify-between text-sm text-slate-300">
                   <span>{tool.category}</span>
                   {tool.rating && (
                     <span className="flex items-center gap-1 text-amber-400">
@@ -593,7 +593,7 @@ export default function HomePage() {
                       {category.name || category._id}
                     </h3>
 
-                    <p className="mt-2 text-sm text-slate-400">
+                    <p className="mt-2 text-sm text-slate-300">
                       Discover AI tools for {category.name || category._id}.
                     </p>
 
@@ -645,9 +645,9 @@ export default function HomePage() {
               </div>
 
               <h3 className="mt-5 text-xl font-semibold">{tool.name}</h3>
-              <p className="mt-2 text-sm text-slate-400">{tool.description}</p>
+              <p className="mt-2 text-sm text-slate-300">{tool.description}</p>
 
-              <div className="mt-4 flex items-center justify-between text-sm text-slate-400">
+              <div className="mt-4 flex items-center justify-between text-sm text-slate-300">
                 <span>{tool.category}</span>
                 <span className="flex items-center gap-1 text-amber-400">
                   <FiStar className="h-4 w-4" /> {tool.rating}
@@ -704,7 +704,7 @@ export default function HomePage() {
           </div>
         ) : trendingBlogs.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-8 text-center">
-            <p className="text-sm text-slate-400">No trending posts yet.</p>
+            <p className="text-sm text-slate-300">No trending posts yet.</p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -730,7 +730,7 @@ export default function HomePage() {
             Never Miss a New AI Tool
           </h2>
 
-          <p className="mx-auto text-base text-slate-200 sm:text-lg lg:text-xl">
+          <p className="mx-auto text-base text-white sm:text-lg lg:text-xl">
             Get notified when new AI tools, product launches, and important updates are published.
           </p>
         </div>
@@ -766,7 +766,7 @@ export default function HomePage() {
 
         </form>
 
-        <div className="relative mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-300">
+        <div className="relative mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-200">
           <span className="inline-flex items-center gap-2">
             <FiCheck className="h-4 w-4 text-emerald-400" />
             Weekly AI Updates

@@ -464,7 +464,7 @@ export default function NotificationDropdown() {
                 )}
                 <button
                   onClick={close}
-                  className="rounded-lg p-1 text-slate-500 transition hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                  className="rounded-lg p-1 text-slate-400 transition hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                   aria-label="Close notifications"
                 >
                   <FiX size={16} />
@@ -592,7 +592,7 @@ export default function NotificationDropdown() {
                                 {notification.message}
                               </p>
                             )}
-                            <p className="mt-1.5 text-[11px] text-slate-500">
+                            <p className="mt-1.5 text-[11px] text-slate-400">
                               {formatTime(notification.createdAt)}
                             </p>
                           </div>
@@ -648,7 +648,7 @@ export default function NotificationDropdown() {
                   {loading && notifications.length > 0 && (
                     <div className="flex items-center justify-center px-5 py-4">
                       <FiRefreshCw className="h-4 w-4 animate-spin text-slate-500" />
-                      <span className="ml-2 text-xs text-slate-500">
+                      <span className="ml-2 text-xs text-slate-400">
                         Loading more...
                       </span>
                     </div>
@@ -664,7 +664,7 @@ export default function NotificationDropdown() {
                   onClick={() => {
                     // Navigate to notifications page (future feature)
                   }}
-                  className="text-xs text-slate-400 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded"
+                  className="text-xs text-slate-300 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded"
                 >
                   View all notifications
                 </button>

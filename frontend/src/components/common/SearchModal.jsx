@@ -102,7 +102,7 @@ export default function SearchModal({ isOpen, onClose }) {
               }}
               onKeyDown={handleKeyDown}
               placeholder="Search tools, categories, tags..."
-              className="w-full rounded-2xl border border-white/10 bg-slate-950/50 py-4 pl-12 pr-4 text-white placeholder:text-slate-500 outline-none focus:border-cyan-500"
+              className="w-full rounded-2xl border border-white/10 bg-slate-950/50 py-4 pl-12 pr-4 text-white placeholder:text-slate-400 outline-none focus:border-cyan-500"
             />
           </div>
         </div>
@@ -143,9 +143,9 @@ export default function SearchModal({ isOpen, onClose }) {
                   />
                   <div className="flex-1">
                     <p className="font-medium text-white">{tool.name}</p>
-                    <p className="text-sm text-slate-400">{tool.category}</p>
+                    <p className="text-sm text-slate-300">{tool.category}</p>
                   </div>
-                  <FiArrowRight className="h-4 w-4 text-slate-400" />
+                  <FiArrowRight className="h-4 w-4 text-slate-300" />
                 </button>
               ))}
             </div>
@@ -153,13 +153,13 @@ export default function SearchModal({ isOpen, onClose }) {
 
           {!loading && search && suggestions.length === 0 && (
             <div className="py-8 text-center">
-              <p className="text-slate-400">No tools found for "{search}"</p>
+              <p className="text-slate-300">No tools found for "{search}"</p>
             </div>
           )}
 
           {!loading && !search && (
             <div className="py-8 text-center">
-              <p className="text-slate-500">Start typing to search for AI tools...</p>
+              <p className="text-slate-400">Start typing to search for AI tools...</p>
             </div>
           )}
         </div>

@@ -580,7 +580,7 @@ export default function Layout() {
                     {brandingSettings.site_name || "ToolSphere"}
                   </span>
                 </div>
-                <p className="mt-5 text-sm leading-7 text-slate-400">
+                <p className="mt-5 text-sm leading-7 text-slate-300">
                   {footerSettings.footer_description}
                 </p>
                 {/* Social Icons */}
@@ -592,7 +592,7 @@ export default function Layout() {
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.03] text-slate-500 transition-all duration-300 hover:border-cyan-400/40 hover:bg-cyan-500/10 hover:text-cyan-400 hover:shadow-[0_0_12px_rgba(34,211,238,0.45)]"
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.03] text-slate-400 transition-all duration-300 hover:border-cyan-400/40 hover:bg-cyan-500/10 hover:text-cyan-400 hover:shadow-[0_0_12px_rgba(34,211,238,0.45)]"
                         aria-label={link.platform}
                       >
                         <SocialIcon platform={link.platform} className="h-4 w-4" />
@@ -618,7 +618,7 @@ export default function Layout() {
                     <li key={link.path}>
                       <Link
                         to={link.path}
-                        className="inline-block rounded-lg px-2 py-2 text-sm font-medium text-slate-400 transition-all duration-300 hover:text-white"
+                        className="inline-block rounded-lg px-2 py-2 text-sm font-medium text-slate-300 transition-all duration-300 hover:text-white"
                       >
                         {link.name}
                       </Link>
@@ -643,7 +643,7 @@ export default function Layout() {
                     <li key={link.path}>
                       <Link
                         to={link.path}
-                        className="inline-block rounded-lg px-2 py-2 text-sm font-medium text-slate-400 transition-all duration-300 hover:text-white"
+                        className="inline-block rounded-lg px-2 py-2 text-sm font-medium text-slate-300 transition-all duration-300 hover:text-white"
                       >
                         {link.name}
                       </Link>
@@ -663,7 +663,7 @@ export default function Layout() {
                       <Mail className="h-[18px] w-[18px] shrink-0 text-cyan-400" />
                       <a
                         href={`mailto:${footerSettings.footer_email}`}
-                        className="text-sm text-slate-400 transition-colors duration-200 hover:text-white"
+                        className="text-sm text-slate-300 transition-colors duration-200 hover:text-white"
                       >
                         {footerSettings.footer_email}
                       </a>
@@ -672,7 +672,7 @@ export default function Layout() {
                   {footerSettings.office_location && (
                     <li className="flex items-center gap-2.5">
                       <MapPin className="h-[18px] w-[18px] shrink-0 text-cyan-400" />
-                      <span className="text-sm text-slate-400">
+                      <span className="text-sm text-slate-300">
                         {footerSettings.office_location}
                       </span>
                     </li>
@@ -680,7 +680,7 @@ export default function Layout() {
                   {footerSettings.working_hours && (
                     <li className="flex items-center gap-2.5">
                       <Clock className="h-[18px] w-[18px] shrink-0 text-cyan-400" />
-                      <span className="text-sm text-slate-400">
+                      <span className="text-sm text-slate-300">
                         {footerSettings.working_hours}
                       </span>
                     </li>
@@ -688,7 +688,7 @@ export default function Layout() {
                   <li className="pt-2">
                     <Link
                       to="/contact"
-                      className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-400 transition-all duration-200 hover:bg-cyan-500/20 hover:border-cyan-500/30"
+                      className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-500/15 px-4 py-2 text-sm font-medium text-cyan-300 transition-all duration-200 hover:bg-cyan-500/25 hover:border-cyan-400/40"
                     >
                       Send a message
                       <ArrowRight className="h-3.5 w-3.5" />
@@ -703,11 +703,11 @@ export default function Layout() {
           {/* BOTTOM BAR */}
           <div className="border-t border-white/[0.06] py-8">
             <div className="flex flex-col items-start gap-3 text-left">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 &copy; {new Date().getFullYear()} {footerSettings.footer_copyright}. All rights reserved.
               </p>
               {footerSettings.footer_disclaimer && (
-                <p className="max-w-3xl text-xs leading-relaxed text-slate-600">
+                <p className="max-w-3xl text-xs leading-relaxed text-slate-400">
                   {footerSettings.footer_disclaimer}
                 </p>
               )}

@@ -149,7 +149,7 @@ export default function ProfileDropdown() {
                 </div>
                 <button
                   onClick={close}
-                  className="rounded-lg p-1 text-slate-500 transition hover:bg-white/5 hover:text-white"
+                  className="rounded-lg p-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
                   aria-label="Close profile menu"
                 >
                   <FiX size={14} />
@@ -175,7 +175,7 @@ export default function ProfileDropdown() {
                       }
                     }}
                   >
-                    <Icon size={16} className="text-slate-500" />
+                    <Icon size={16} className="text-slate-300" />
                     <span>{item.label}</span>
                   </button>
                 );

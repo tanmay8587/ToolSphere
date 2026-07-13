@@ -125,7 +125,7 @@ export default function Topbar() {
           <h2 className="text-xl font-bold text-white sm:text-2xl">
             {currentPage.title}
           </h2>
-          <p className="text-xs text-slate-400 sm:text-sm">
+          <p className="text-xs text-slate-300 sm:text-sm">
             {currentPage.description}
           </p>
         </div>
@@ -135,7 +135,7 @@ export default function Topbar() {
       <div className="flex items-center gap-2 sm:gap-4">
         {/* SEARCH */}
         <div ref={searchRef} className="relative hidden md:block">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
           <input
             ref={searchInputRef}
             type="text"
@@ -155,7 +155,7 @@ export default function Topbar() {
                   setSearchResults(null);
                   searchInputRef.current?.focus();
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white"
                 aria-label="Clear search"
               >
                 <FiX size={14} />
@@ -174,7 +174,7 @@ export default function Topbar() {
                   {/* Tools */}
                   {searchResults.tools?.length > 0 && (
                     <div className="border-b border-white/10 p-3">
-                      <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Tools</h3>
+                      <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-300">Tools</h3>
                       {searchResults.tools.slice(0, 5).map((tool) => (
                         <div
                           key={tool._id}
@@ -196,7 +196,7 @@ export default function Topbar() {
                           className="cursor-pointer rounded-lg px-2 py-2 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                         >
                           <p className="font-medium">{tool.name}</p>
-                          <p className="text-xs text-slate-500">{tool.category} • {tool.status}</p>
+                          <p className="text-xs text-slate-300">{tool.category} • {tool.status}</p>
                         </div>
                       ))}
                     </div>
@@ -205,7 +205,7 @@ export default function Topbar() {
                   {/* Categories */}
                   {searchResults.categories?.length > 0 && (
                     <div className="border-b border-white/10 p-3">
-                      <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Categories</h3>
+                      <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-300">Categories</h3>
                       {searchResults.categories.slice(0, 5).map((cat) => (
                         <div
                           key={cat._id}
@@ -220,21 +220,21 @@ export default function Topbar() {
                   {/* Users */}
                   {searchResults.users?.length > 0 && (
                     <div className="p-3">
-                      <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Users</h3>
+                      <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-300">Users</h3>
                       {searchResults.users.slice(0, 5).map((user) => (
                         <div
                           key={user._id}
                           className="rounded-lg px-2 py-2 text-sm text-slate-300"
                         >
                           <p className="font-medium">{user.name}</p>
-                          <p className="text-xs text-slate-500">{user.email}</p>
+                          <p className="text-xs text-slate-300">{user.email}</p>
                         </div>
                       ))}
                     </div>
                   )}
 
                   {!searchResults.tools?.length && !searchResults.categories?.length && !searchResults.users?.length && (
-                    <div className="px-5 py-8 text-center text-sm text-slate-500">
+                    <div className="px-5 py-8 text-center text-sm text-slate-300">
                       No results found for "{searchQuery}"
                     </div>
                   )}

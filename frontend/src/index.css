@@ -194,14 +194,14 @@ pre code {
   color: #ffa657;
 }
 
-/* Code block header (language label) */
+/* Code block header (language label) - improved contrast */
 pre[data-language]::before {
   content: attr(data-language);
   position: absolute;
   top: 0;
   right: 0;
   background: #161b22;
-  color: #8b949e;
+  color: #b1bac4;
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
   border-bottom-left-radius: 0.5rem;
@@ -218,7 +218,7 @@ pre .copy-button {
   right: 0.5rem;
   background: #161b22;
   border: 1px solid #30363d;
-  color: #8b949e;
+  color: #b1bac4;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
@@ -329,7 +329,7 @@ pre .copy-button:active {
 
 .blog-content th {
   font-weight: 600;
-  color: #e2e8f0;
+  color: #f1f5f9;
 }
 
 /* Code blocks: GitHub-dark surface. prose-pre:bg-transparent/p-0/border-0

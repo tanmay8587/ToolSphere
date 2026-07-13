@@ -159,7 +159,7 @@ export default function Sidebar() {
             <h1 className="text-2xl font-bold text-cyan-400">
               ToolSphere
             </h1>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-slate-300">
               Admin Dashboard
             </p>
           </div>
@@ -187,12 +187,12 @@ export default function Sidebar() {
               `group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 relative ${
                 isActive
                   ? "bg-cyan-500/10 text-cyan-300 border border-cyan-500/20"
-                  : "text-slate-300 hover:bg-white/5 hover:text-white"
-              } ${collapsed ? "justify-center px-3" : ""}`
+                  : "text-slate-200 hover:bg-white/5 hover:text-white"
+                } ${collapsed ? "justify-center px-3" : ""}`
             }
             aria-current={({ isActive }) => isActive ? "page" : undefined}
           >
-            <span className="flex-shrink-0 transition-colors text-slate-400 group-hover:text-cyan-300">
+            <span className="flex-shrink-0 transition-colors text-slate-300 group-hover:text-cyan-300">
               {item.icon}
             </span>
             
@@ -226,12 +226,12 @@ export default function Sidebar() {
               `group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 relative ${
                 isActive
                   ? "bg-cyan-500/10 text-cyan-300 border border-cyan-500/20"
-                  : "text-slate-300 hover:bg-white/5 hover:text-white"
-              } ${collapsed ? "justify-center px-3" : ""}`
+                  : "text-slate-200 hover:bg-white/5 hover:text-white"
+                } ${collapsed ? "justify-center px-3" : ""}`
             }
             aria-current={({ isActive }) => isActive ? "page" : undefined}
           >
-            <span className="flex-shrink-0 transition-colors text-slate-400 group-hover:text-cyan-300">
+            <span className="flex-shrink-0 transition-colors text-slate-300 group-hover:text-cyan-300">
               {item.icon}
             </span>
             {!collapsed && <span>{item.name}</span>}
