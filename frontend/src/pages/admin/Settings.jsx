@@ -2599,7 +2599,305 @@ const loadData = async () => {
                   />
                 </button>
                 {testimonialsOpen && (
-                  <div className="border-t border-slate-800 p-5">
+                  <div className="border-t border-slate-800 p-5 space-y-5">
+                    {/* Enable/Disable Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">
+                          Enable Testimonials
+                        </label>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Show testimonials section on homepage
+                        </p>
+                      </div>
+                      <ToggleSwitch
+                        checked={homeSettings.testimonials?.enabled ?? true}
+                        onChange={(checked) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            testimonials: {
+                              ...prev.testimonials,
+                              enabled: checked,
+                            },
+                          }));
+                        }}
+                        aria-label="Toggle testimonials"
+                      />
+                    </div>
+
+                    {/* Testimonials List */}
+                    {homeSettings.testimonials?.enabled && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-sm font-medium text-slate-300">
+                            Testimonials
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHomeSettings(prev => ({
+                                ...prev,
+                                testimonials: {
+                                  ...prev.testimonials,
+                                  items: [
+                                    ...(prev.testimonials.items || []),
+                                    {
+                                      name: "",
+                                      role: "",
+                                      company: "",
+                                      review: "",
+                                      rating: 5,
+                                      avatarUrl: "",
+                                    },
+                                  ],
+                                },
+                              }));
+                            }}
+                            className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-cyan-500"
+                          >
+                            Add Testimonial
+                          </button>
+                        </div>
+
+                        {homeSettings.testimonials.items && homeSettings.testimonials.items.length > 0 ? (
+                          <div className="space-y-4">
+                            {homeSettings.testimonials.items.map((testimonial, index) => (
+                              <div
+                                key={index}
+                                className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 space-y-3"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium text-slate-300">
+                                    Testimonial {index + 1}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    {/* Reorder Buttons */}
+                                    <div className="flex flex-col gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (index === 0) return;
+                                          setHomeSettings(prev => {
+                                            const newItems = [...prev.testimonials.items];
+                                            [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
+                                            return {
+                                              ...prev,
+                                              testimonials: {
+                                                ...prev.testimonials,
+                                                items: newItems,
+                                              },
+                                            };
+                                          });
+                                        }}
+                                        disabled={index === 0}
+                                        className="rounded-lg bg-slate-800 p-1.5 text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        title="Move up"
+                                      >
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <path d="M4 10L8 6L12 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (index === homeSettings.testimonials.items.length - 1) return;
+                                          setHomeSettings(prev => {
+                                            const newItems = [...prev.testimonials.items];
+                                            [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
+                                            return {
+                                              ...prev,
+                                              testimonials: {
+                                                ...prev.testimonials,
+                                                items: newItems,
+                                              },
+                                            };
+                                          });
+                                        }}
+                                        disabled={index === homeSettings.testimonials.items.length - 1}
+                                        className="rounded-lg bg-slate-800 p-1.5 text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        title="Move down"
+                                      >
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                      </button>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          testimonials: {
+                                            ...prev.testimonials,
+                                            items: prev.testimonials.items.filter((_, i) => i !== index),
+                                          },
+                                        }));
+                                      }}
+                                      className="inline-flex items-center gap-1 rounded-lg bg-red-600/20 px-2.5 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-600/30"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                  {/* Name */}
+                                  <div className="space-y-1.5">
+                                    <label className="block text-xs font-medium text-slate-400">
+                                      Name *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={testimonial.name || ""}
+                                      onChange={(e) => {
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          testimonials: {
+                                            ...prev.testimonials,
+                                            items: prev.testimonials.items.map((t, i) =>
+                                              i === index ? { ...t, name: e.target.value } : t
+                                            ),
+                                          },
+                                        }));
+                                      }}
+                                      placeholder="Person's name"
+                                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                    />
+                                  </div>
+
+                                  {/* Role */}
+                                  <div className="space-y-1.5">
+                                    <label className="block text-xs font-medium text-slate-400">
+                                      Role *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={testimonial.role || ""}
+                                      onChange={(e) => {
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          testimonials: {
+                                            ...prev.testimonials,
+                                            items: prev.testimonials.items.map((t, i) =>
+                                              i === index ? { ...t, role: e.target.value } : t
+                                            ),
+                                          },
+                                        }));
+                                      }}
+                                      placeholder="e.g., Product Manager"
+                                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                    />
+                                  </div>
+
+                                  {/* Company */}
+                                  <div className="space-y-1.5">
+                                    <label className="block text-xs font-medium text-slate-400">
+                                      Company *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={testimonial.company || ""}
+                                      onChange={(e) => {
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          testimonials: {
+                                            ...prev.testimonials,
+                                            items: prev.testimonials.items.map((t, i) =>
+                                              i === index ? { ...t, company: e.target.value } : t
+                                            ),
+                                          },
+                                        }));
+                                      }}
+                                      placeholder="e.g., Acme Inc."
+                                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                    />
+                                  </div>
+
+                                  {/* Rating */}
+                                  <div className="space-y-1.5">
+                                    <label className="block text-xs font-medium text-slate-400">
+                                      Rating (0-5)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max="5"
+                                      step="0.1"
+                                      value={testimonial.rating || 0}
+                                      onChange={(e) => {
+                                        const value = parseFloat(e.target.value) || 0;
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          testimonials: {
+                                            ...prev.testimonials,
+                                            items: prev.testimonials.items.map((t, i) =>
+                                              i === index ? { ...t, rating: Math.min(5, Math.max(0, value)) } : t
+                                            ),
+                                          },
+                                        }));
+                                      }}
+                                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                    />
+                                  </div>
+
+                                  {/* Avatar URL */}
+                                  <div className="space-y-1.5 sm:col-span-2">
+                                    <label className="block text-xs font-medium text-slate-400">
+                                      Avatar URL
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={testimonial.avatarUrl || ""}
+                                      onChange={(e) => {
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          testimonials: {
+                                            ...prev.testimonials,
+                                            items: prev.testimonials.items.map((t, i) =>
+                                              i === index ? { ...t, avatarUrl: e.target.value } : t
+                                            ),
+                                          },
+                                        }));
+                                      }}
+                                      placeholder="https://example.com/avatar.jpg"
+                                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                    />
+                                  </div>
+
+                                  {/* Review */}
+                                  <div className="space-y-1.5 sm:col-span-2">
+                                    <label className="block text-xs font-medium text-slate-400">
+                                      Review *
+                                    </label>
+                                    <textarea
+                                      value={testimonial.review || ""}
+                                      onChange={(e) => {
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          testimonials: {
+                                            ...prev.testimonials,
+                                            items: prev.testimonials.items.map((t, i) =>
+                                              i === index ? { ...t, review: e.target.value } : t
+                                            ),
+                                          },
+                                        }));
+                                      }}
+                                      placeholder="Testimonial review text..."
+                                      rows={3}
+                                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500 resize-none"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center">
+                            <p className="text-sm text-slate-400">No testimonials added yet. Click "Add Testimonial" to add your first testimonial.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
