@@ -15,6 +15,7 @@ import {
   getSavedBlogs,
 } from "../services/blogInteractionService";
 import { isLoggedIn } from "../utils/auth";
+import { addViewedBlog, getRecentlyViewedBlogs } from "../services/recentlyViewedService";
 import { useNavigate } from "react-router-dom";
 import {
   getBlogImage,
@@ -224,6 +225,7 @@ export default function BlogDetailPage() {
   const [mobileTocOpen, setMobileTocOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState(new Set());
   const [views, setViews] = useState(0);
+  const [recentlyViewedBlogs, setRecentlyViewedBlogs] = useState([]);
   const contentRef = useRef(null);
   const navigate = useNavigate();
   const { toasts, addToast, removeToast } = useToast();
@@ -249,6 +251,28 @@ export default function BlogDetailPage() {
     loadBlog();
     window.scrollTo(0, 0);
   }, [slug]);
+
+  // When the blog detail page opens, record it as viewed (for logged-in users)
+  // and load the user's recently viewed blogs list.
+  useEffect(() => {
+    if (!blog?._id) return;
+
+    const updateRecentlyViewed = async () => {
+      try {
+        if (isLoggedIn()) {
+          await addViewedBlog(blog._id);
+        }
+        const res = await getRecentlyViewedBlogs();
+        if (res.success) {
+          setRecentlyViewedBlogs(res.recentlyViewedBlogs || []);
+        }
+      } catch (err) {
+        // Non-critical — silently ignore failures
+      }
+    };
+
+    updateRecentlyViewed();
+  }, [blog?._id]);
 
   useEffect(() => {
     if (!slug) return;
@@ -999,6 +1023,21 @@ export default function BlogDetailPage() {
                     <RelatedBlogCard 
                       key={related._id} 
                       blog={related} 
+                      formatDate={formatDate}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {recentlyViewedBlogs.length > 0 && (
+              <div className="mt-16 pt-10 border-t border-slate-800">
+                <h2 className="text-2xl font-bold text-white mb-6">Recently Viewed Blogs</h2>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  {recentlyViewedBlogs.slice(0, 10).map((recent) => (
+                    <RelatedBlogCard 
+                      key={recent._id} 
+                      blog={recent} 
                       formatDate={formatDate}
                     />
                   ))}
