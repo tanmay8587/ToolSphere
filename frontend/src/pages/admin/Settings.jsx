@@ -138,15 +138,23 @@ export default function Settings() {
   // Homepage settings state
   const [homeSettings, setHomeSettings] = useState({
     heroTrending: { title: "", subtitle: "", icon: "", tools: [] },
+    trendingCard: { label: "", title: "", icon: "", tools: [] },
+    featuredCategories: { enabled: true, categoryOrder: [] },
+    statsCounter: { enabled: true, items: [] },
+    testimonials: { enabled: true, items: [] },
+    faqPreview: { enabled: true, items: [] },
+    ctaSection: { enabled: true, title: "", description: "", primaryButtonText: "", primaryButtonLink: "", secondaryButtonText: "", secondaryButtonLink: "" },
   });
   const [homeLoading, setHomeLoading] = useState(false);
   const [homeSaving, setHomeSaving] = useState(false);
+  const [homeErrors, setHomeErrors] = useState({});
   const [heroSectionOpen, setHeroSectionOpen] = useState(true);
   const [trendingCardOpen, setTrendingCardOpen] = useState(true);
   const [featuredCategoriesOpen, setFeaturedCategoriesOpen] = useState(true);
   const [statsCounterOpen, setStatsCounterOpen] = useState(true);
   const [testimonialsOpen, setTestimonialsOpen] = useState(true);
   const [faqPreviewOpen, setFaqPreviewOpen] = useState(true);
+  const [ctaSectionOpen, setCtaSectionOpen] = useState(true);
 
   // Analytics settings state
   const [analyticsSettings, setAnalyticsSettings] = useState([]);
@@ -652,29 +660,299 @@ const loadData = async () => {
     setHomeLoading(true);
     try {
       const result = await getHomeSettings();
-      if (result.success && result.settings?.heroTrending) {
-        setHomeSettings({ heroTrending: result.settings.heroTrending });
+      
+      // Fallback to current homepage values if settings are empty
+      const fallbackHeroTrending = {
+        title: "Trending now",
+        subtitle: "AI Design Stack",
+        icon: "FiZap",
+        tools: [
+          {
+            name: "ChatGPT",
+            category: "Writing",
+            rating: 4.9,
+            description: "A versatile conversational AI assistant for brainstorming and writing.",
+          },
+          {
+            name: "Midjourney",
+            category: "Image",
+            rating: 4.8,
+            description: "Create stunning visuals with text prompts and style control.",
+          },
+          {
+            name: "Notion AI",
+            category: "Productivity",
+            rating: 4.7,
+            description: "Enhance your workspace with AI-powered summaries and writing.",
+          },
+        ],
+        badge: "Discover the future of AI products",
+        heading: "Find the best AI tools for every workflow.",
+        description: "Explore curated AI platforms for writing, coding, design, marketing, and more — all in one place.",
+        searchPlaceholder: "Search AI tools, categories, tags...",
+        buttonText: "Explore",
+      };
+
+      const fallbackTrendingCard = {
+        label: "Trending now",
+        title: "AI Design Stack",
+        icon: "FiZap",
+        tools: [
+          {
+            name: "ChatGPT",
+            category: "Writing",
+            rating: 4.9,
+            description: "A versatile conversational AI assistant for brainstorming and writing.",
+          },
+          {
+            name: "Midjourney",
+            category: "Image",
+            rating: 4.8,
+            description: "Create stunning visuals with text prompts and style control.",
+          },
+          {
+            name: "Notion AI",
+            category: "Productivity",
+            rating: 4.7,
+            description: "Enhance your workspace with AI-powered summaries and writing.",
+          },
+        ],
+      };
+
+      const fallbackFeaturedCategories = {
+        enabled: true,
+        categoryOrder: [],
+      };
+
+      const fallbackStatsCounter = {
+        enabled: true,
+        items: [
+          {
+            label: "AI tools",
+            value: "100+",
+          },
+          {
+            label: "Real ratings",
+            value: "Verified",
+          },
+          {
+            label: "New releases weekly",
+            value: "Updated",
+          },
+        ],
+      };
+
+      const fallbackTestimonials = {
+        enabled: true,
+        items: [
+          {
+            name: "Sarah Johnson",
+            role: "Product Manager",
+            content: "ToolSphere helped us discover the perfect AI tools for our workflow. The curated selection saves us hours of research.",
+            rating: 5,
+          },
+          {
+            name: "Michael Chen",
+            role: "Software Engineer",
+            content: "An invaluable resource for finding AI tools. The ratings and reviews are spot-on and help make informed decisions.",
+            rating: 5,
+          },
+          {
+            name: "Emily Rodriguez",
+            role: "Marketing Director",
+            content: "The best AI tools directory I've found. Clean interface, comprehensive listings, and great recommendations.",
+            rating: 4.8,
+          },
+        ],
+      };
+
+      const fallbackFaqPreview = {
+        enabled: true,
+        items: [
+          {
+            question: "What is ToolSphere?",
+            answer: "ToolSphere is a curated platform featuring the best AI tools for various workflows including writing, coding, design, and marketing.",
+          },
+          {
+            question: "How do I find the right tool?",
+            answer: "Use our search feature or browse categories to discover AI tools that match your specific needs and workflow requirements.",
+          },
+          {
+            question: "Are the tools free to use?",
+            answer: "Many tools offer free tiers or trials. Each tool listing includes pricing information to help you choose what fits your budget.",
+          },
+          {
+            question: "How often are new tools added?",
+            answer: "We update our directory weekly with new AI tools and platforms to ensure you have access to the latest innovations.",
+          },
+        ],
+      };
+
+      const fallbackCtaSection = {
+        enabled: true,
+        title: "Ready to explore AI tools?",
+        description: "Join thousands of users discovering the best AI tools for their workflow. Start exploring ToolSphere today.",
+        primaryButtonText: "Browse All Tools",
+        primaryButtonLink: "/tools",
+        secondaryButtonText: "View Categories",
+        secondaryButtonLink: "/categories",
+      };
+
+      if (result.success && result.settings) {
+        setHomeSettings({
+          heroTrending: result.settings.heroTrending || fallbackHeroTrending,
+          trendingCard: result.settings.trendingCard || fallbackTrendingCard,
+          featuredCategories: result.settings.featuredCategories || fallbackFeaturedCategories,
+          statsCounter: result.settings.statsCounter || fallbackStatsCounter,
+          testimonials: result.settings.testimonials || fallbackTestimonials,
+          faqPreview: result.settings.faqPreview || fallbackFaqPreview,
+          ctaSection: result.settings.ctaSection || fallbackCtaSection,
+        });
+      } else {
+        // If no settings exist at all, use all fallbacks
+        setHomeSettings({
+          heroTrending: fallbackHeroTrending,
+          trendingCard: fallbackTrendingCard,
+          featuredCategories: fallbackFeaturedCategories,
+          statsCounter: fallbackStatsCounter,
+          testimonials: fallbackTestimonials,
+          faqPreview: fallbackFaqPreview,
+          ctaSection: fallbackCtaSection,
+        });
       }
     } catch (err) {
       console.error("Failed to load homepage settings:", err);
+      // On error, use fallback values
+      addToast("Failed to load settings, using defaults", "error");
     } finally {
       setHomeLoading(false);
     }
   };
 
+  // Validate homepage settings
+  const validateHomeSettings = () => {
+    const errors = {};
+
+    // Validate heroTrending
+    if (homeSettings.heroTrending) {
+      if (!homeSettings.heroTrending.badge?.trim()) {
+        errors.heroBadge = "Hero badge is required";
+      } else if (homeSettings.heroTrending.badge.length > 120) {
+        errors.heroBadge = "Hero badge must not exceed 120 characters";
+      }
+
+      if (!homeSettings.heroTrending.heading?.trim()) {
+        errors.heroHeading = "Hero heading is required";
+      } else if (homeSettings.heroTrending.heading.length > 200) {
+        errors.heroHeading = "Hero heading must not exceed 200 characters";
+      }
+
+      if (!homeSettings.heroTrending.description?.trim()) {
+        errors.heroDescription = "Hero description is required";
+      } else if (homeSettings.heroTrending.description.length > 500) {
+        errors.heroDescription = "Hero description must not exceed 500 characters";
+      }
+
+      if (!homeSettings.heroTrending.searchPlaceholder?.trim()) {
+        errors.heroSearchPlaceholder = "Search placeholder is required";
+      }
+
+      if (!homeSettings.heroTrending.buttonText?.trim()) {
+        errors.heroButtonText = "Button text is required";
+      }
+
+      // Validate tools
+      if (homeSettings.heroTrending.tools && homeSettings.heroTrending.tools.length > 0) {
+        homeSettings.heroTrending.tools.forEach((tool, index) => {
+          if (!tool.name?.trim()) {
+            errors[`heroToolName${index}`] = `Tool ${index + 1} name is required`;
+          }
+          if (!tool.category?.trim()) {
+            errors[`heroToolCategory${index}`] = `Tool ${index + 1} category is required`;
+          }
+          if (tool.rating === undefined || tool.rating === null || tool.rating === "") {
+            errors[`heroToolRating${index}`] = `Tool ${index + 1} rating is required`;
+          } else if (isNaN(tool.rating) || tool.rating < 0 || tool.rating > 5) {
+            errors[`heroToolRating${index}`] = `Tool ${index + 1} rating must be between 0 and 5`;
+          }
+        });
+      }
+    }
+
+    // Validate trendingCard
+    if (homeSettings.trendingCard) {
+      if (!homeSettings.trendingCard.label?.trim()) {
+        errors.trendingLabel = "Trending card label is required";
+      }
+      if (!homeSettings.trendingCard.title?.trim()) {
+        errors.trendingTitle = "Trending card title is required";
+      }
+    }
+
+    // Validate ctaSection
+    if (homeSettings.ctaSection?.enabled) {
+      if (!homeSettings.ctaSection.title?.trim()) {
+        errors.ctaTitle = "CTA title is required";
+      } else if (homeSettings.ctaSection.title.length > 200) {
+        errors.ctaTitle = "CTA title must not exceed 200 characters";
+      }
+
+      if (!homeSettings.ctaSection.description?.trim()) {
+        errors.ctaDescription = "CTA description is required";
+      } else if (homeSettings.ctaSection.description.length > 500) {
+        errors.ctaDescription = "CTA description must not exceed 500 characters";
+      }
+
+      if (!homeSettings.ctaSection.primaryButtonText?.trim()) {
+        errors.ctaPrimaryButtonText = "Primary button text is required";
+      }
+
+      if (!homeSettings.ctaSection.primaryButtonLink?.trim()) {
+        errors.ctaPrimaryButtonLink = "Primary button link is required";
+      }
+
+      if (!homeSettings.ctaSection.secondaryButtonText?.trim()) {
+        errors.ctaSecondaryButtonText = "Secondary button text is required";
+      }
+
+      if (!homeSettings.ctaSection.secondaryButtonLink?.trim()) {
+        errors.ctaSecondaryButtonLink = "Secondary button link is required";
+      }
+    }
+
+    setHomeErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Save homepage settings
   const handleSaveHomeSettings = async () => {
+    // Validate before saving
+    if (!validateHomeSettings()) {
+      addToast("Please fix the validation errors before saving", "error");
+      return;
+    }
+
     setHomeSaving(true);
+    setHomeErrors({});
     try {
-      const result = await updateHomeSettings(homeSettings.heroTrending);
+      const result = await updateHomeSettings(homeSettings);
       if (result.success) {
-        setStatus({ type: "success", message: "Homepage settings updated successfully" });
-        if (result.settings?.heroTrending) {
-          setHomeSettings({ heroTrending: result.settings.heroTrending });
+        addToast("Homepage settings updated successfully", "success");
+        if (result.settings) {
+          setHomeSettings({
+            heroTrending: result.settings.heroTrending || homeSettings.heroTrending,
+            trendingCard: result.settings.trendingCard || homeSettings.trendingCard,
+            featuredCategories: result.settings.featuredCategories || homeSettings.featuredCategories,
+            statsCounter: result.settings.statsCounter || homeSettings.statsCounter,
+            testimonials: result.settings.testimonials || homeSettings.testimonials,
+            faqPreview: result.settings.faqPreview || homeSettings.faqPreview,
+            ctaSection: result.settings.ctaSection || homeSettings.ctaSection,
+          });
         }
       }
     } catch (err) {
-      setStatus({ type: "error", message: err.response?.data?.message || err.message || "Failed to update homepage settings" });
+      const errorMessage = err.response?.data?.message || err.message || "Failed to update homepage settings";
+      addToast(errorMessage, "error");
     } finally {
       setHomeSaving(false);
     }
@@ -1486,7 +1764,51 @@ const loadData = async () => {
           {/* Homepage Tab */}
           {activeTab === "homepage" && (
             <div className="rounded-3xl border border-slate-800 bg-slate-950 p-6 shadow-xl shadow-black/10">
-              {/* Hero Section - Collapsible */}
+              {/* Sticky Action Bar */}
+              <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-6 flex items-center justify-between border-b border-slate-800 bg-slate-950/95 px-6 py-4 backdrop-blur-sm">
+                <h2 className="text-xl font-semibold text-white">Homepage Settings</h2>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      loadHomeSettings();
+                      addToast("Changes discarded", "info");
+                    }}
+                    disabled={homeSaving}
+                    className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-700 disabled:opacity-50"
+                  >
+                    <FiX size={16} />
+                    Reset
+                  </button>
+                  <button
+                    onClick={handleSaveHomeSettings}
+                    disabled={homeSaving}
+                    className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {homeSaving ? (
+                      <>
+                        <FiSave className="animate-spin" size={16} />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <FiSave size={16} />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Loading Skeleton */}
+              {homeLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="h-32 animate-pulse rounded-2xl border border-slate-700 bg-slate-900" />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {/* Hero Section - Collapsible */}
               <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
                 <button
                   type="button"
@@ -1599,9 +1921,11 @@ const loadData = async () => {
                   </div>
                 )}
               </div>
-            </div>
+            </>
           )}
-
+          </div>
+          )}
+          
           {/* Social Links Tab */}
           {activeTab === "social" && (
             <div className="relative rounded-3xl border border-slate-800 bg-slate-950 p-6 shadow-xl shadow-black/10">
@@ -2380,8 +2704,8 @@ const loadData = async () => {
             </div>
           )}
         </div>
-
-        {/* Users Section - Always visible at bottom */}
+      
+      {/* Users Section - Always visible at bottom */}
         <section className="rounded-3xl border border-slate-800 bg-slate-950 p-6 shadow-xl shadow-black/10">
           <h2 className="text-xl font-semibold text-white mb-4">Manage Users</h2>
           <div className="space-y-2">

@@ -45,7 +45,12 @@ const FALLBACK_HERO_TRENDING = {
       rating: 4.7,
       description: 'Enhance your workspace with AI-powered summaries and writing.'
     }
-  ]
+  ],
+  badge: "Discover the future of AI products",
+  heading: "Find the best AI tools for every workflow.",
+  description: "Explore curated AI platforms for writing, coding, design, marketing, and more — all in one place.",
+  searchPlaceholder: "Search AI tools, categories, tags...",
+  buttonText: "Explore"
 };
 
 export default function HomePage() {
@@ -76,6 +81,26 @@ export default function HomePage() {
   // Hero "Trending now" card state (dynamic, from Home Settings API)
   const [heroTrending, setHeroTrending] = useState(FALLBACK_HERO_TRENDING);
   const [heroTrendingLoading, setHeroTrendingLoading] = useState(true);
+
+  // Trending Card state (dynamic, from Home Settings API)
+  const [trendingCard, setTrendingCard] = useState(FALLBACK_HERO_TRENDING);
+  const [trendingCardLoading, setTrendingCardLoading] = useState(true);
+
+  // Featured Categories state (dynamic, from Home Settings API)
+  const [featuredCategories, setFeaturedCategories] = useState({ enabled: true, categoryOrder: [] });
+  const [featuredCategoriesLoading, setFeaturedCategoriesLoading] = useState(true);
+
+  // Stats Counter state (dynamic, from Home Settings API)
+  const [statsCounter, setStatsCounter] = useState({ enabled: true, items: [] });
+  const [statsCounterLoading, setStatsCounterLoading] = useState(true);
+
+  // Testimonials state (dynamic, from Home Settings API)
+  const [testimonials, setTestimonials] = useState({ enabled: true, items: [] });
+  const [testimonialsLoading, setTestimonialsLoading] = useState(true);
+
+  // FAQ Preview state (dynamic, from Home Settings API)
+  const [faqPreview, setFaqPreview] = useState({ enabled: true, items: [] });
+  const [faqPreviewLoading, setFaqPreviewLoading] = useState(true);
 
   // Newsletter form state
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -274,6 +299,151 @@ export default function HomePage() {
     };
   }, []);
 
+  // Fetch the dynamic trending card from Home Settings.
+  // Falls back to the default values if the request fails or no settings exist.
+  useEffect(() => {
+    let active = true;
+
+    async function loadTrendingCard() {
+      try {
+        setTrendingCardLoading(true);
+
+        const data = await getHomeSettings();
+
+        if (active && data?.success && data?.settings?.trendingCard) {
+          setTrendingCard(data.settings.trendingCard);
+        }
+      } catch (err) {
+        // Keep the fallback defaults on error (non-blocking).
+        console.error("Error loading trending card settings:", err);
+      } finally {
+        if (active) setTrendingCardLoading(false);
+      }
+    }
+
+    loadTrendingCard();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Fetch the featured categories settings from Home Settings.
+  // Falls back to the default values if the request fails or no settings exist.
+  useEffect(() => {
+    let active = true;
+
+    async function loadFeaturedCategories() {
+      try {
+        setFeaturedCategoriesLoading(true);
+
+        const data = await getHomeSettings();
+
+        if (active && data?.success && data?.settings?.featuredCategories) {
+          setFeaturedCategories(data.settings.featuredCategories);
+        }
+      } catch (err) {
+        // Keep the fallback defaults on error (non-blocking).
+        console.error("Error loading featured categories settings:", err);
+      } finally {
+        if (active) setFeaturedCategoriesLoading(false);
+      }
+    }
+
+    loadFeaturedCategories();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Fetch the stats counter settings from Home Settings.
+  // Falls back to the default values if the request fails or no settings exist.
+  useEffect(() => {
+    let active = true;
+
+    async function loadStatsCounter() {
+      try {
+        setStatsCounterLoading(true);
+
+        const data = await getHomeSettings();
+
+        if (active && data?.success && data?.settings?.statsCounter) {
+          setStatsCounter(data.settings.statsCounter);
+        }
+      } catch (err) {
+        // Keep the fallback defaults on error (non-blocking).
+        console.error("Error loading stats counter settings:", err);
+      } finally {
+        if (active) setStatsCounterLoading(false);
+      }
+    }
+
+    loadStatsCounter();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Fetch the testimonials settings from Home Settings.
+  // Falls back to the default values if the request fails or no settings exist.
+  useEffect(() => {
+    let active = true;
+
+    async function loadTestimonials() {
+      try {
+        setTestimonialsLoading(true);
+
+        const data = await getHomeSettings();
+
+        if (active && data?.success && data?.settings?.testimonials) {
+          setTestimonials(data.settings.testimonials);
+        }
+      } catch (err) {
+        // Keep the fallback defaults on error (non-blocking).
+        console.error("Error loading testimonials settings:", err);
+      } finally {
+        if (active) setTestimonialsLoading(false);
+      }
+    }
+
+    loadTestimonials();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Fetch the FAQ preview settings from Home Settings.
+  // Falls back to the default values if the request fails or no settings exist.
+  useEffect(() => {
+    let active = true;
+
+    async function loadFaqPreview() {
+      try {
+        setFaqPreviewLoading(true);
+
+        const data = await getHomeSettings();
+
+        if (active && data?.success && data?.settings?.faqPreview) {
+          setFaqPreview(data.settings.faqPreview);
+        }
+      } catch (err) {
+        // Keep the fallback defaults on error (non-blocking).
+        console.error("Error loading FAQ preview settings:", err);
+      } finally {
+        if (active) setFaqPreviewLoading(false);
+      }
+    }
+
+    loadFaqPreview();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     let active = true;
 
@@ -319,15 +489,15 @@ export default function HomePage() {
 
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200">
             <FiZap className="h-4 w-4" />
-            Discover the future of AI products
+            {heroTrending.badge || "Discover the future of AI products"}
           </div>
 
           <div className="space-y-4">
             <h1 className="text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-              Find the best AI tools for every workflow.
+              {heroTrending.heading || "Find the best AI tools for every workflow."}
             </h1>
             <p className="max-w-2xl text-lg text-slate-200 sm:text-xl">
-              Explore curated AI platforms for writing, coding, design, marketing, and more — all in one place.
+              {heroTrending.description || "Explore curated AI platforms for writing, coding, design, marketing, and more — all in one place."}
             </p>
           </div>
 
@@ -350,7 +520,7 @@ export default function HomePage() {
                   }
                 }}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
-                placeholder="Search AI tools, categories, tags..."
+                placeholder={heroTrending.searchPlaceholder || "Search AI tools, categories, tags..."}
                 aria-label="Search AI tools"
                 role="combobox"
                 aria-expanded={showSuggestions && suggestions.length > 0}
@@ -394,17 +564,23 @@ export default function HomePage() {
               onClick={() => navigate(`/tools?search=${encodeURIComponent(search)}`)}
               className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-5 py-3 font-semibold text-white transition hover:opacity-90"
             >
-              Explore
+              {heroTrending.buttonText || "Explore"}
             </button>
           </div>
 
           <div className="flex flex-wrap gap-3 text-sm text-slate-300">
-            {statsLoading ? (
+            {statsCounterLoading ? (
               <>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Loading...</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Real ratings</span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">New releases weekly</span>
               </>
+            ) : statsCounter.enabled && statsCounter.items && statsCounter.items.length > 0 ? (
+              statsCounter.items.map((item, index) => (
+                <span key={index} className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                  {item.value} {item.label}
+                </span>
+              ))
             ) : homeStats ? (
               <>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
@@ -427,7 +603,7 @@ export default function HomePage() {
         {/* RIGHT SIDE CARD */}
         <div className="rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-800/60 p-6 shadow-xl">
 
-          {heroTrendingLoading ? (
+          {trendingCardLoading ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -455,8 +631,8 @@ export default function HomePage() {
             <>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-300">{heroTrending.title}</p>
-                  <h2 className="mt-1 text-2xl font-semibold">{heroTrending.subtitle}</h2>
+                  <p className="text-sm text-slate-300">{trendingCard.label}</p>
+                  <h2 className="mt-1 text-2xl font-semibold">{trendingCard.title}</h2>
                 </div>
                 <div className="rounded-full border border-cyan-400/20 bg-cyan-500/10 p-2 text-cyan-300">
                   <FiZap className="h-5 w-5" />
@@ -464,7 +640,7 @@ export default function HomePage() {
               </div>
 
               <div className="mt-6 space-y-3">
-                {(heroTrending.tools || []).map((tool, index) => (
+                {(trendingCard.tools || []).map((tool, index) => (
                   <div key={tool.name || index} className="rounded-2xl border border-white/10 bg-white/5 p-4">
 
                     <div className="flex items-center justify-between">
@@ -594,104 +770,121 @@ export default function HomePage() {
       </section>
 
       {/* CATEGORIES */}
-      <section>
+      {featuredCategories.enabled && (
+        <section>
 
-        <div className="mb-6 flex items-end justify-between">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">
-              Categories
-            </p>
-            <h2 className="text-2xl font-semibold">Featured categories</h2>
-          </div>
-
-          <Link
-            to="/categories"
-            className="text-sm text-cyan-300 transition hover:text-cyan-200"
-          >
-            View all
-          </Link>
-        </div>
-
-        {error && (
-          <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-center">
-            <p className="text-sm text-red-300">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-2 text-sm text-red-200 underline hover:text-red-100"
-            >
-              Try refreshing the page
-            </button>
-          </div>
-        )}
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
-          {loading ? (
-            // Loading skeleton for categories
-            [1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-cyan-500 to-fuchsia-500 p-[1px]"
-              >
-                <div className="rounded-[1.45rem] bg-slate-950/90 p-5 animate-pulse">
-                  <div className="flex items-center justify-between">
-                    <div className="h-10 w-10 rounded-xl bg-slate-800" />
-                    <div className="h-6 w-20 rounded-full bg-slate-800" />
-                  </div>
-                  <div className="mt-6 h-7 w-3/4 bg-slate-800 rounded" />
-                  <div className="mt-2 h-4 w-full bg-slate-800 rounded" />
-                </div>
-              </div>
-            ))
-          ) : categories.length === 0 ? (
-            <div className="md:col-span-2 xl:col-span-4">
-              <EmptyState
-                type="folder"
-                title="No categories yet"
-                description="Categories will appear here once tools are organized into different categories. Check back soon!"
-              />
+          <div className="mb-6 flex items-end justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">
+                Categories
+              </p>
+              <h2 className="text-2xl font-semibold">Featured categories</h2>
             </div>
-          ) : (
-            categories.map((category) => (
-              <Link
-                key={category._id || category.name}
-                to={`/tools?category=${encodeURIComponent(category.name || category._id)}`}
+
+            <Link
+              to="/categories"
+              className="text-sm text-cyan-300 transition hover:text-cyan-200"
+            >
+              View all
+            </Link>
+          </div>
+
+          {error && (
+            <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-center">
+              <p className="text-sm text-red-300">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 text-sm text-red-200 underline hover:text-red-100"
               >
-                <motion.div
-                  whileHover={{ y: -4, scale: 1.01 }}
-                  className="cursor-pointer rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-cyan-500 to-fuchsia-500 p-[1px]"
-                >
-                  <div className="rounded-[1.45rem] bg-slate-950/90 p-5">
-
-                    <div className="flex items-center justify-between">
-                      <CategoryIcon
-                        category={category.name || category._id}
-                        icon={category.icon}
-                        size="xl"
-                      />
-
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300">
-                        {category.count} tools
-                      </span>
-                    </div>
-
-                    <h3 className="mt-6 text-xl font-semibold">
-                      {category.name || category._id}
-                    </h3>
-
-                    <p className="mt-2 text-sm text-slate-300">
-                      Discover AI tools for {category.name || category._id}.
-                    </p>
-
-                  </div>
-                </motion.div>
-              </Link>
-            ))
+                Try refreshing the page
+              </button>
+            </div>
           )}
 
-        </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
 
-      </section>
+            {loading ? (
+              // Loading skeleton for categories
+              [1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-cyan-500 to-fuchsia-500 p-[1px]"
+                >
+                  <div className="rounded-[1.45rem] bg-slate-950/90 p-5 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="h-10 w-10 rounded-xl bg-slate-800" />
+                      <div className="h-6 w-20 rounded-full bg-slate-800" />
+                    </div>
+                    <div className="mt-6 h-7 w-3/4 bg-slate-800 rounded" />
+                    <div className="mt-2 h-4 w-full bg-slate-800 rounded" />
+                  </div>
+                </div>
+              ))
+            ) : categories.length === 0 ? (
+              <div className="md:col-span-2 xl:col-span-4">
+                <EmptyState
+                  type="folder"
+                  title="No categories yet"
+                  description="Categories will appear here once tools are organized into different categories. Check back soon!"
+                />
+              </div>
+            ) : (
+              (() => {
+                // Sort categories based on categoryOrder if provided
+                let displayCategories = categories;
+                if (featuredCategories.categoryOrder && featuredCategories.categoryOrder.length > 0) {
+                  const orderMap = new Map(featuredCategories.categoryOrder.map((name, index) => [name, index]));
+                  displayCategories = [...categories].sort((a, b) => {
+                    const aName = a.name || a._id;
+                    const bName = b.name || b._id;
+                    const aOrder = orderMap.has(aName) ? orderMap.get(aName) : Infinity;
+                    const bOrder = orderMap.has(bName) ? orderMap.get(bName) : Infinity;
+                    return aOrder - bOrder;
+                  });
+                }
+
+                return displayCategories.map((category) => (
+                  <Link
+                    key={category._id || category.name}
+                    to={`/tools?category=${encodeURIComponent(category.name || category._id)}`}
+                  >
+                    <motion.div
+                      whileHover={{ y: -4, scale: 1.01 }}
+                      className="cursor-pointer rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-cyan-500 to-fuchsia-500 p-[1px]"
+                    >
+                      <div className="rounded-[1.45rem] bg-slate-950/90 p-5">
+
+                        <div className="flex items-center justify-between">
+                          <CategoryIcon
+                            category={category.name || category._id}
+                            icon={category.icon}
+                            size="xl"
+                          />
+
+                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300">
+                            {category.count} tools
+                          </span>
+                        </div>
+
+                        <h3 className="mt-6 text-xl font-semibold">
+                          {category.name || category._id}
+                        </h3>
+
+                        <p className="mt-2 text-sm text-slate-300">
+                          Discover AI tools for {category.name || category._id}.
+                        </p>
+
+                      </div>
+                    </motion.div>
+                  </Link>
+                ));
+              })()
+            )}
+
+          </div>
+
+        </section>
+      )}
 
       {/* POPULAR */}
       <section>
@@ -801,6 +994,71 @@ export default function HomePage() {
         )}
       </section>
 
+      {/* TESTIMONIALS */}
+      {testimonials.enabled && testimonials.items && testimonials.items.length > 0 && (
+        <section>
+          <div className="mb-6 flex items-end justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">
+                Testimonials
+              </p>
+              <h2 className="text-2xl font-semibold">What our users say</h2>
+            </div>
+          </div>
+
+          {testimonialsLoading ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-[1.5rem] border border-white/10 bg-slate-900/50 p-6 animate-pulse space-y-4"
+                >
+                  <div className="h-4 w-3/4 rounded bg-slate-800" />
+                  <div className="h-3 w-1/2 rounded bg-slate-800" />
+                  <div className="h-3 w-full rounded bg-slate-800" />
+                  <div className="h-3 w-full rounded bg-slate-800" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {testimonials.items.map((testimonial, index) => (
+                <div
+                  key={index}
+                  className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-slate-950/40"
+                >
+                  <div className="flex items-center gap-1 text-amber-400 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={i}
+                        className={`h-4 w-4 ${i < Math.floor(testimonial.rating) ? "fill-current" : "fill-none"}`}
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+
+                  <p className="text-sm text-slate-300 mb-4 line-clamp-4">
+                    "{testimonial.content}"
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-fuchsia-500 text-sm font-semibold text-white">
+                      {testimonial.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">{testimonial.name}</p>
+                      <p className="text-xs text-slate-400">{testimonial.role}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* NEWSLETTER */}
       <section className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-indigo-500/20 px-6 py-12 text-center shadow-2xl shadow-blue-950/40 backdrop-blur-xl sm:px-8 sm:py-16 lg:px-12 lg:py-20">
 
@@ -869,41 +1127,33 @@ export default function HomePage() {
       </section>
 
       {/* FAQ Preview - Collapsible */}
-      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/50">
-        <button
-          type="button"
-          onClick={() => setFaqPreviewOpen(prev => !prev)}
-          className="flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-slate-900"
-        >
-          <span className="text-lg font-semibold text-white">FAQ Preview</span>
-          <FiChevronDown
-            size={20}
-            className={`text-slate-400 transition-transform duration-200 ${faqPreviewOpen ? "rotate-180" : ""}`}
-          />
-        </button>
-        {faqPreviewOpen && (
-          <div className="border-t border-white/10 p-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-                <h3 className="text-base font-semibold text-white mb-2">What is ToolSphere?</h3>
-                <p className="text-sm text-slate-300">ToolSphere is a curated platform featuring the best AI tools for various workflows including writing, coding, design, and marketing.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-                <h3 className="text-base font-semibold text-white mb-2">How do I find the right tool?</h3>
-                <p className="text-sm text-slate-300">Use our search feature or browse categories to discover AI tools that match your specific needs and workflow requirements.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-                <h3 className="text-base font-semibold text-white mb-2">Are the tools free to use?</h3>
-                <p className="text-sm text-slate-300">Many tools offer free tiers or trials. Each tool listing includes pricing information to help you choose what fits your budget.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
-                <h3 className="text-base font-semibold text-white mb-2">How often are new tools added?</h3>
-                <p className="text-sm text-slate-300">We update our directory weekly with new AI tools and platforms to ensure you have access to the latest innovations.</p>
+      {faqPreview.enabled && faqPreview.items && faqPreview.items.length > 0 && (
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/50">
+          <button
+            type="button"
+            onClick={() => setFaqPreviewOpen(prev => !prev)}
+            className="flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-slate-900"
+          >
+            <span className="text-lg font-semibold text-white">FAQ Preview</span>
+            <FiChevronDown
+              size={20}
+              className={`text-slate-400 transition-transform duration-200 ${faqPreviewOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {faqPreviewOpen && (
+            <div className="border-t border-white/10 p-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                {faqPreview.items.map((item, index) => (
+                  <div key={index} className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+                    <h3 className="text-base font-semibold text-white mb-2">{item.question}</h3>
+                    <p className="text-sm text-slate-300">{item.answer}</p>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       {/* CTA Section - Collapsible */}
       <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/50">
