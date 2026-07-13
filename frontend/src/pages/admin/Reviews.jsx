@@ -4,7 +4,7 @@ import { getAdminToken } from "../../utils/auth";
 import AdminLayout from "../../layout/AdminLayout";
 import { FiStar, FiInbox, FiRefreshCw, FiClock, FiCheck, FiX, FiTrash2 } from "react-icons/fi";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 // Admin API instance with auth interceptor
 const adminApi = axios.create({

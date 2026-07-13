@@ -1,9 +1,7 @@
 import axios from "axios";
 import { getAdminToken } from "../utils/auth";
 
-const API_URL = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/upload`
-  : "http://localhost:5000/api/upload";
+const API_URL = `${import.meta.env.VITE_API_URL}/upload`;
 
 export const uploadFile = async (file, onProgress) => {
   const formData = new FormData();
