@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FiArrowRight, FiSearch, FiStar, FiZap, FiLoader, FiCheck, FiChevronDown } from 'react-icons/fi';
+import { FiArrowRight, FiSearch, FiStar, FiZap, FiLoader, FiCheck, FiColumns, FiChevronDown } from 'react-icons/fi';
 import { Link, useNavigate } from "react-router-dom";
 
 import { useEffect, useState, memo } from "react";
@@ -14,6 +14,7 @@ import CategoryIcon from "../components/common/CategoryIcon";
 import EmptyState from "../components/common/EmptyState";
 import BlogCard from "../components/blog/BlogCard";
 import { isLoggedIn } from "../utils/auth";
+import { useComparison } from "../context/ComparisonContext";
 
 // Memoized so the toast container (and its Toast children, which reset their
 // auto-dismiss timers on every re-render) does NOT re-render on unrelated
@@ -58,6 +59,21 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { toasts, addToast, removeToast } = useToast();
+
+  const { isComparing, toggleCompare, maxCompare } = useComparison();
+
+  const handleCompareToggle = (tool, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const result = toggleCompare(tool);
+    if (result === "max") {
+      addToast(`You can compare up to ${maxCompare} tools.`, "error");
+    } else if (result === "added") {
+      addToast(`Added "${tool.name}" to comparison.`, "success");
+    } else if (result === "removed") {
+      addToast(`Removed "${tool.name}" from comparison.`, "info");
+    }
+  };
 
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
@@ -831,13 +847,31 @@ export default function HomePage() {
                   )}
                 </div>
 
-                <Link
-                  to={`/tools/${tool.slug}`}
-                  className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
-                >
-                  View Details
-                  <FiArrowRight className="h-4 w-4" />
-                </Link>
+                <div className="mt-6 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={(e) => handleCompareToggle(tool, e)}
+                    aria-pressed={isComparing(tool._id)}
+                    aria-label={isComparing(tool._id) ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+                    title={isComparing(tool._id) ? "Remove from comparison" : "Add to comparison"}
+                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+                      isComparing(tool._id)
+                        ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
+                        : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                    }`}
+                  >
+                    {isComparing(tool._id) ? <FiCheck size={14} /> : <FiColumns size={14} />}
+                    {isComparing(tool._id) ? "Comparing" : "Compare"}
+                  </button>
+
+                  <Link
+                    to={`/tools/${tool.slug}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                  >
+                    View Details
+                    <FiArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
             ))
           )}
@@ -910,13 +944,31 @@ export default function HomePage() {
                     )}
                   </div>
 
-                  <Link
-                    to={`/tools/${tool.slug}`}
-                    className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
-                  >
-                    View Details
-                    <FiArrowRight className="h-4 w-4" />
-                  </Link>
+                  <div className="mt-6 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={(e) => handleCompareToggle(tool, e)}
+                      aria-pressed={isComparing(tool._id)}
+                      aria-label={isComparing(tool._id) ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+                      title={isComparing(tool._id) ? "Remove from comparison" : "Add to comparison"}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+                        isComparing(tool._id)
+                          ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
+                          : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                      }`}
+                    >
+                      {isComparing(tool._id) ? <FiCheck size={14} /> : <FiColumns size={14} />}
+                      {isComparing(tool._id) ? "Comparing" : "Compare"}
+                    </button>
+
+                    <Link
+                      to={`/tools/${tool.slug}`}
+                      className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                    >
+                      View Details
+                      <FiArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1088,13 +1140,31 @@ export default function HomePage() {
                 </span>
               </div>
 
-              <Link
-                to={`/tools/${tool.slug}`}
-                className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
-              >
-                View Details
-                <FiArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="mt-6 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={(e) => handleCompareToggle(tool, e)}
+                  aria-pressed={isComparing(tool._id)}
+                  aria-label={isComparing(tool._id) ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+                  title={isComparing(tool._id) ? "Remove from comparison" : "Add to comparison"}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+                    isComparing(tool._id)
+                      ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
+                      : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                  }`}
+                >
+                  {isComparing(tool._id) ? <FiCheck size={14} /> : <FiColumns size={14} />}
+                  {isComparing(tool._id) ? "Comparing" : "Compare"}
+                </button>
+
+                <Link
+                  to={`/tools/${tool.slug}`}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                >
+                  View Details
+                  <FiArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
 
             </div>
           ))}
