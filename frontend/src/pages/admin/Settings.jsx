@@ -2236,7 +2236,193 @@ const loadData = async () => {
                   />
                 </button>
                 {featuredCategoriesOpen && (
-                  <div className="border-t border-slate-800 p-5">
+                  <div className="border-t border-slate-800 p-5 space-y-5">
+                    {/* Enable/Disable Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">
+                          Enable Featured Categories
+                        </label>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Show featured categories section on homepage
+                        </p>
+                      </div>
+                      <ToggleSwitch
+                        checked={homeSettings.featuredCategories?.enabled ?? true}
+                        onChange={(checked) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            featuredCategories: {
+                              ...prev.featuredCategories,
+                              enabled: checked,
+                            },
+                          }));
+                        }}
+                        aria-label="Toggle featured categories"
+                      />
+                    </div>
+
+                    {/* Category Order List */}
+                    {homeSettings.featuredCategories?.enabled && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-sm font-medium text-slate-300">
+                            Category Order
+                          </label>
+                          <p className="text-xs text-slate-400">
+                            Drag or use buttons to reorder categories
+                          </p>
+                        </div>
+
+                        {categories.length === 0 ? (
+                          <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center">
+                            <p className="text-sm text-slate-400">No categories available. Create categories in the General tab first.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {homeSettings.featuredCategories.categoryOrder?.length > 0 ? (
+                              homeSettings.featuredCategories.categoryOrder.map((categoryId, index) => {
+                                const category = categories.find(c => c._id === categoryId);
+                                if (!category) return null;
+
+                                return (
+                                  <div
+                                    key={categoryId}
+                                    className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/50 p-3"
+                                  >
+                                    <div className="flex flex-col gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (index === 0) return;
+                                          setHomeSettings(prev => {
+                                            const newOrder = [...prev.featuredCategories.categoryOrder];
+                                            [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+                                            return {
+                                              ...prev,
+                                              featuredCategories: {
+                                                ...prev.featuredCategories,
+                                                categoryOrder: newOrder,
+                                              },
+                                            };
+                                          });
+                                        }}
+                                        disabled={index === 0}
+                                        className="rounded-lg bg-slate-800 p-1.5 text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        title="Move up"
+                                      >
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <path d="M4 10L8 6L12 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (index === homeSettings.featuredCategories.categoryOrder.length - 1) return;
+                                          setHomeSettings(prev => {
+                                            const newOrder = [...prev.featuredCategories.categoryOrder];
+                                            [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+                                            return {
+                                              ...prev,
+                                              featuredCategories: {
+                                                ...prev.featuredCategories,
+                                                categoryOrder: newOrder,
+                                              },
+                                            };
+                                          });
+                                        }}
+                                        disabled={index === homeSettings.featuredCategories.categoryOrder.length - 1}
+                                        className="rounded-lg bg-slate-800 p-1.5 text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        title="Move down"
+                                      >
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                      </button>
+                                    </div>
+
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <CategoryIcon
+                                          category={category.name}
+                                          icon={category.icon}
+                                          size="sm"
+                                        />
+                                        <span className="text-sm font-medium text-white">
+                                          {category.name}
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-slate-400 mt-1">
+                                        {category.count} tools
+                                      </p>
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          featuredCategories: {
+                                            ...prev.featuredCategories,
+                                            categoryOrder: prev.featuredCategories.categoryOrder.filter((_, i) => i !== index),
+                                          },
+                                        }));
+                                      }}
+                                      className="rounded-lg bg-red-600/20 p-2 text-red-300 transition hover:bg-red-600/30"
+                                      title="Remove from featured"
+                                    >
+                                      <FiTrash2 size={16} />
+                                    </button>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center">
+                                <p className="text-sm text-slate-400">No categories selected. Add categories below to feature them.</p>
+                              </div>
+                            )}
+
+                            {/* Add Category Dropdown */}
+                            <div className="flex gap-2">
+                              <select
+                                value=""
+                                onChange={(e) => {
+                                  const categoryId = e.target.value;
+                                  if (!categoryId) return;
+
+                                  setHomeSettings(prev => {
+                                    const currentOrder = prev.featuredCategories.categoryOrder || [];
+                                    if (currentOrder.includes(categoryId)) {
+                                      return prev;
+                                    }
+
+                                    return {
+                                      ...prev,
+                                      featuredCategories: {
+                                        ...prev.featuredCategories,
+                                        categoryOrder: [...currentOrder, categoryId],
+                                      },
+                                    };
+                                  });
+
+                                  e.target.value = "";
+                                }}
+                                className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-500"
+                              >
+                                <option value="">Select a category to add...</option>
+                                {categories
+                                  .filter(cat => !(homeSettings.featuredCategories.categoryOrder || []).includes(cat._id))
+                                  .map(category => (
+                                    <option key={category._id} value={category._id}>
+                                      {category.name}
+                                    </option>
+                                  ))}
+                              </select>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -2255,7 +2441,146 @@ const loadData = async () => {
                   />
                 </button>
                 {statsCounterOpen && (
-                  <div className="border-t border-slate-800 p-5">
+                  <div className="border-t border-slate-800 p-5 space-y-5">
+                    {/* Enable/Disable Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">
+                          Enable Stats Counter
+                        </label>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Show statistics counter section on homepage
+                        </p>
+                      </div>
+                      <ToggleSwitch
+                        checked={homeSettings.statsCounter?.enabled ?? true}
+                        onChange={(checked) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            statsCounter: {
+                              ...prev.statsCounter,
+                              enabled: checked,
+                            },
+                          }));
+                        }}
+                        aria-label="Toggle stats counter"
+                      />
+                    </div>
+
+                    {/* Stats List */}
+                    {homeSettings.statsCounter?.enabled && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-sm font-medium text-slate-300">
+                            Statistics
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHomeSettings(prev => ({
+                                ...prev,
+                                statsCounter: {
+                                  ...prev.statsCounter,
+                                  items: [
+                                    ...(prev.statsCounter.items || []),
+                                    { label: "", value: "" },
+                                  ],
+                                },
+                              }));
+                            }}
+                            className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-cyan-500"
+                          >
+                            Add Stat
+                          </button>
+                        </div>
+
+                        {homeSettings.statsCounter.items && homeSettings.statsCounter.items.length > 0 ? (
+                          <div className="space-y-3">
+                            {homeSettings.statsCounter.items.map((stat, index) => (
+                              <div
+                                key={index}
+                                className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 space-y-3"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium text-slate-300">
+                                    Stat {index + 1}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setHomeSettings(prev => ({
+                                        ...prev,
+                                        statsCounter: {
+                                          ...prev.statsCounter,
+                                          items: prev.statsCounter.items.filter((_, i) => i !== index),
+                                        },
+                                      }));
+                                    }}
+                                    className="inline-flex items-center gap-1 rounded-lg bg-red-600/20 px-2.5 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-600/30"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                  {/* Label */}
+                                  <div className="space-y-1.5">
+                                    <label className="block text-xs font-medium text-slate-400">
+                                      Label
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={stat.label || ""}
+                                      onChange={(e) => {
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          statsCounter: {
+                                            ...prev.statsCounter,
+                                            items: prev.statsCounter.items.map((s, i) =>
+                                              i === index ? { ...s, label: e.target.value } : s
+                                            ),
+                                          },
+                                        }));
+                                      }}
+                                      placeholder="e.g., AI tools"
+                                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                    />
+                                  </div>
+
+                                  {/* Value */}
+                                  <div className="space-y-1.5">
+                                    <label className="block text-xs font-medium text-slate-400">
+                                      Value
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={stat.value || ""}
+                                      onChange={(e) => {
+                                        setHomeSettings(prev => ({
+                                          ...prev,
+                                          statsCounter: {
+                                            ...prev.statsCounter,
+                                            items: prev.statsCounter.items.map((s, i) =>
+                                              i === index ? { ...s, value: e.target.value } : s
+                                            ),
+                                          },
+                                        }));
+                                      }}
+                                      placeholder="e.g., 100+"
+                                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center">
+                            <p className="text-sm text-slate-400">No stats added yet. Click "Add Stat" to add your first statistic.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
