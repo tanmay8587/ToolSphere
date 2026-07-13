@@ -7,6 +7,7 @@ import {
   getToolBySlug,
   getRelatedTools,
   getRecommendedTools,
+  getRecommendations,
   searchTools,
   reportTool,
 } from "../controllers/toolController.js";
@@ -52,6 +53,12 @@ router.get("/:slug/related", getRelatedTools);
  * - Recommended tools (same category)
  */
 router.get("/:toolId/recommendations", getRecommendedTools);
+
+/**
+ * GET /api/tools/:id/recommendations
+ * - Recommendations (same category)
+ */
+router.get("/:id/recommendations", getRecommendations);
 
 /**
  * GET /api/tools/:slug

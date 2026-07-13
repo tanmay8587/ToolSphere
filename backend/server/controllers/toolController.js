@@ -171,6 +171,43 @@ export const getRecommendedTools = async (req, res) => {
 };
 
 /* =====================================
+    GET RECOMMENDATIONS (same category)
+===================================== */
+
+export const getRecommendations = async (req, res) => {
+  try {
+    const currentTool = await Tool.findById(req.params.id);
+
+    if (!currentTool) {
+      return res.status(404).json({
+        success: false,
+        message: "Tool not found",
+      });
+    }
+
+    const tools = await Tool.find({
+      _id: { $ne: currentTool._id },
+      category: currentTool.category,
+      approved: true,
+      isDeleted: false,
+      status: "active",
+    })
+      .sort({ rating: -1, createdAt: -1 })
+      .limit(6);
+
+    res.json({
+      success: true,
+      tools,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch recommendations",
+    });
+  }
+};
+
+/* =====================================
     GET TOOL BY SLUG
 ===================================== */
 
