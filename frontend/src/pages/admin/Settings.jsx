@@ -1975,7 +1975,249 @@ const loadData = async () => {
                   />
                 </button>
                 {trendingCardOpen && (
-                  <div className="border-t border-slate-800 p-5">
+                  <div className="border-t border-slate-800 p-5 space-y-5">
+                    {/* Label */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-300">
+                        Label
+                      </label>
+                      <input
+                        type="text"
+                        value={homeSettings.trendingCard?.label || ""}
+                        onChange={(e) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            trendingCard: {
+                              ...prev.trendingCard,
+                              label: e.target.value,
+                            },
+                          }));
+                        }}
+                        placeholder="Enter label..."
+                        className={`w-full rounded-xl border bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500 ${
+                          homeErrors.trendingLabel ? "border-red-500" : "border-slate-700"
+                        }`}
+                      />
+                      {homeErrors.trendingLabel && (
+                        <p className="text-xs text-red-400">{homeErrors.trendingLabel}</p>
+                      )}
+                    </div>
+
+                    {/* Title */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-300">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        value={homeSettings.trendingCard?.title || ""}
+                        onChange={(e) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            trendingCard: {
+                              ...prev.trendingCard,
+                              title: e.target.value,
+                            },
+                          }));
+                        }}
+                        placeholder="Enter title..."
+                        className={`w-full rounded-xl border bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500 ${
+                          homeErrors.trendingTitle ? "border-red-500" : "border-slate-700"
+                        }`}
+                      />
+                      {homeErrors.trendingTitle && (
+                        <p className="text-xs text-red-400">{homeErrors.trendingTitle}</p>
+                      )}
+                    </div>
+
+                    {/* Icon */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-300">
+                        Icon
+                      </label>
+                      <input
+                        type="text"
+                        value={homeSettings.trendingCard?.icon || ""}
+                        onChange={(e) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            trendingCard: {
+                              ...prev.trendingCard,
+                              icon: e.target.value,
+                            },
+                          }));
+                        }}
+                        placeholder="Enter icon name (e.g., FiZap)..."
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500"
+                      />
+                      <p className="text-xs text-slate-400">
+                        Enter a React Icons name (e.g., FiZap, FiStar, FiTool)
+                      </p>
+                    </div>
+
+                    {/* Tools List */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-sm font-medium text-slate-300">
+                          Tools
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setHomeSettings(prev => ({
+                              ...prev,
+                              trendingCard: {
+                                ...prev.trendingCard,
+                                tools: [
+                                  ...(prev.trendingCard.tools || []),
+                                  { name: "", category: "", rating: 0, description: "" },
+                                ],
+                              },
+                            }));
+                          }}
+                          className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-cyan-500"
+                        >
+                          Add Tool
+                        </button>
+                      </div>
+
+                      {homeSettings.trendingCard?.tools && homeSettings.trendingCard.tools.length > 0 ? (
+                        <div className="space-y-4">
+                          {homeSettings.trendingCard.tools.map((tool, index) => (
+                            <div
+                              key={index}
+                              className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 space-y-3"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-300">
+                                  Tool {index + 1}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setHomeSettings(prev => ({
+                                      ...prev,
+                                      trendingCard: {
+                                        ...prev.trendingCard,
+                                        tools: prev.trendingCard.tools.filter((_, i) => i !== index),
+                                      },
+                                    }));
+                                  }}
+                                  className="inline-flex items-center gap-1 rounded-lg bg-red-600/20 px-2.5 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-600/30"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                {/* Name */}
+                                <div className="space-y-1.5">
+                                  <label className="block text-xs font-medium text-slate-400">
+                                    Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={tool.name || ""}
+                                    onChange={(e) => {
+                                      setHomeSettings(prev => ({
+                                        ...prev,
+                                        trendingCard: {
+                                          ...prev.trendingCard,
+                                          tools: prev.trendingCard.tools.map((t, i) =>
+                                            i === index ? { ...t, name: e.target.value } : t
+                                          ),
+                                        },
+                                      }));
+                                    }}
+                                    placeholder="Tool name"
+                                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                  />
+                                </div>
+
+                                {/* Category */}
+                                <div className="space-y-1.5">
+                                  <label className="block text-xs font-medium text-slate-400">
+                                    Category
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={tool.category || ""}
+                                    onChange={(e) => {
+                                      setHomeSettings(prev => ({
+                                        ...prev,
+                                        trendingCard: {
+                                          ...prev.trendingCard,
+                                          tools: prev.trendingCard.tools.map((t, i) =>
+                                            i === index ? { ...t, category: e.target.value } : t
+                                          ),
+                                        },
+                                      }));
+                                    }}
+                                    placeholder="Category"
+                                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Rating */}
+                              <div className="space-y-1.5">
+                                <label className="block text-xs font-medium text-slate-400">
+                                  Rating (0-5)
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="5"
+                                  step="0.1"
+                                  value={tool.rating || 0}
+                                  onChange={(e) => {
+                                    const value = parseFloat(e.target.value) || 0;
+                                    setHomeSettings(prev => ({
+                                      ...prev,
+                                      trendingCard: {
+                                        ...prev.trendingCard,
+                                        tools: prev.trendingCard.tools.map((t, i) =>
+                                          i === index ? { ...t, rating: Math.min(5, Math.max(0, value)) } : t
+                                        ),
+                                      },
+                                    }));
+                                  }}
+                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                                />
+                              </div>
+
+                              {/* Description */}
+                              <div className="space-y-1.5">
+                                <label className="block text-xs font-medium text-slate-400">
+                                  Description
+                                </label>
+                                <textarea
+                                  value={tool.description || ""}
+                                  onChange={(e) => {
+                                    setHomeSettings(prev => ({
+                                      ...prev,
+                                      trendingCard: {
+                                        ...prev.trendingCard,
+                                        tools: prev.trendingCard.tools.map((t, i) =>
+                                          i === index ? { ...t, description: e.target.value } : t
+                                        ),
+                                      },
+                                    }));
+                                  }}
+                                  placeholder="Tool description..."
+                                  rows={2}
+                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500 resize-none"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center">
+                          <p className="text-sm text-slate-400">No tools added yet. Click "Add Tool" to add your first tool.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
