@@ -121,17 +121,42 @@ export const getRecommendedTools = async (req, res) => {
       });
     }
 
+    const currentTags = Array.isArray(currentTool.tags) ? currentTool.tags : [];
+
+    // Match tools that share the same category OR at least one tag.
+    const matchConditions = [{ category: currentTool.category }];
+    if (currentTags.length > 0) {
+      matchConditions.push({ tags: { $in: currentTags } });
+    }
+
     const filters = {
       _id: { $ne: currentTool._id },
-      category: currentTool.category,
       approved: true,
       isDeleted: false,
       status: "active",
+      $or: matchConditions,
     };
 
-    const tools = await Tool.find(filters)
-      .sort({ createdAt: -1 })
-      .limit(6);
+    const candidateTools = await Tool.find(filters).lean();
+
+    // Score by relevance: shared tags weighted higher than a category match.
+    const scored = candidateTools.map((tool) => {
+      const toolTags = Array.isArray(tool.tags) ? tool.tags : [];
+      const sharedTags = currentTags.filter((tag) => toolTags.includes(tag)).length;
+      const categoryMatch = tool.category === currentTool.category ? 1 : 0;
+      const score = sharedTags * 2 + categoryMatch;
+      return { tool, score };
+    });
+
+    scored.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const ratingA = a.tool.rating || 0;
+      const ratingB = b.tool.rating || 0;
+      if (ratingB !== ratingA) return ratingB - ratingA;
+      return new Date(b.tool.createdAt) - new Date(a.tool.createdAt);
+    });
+
+    const tools = scored.slice(0, 6).map((entry) => entry.tool);
 
     res.json({
       success: true,
