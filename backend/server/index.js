@@ -36,6 +36,7 @@ import blogCommentRoutes from "./routes/blogComment.js";
 import { adminRouter } from "./routes/blogComment.js";
 import blogInteractionRoutes from "./routes/blogInteraction.js";
 import userRoutes from "./routes/users.js";
+import homeSettingsRoutes from "./routes/homeSettings.js";
 import logger from "./utils/logger.js";
 import validateEnvironment from "./utils/envValidation.js";
 import { checkMaintenanceMode } from "./middleware/maintenance.js";
@@ -44,6 +45,7 @@ import seedAnalyticsSettings from "./utils/seedAnalyticsSettings.js";
 import seedWebsiteBranding from "./utils/seedWebsiteBranding.js";
 import seedSeoSettings from "./utils/seedSeoSettings.js";
 import seedSmtpSettings from "./utils/seedSmtpSettings.js";
+import seedHomeSettings from "./utils/seedHomeSettings.js";
 import { sendErrorResponse, AppError } from "./utils/errorResponse.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -369,6 +371,7 @@ app.use("/api/blogs", blogInteractionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminBlogRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api", homeSettingsRoutes);
 
 /* ===========================
    404 HANDLER
@@ -480,11 +483,11 @@ const startServer = () => {
   // ===========================
   // TIMEOUT CONFIGURATION
   // ===========================
-  
+   
   // Request timeout: Maximum time to receive the entire request from client (10 seconds)
   // This prevents slow-client attacks where clients send data very slowly
   server.requestTimeout = 10000;
-  
+   
   logger.info("⏱️  Timeout configuration: Request timeout set to 10 seconds");
 };
 
@@ -534,7 +537,7 @@ const gracefulShutdown = async (signal) => {
 
     // Clear the timeout since shutdown completed successfully
     clearTimeout(shutdownTimeout);
-    
+     
     logger.info("👋 Graceful shutdown complete");
     process.exit(0);
   } catch (error) {
@@ -624,7 +627,7 @@ const seedDatabase = async () => {
 
 /* ===========================
    START APP
-   =========================== */
+=========================== */
 
 logger.info("🛡️  Graceful shutdown handlers registered (SIGINT, SIGTERM)");
 
@@ -645,11 +648,12 @@ const connectAndStart = async () => {
     const seedContactSettings = (await import("./utils/seedContactSettings.js")).default;
     await seedContactSettings();
 
-    // Seed analytics, website branding, SEO, and SMTP settings
+    // Seed analytics, website branding, SEO, SMTP, and Home settings
     await seedAnalyticsSettings();
     await seedWebsiteBranding();
     await seedSeoSettings();
     await seedSmtpSettings();
+    await seedHomeSettings();
 
     startServer();
   } catch (error) {
