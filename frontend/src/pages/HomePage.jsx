@@ -109,8 +109,17 @@ export default function HomePage() {
   // FAQ Preview state
   const [faqPreviewOpen, setFaqPreviewOpen] = useState(true);
 
-  // CTA Section state
-  const [ctaSectionOpen, setCtaSectionOpen] = useState(true);
+  // CTA Section state (dynamic, from Home Settings API)
+  const [ctaSection, setCtaSection] = useState({ 
+    enabled: true, 
+    title: "Ready to explore AI tools?", 
+    description: "Join thousands of users discovering the best AI tools for their workflow. Start exploring ToolSphere today.",
+    primaryButtonText: "Browse All Tools",
+    primaryButtonLink: "/tools",
+    secondaryButtonText: "View Categories",
+    secondaryButtonLink: "/categories"
+  });
+  const [ctaSectionLoading, setCtaSectionLoading] = useState(true);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -438,6 +447,35 @@ export default function HomePage() {
     }
 
     loadFaqPreview();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Fetch the CTA section settings from Home Settings.
+  // Falls back to the default values if the request fails or no settings exist.
+  useEffect(() => {
+    let active = true;
+
+    async function loadCtaSection() {
+      try {
+        setCtaSectionLoading(true);
+
+        const data = await getHomeSettings();
+
+        if (active && data?.success && data?.settings?.ctaSection) {
+          setCtaSection(data.settings.ctaSection);
+        }
+      } catch (err) {
+        // Keep the fallback defaults on error (non-blocking).
+        console.error("Error loading CTA section settings:", err);
+      } finally {
+        if (active) setCtaSectionLoading(false);
+      }
+    }
+
+    loadCtaSection();
 
     return () => {
       active = false;
@@ -1156,35 +1194,47 @@ export default function HomePage() {
       )}
 
       {/* CTA Section - Collapsible */}
-      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/50">
-        <button
-          type="button"
-          onClick={() => setCtaSectionOpen(prev => !prev)}
-          className="flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-slate-900"
-        >
-          <span className="text-lg font-semibold text-white">CTA Section</span>
-          <FiChevronDown
-            size={20}
-            className={`text-slate-400 transition-transform duration-200 ${ctaSectionOpen ? "rotate-180" : ""}`}
-          />
-        </button>
-        {ctaSectionOpen && (
-          <div className="border-t border-white/10 p-6">
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-fuchsia-500/10 p-8 text-center">
-              <h3 className="text-2xl font-semibold text-white mb-3">Ready to explore AI tools?</h3>
-              <p className="text-base text-slate-300 mb-6 max-w-2xl mx-auto">Join thousands of users discovering the best AI tools for their workflow. Start exploring ToolSphere today.</p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link to="/tools" className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-6 py-3 font-semibold text-white transition hover:opacity-90">
-                  Browse All Tools
-                </Link>
-                <Link to="/categories" className="rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
-                  View Categories
-                </Link>
+      {ctaSection.enabled && (
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/50">
+          <button
+            type="button"
+            onClick={() => setCtaSectionOpen(prev => !prev)}
+            className="flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-slate-900"
+          >
+            <span className="text-lg font-semibold text-white">CTA Section</span>
+            <FiChevronDown
+              size={20}
+              className={`text-slate-400 transition-transform duration-200 ${ctaSectionOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {ctaSectionOpen && (
+            <div className="border-t border-white/10 p-6">
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-fuchsia-500/10 p-8 text-center">
+                <h3 className="text-2xl font-semibold text-white mb-3">
+                  {ctaSection.title || "Ready to explore AI tools?"}
+                </h3>
+                <p className="text-base text-slate-300 mb-6 max-w-2xl mx-auto">
+                  {ctaSection.description || "Join thousands of users discovering the best AI tools for their workflow. Start exploring ToolSphere today."}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <Link 
+                    to={ctaSection.primaryButtonLink || "/tools"} 
+                    className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-6 py-3 font-semibold text-white transition hover:opacity-90"
+                  >
+                    {ctaSection.primaryButtonText || "Browse All Tools"}
+                  </Link>
+                  <Link 
+                    to={ctaSection.secondaryButtonLink || "/categories"} 
+                    className="rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+                  >
+                    {ctaSection.secondaryButtonText || "View Categories"}
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       {/* Toast Container */}
       <MemoizedToastContainer toasts={toasts} removeToast={removeToast} />
