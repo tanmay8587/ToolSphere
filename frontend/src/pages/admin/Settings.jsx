@@ -1822,7 +1822,141 @@ const loadData = async () => {
                   />
                 </button>
                 {heroSectionOpen && (
-                  <div className="border-t border-slate-800 p-5">
+                  <div className="border-t border-slate-800 p-5 space-y-5">
+                    {/* Badge */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-300">
+                        Badge
+                      </label>
+                      <input
+                        type="text"
+                        value={homeSettings.heroTrending?.badge || ""}
+                        onChange={(e) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            heroTrending: {
+                              ...prev.heroTrending,
+                              badge: e.target.value,
+                            },
+                          }));
+                        }}
+                        placeholder="Enter badge text..."
+                        className={`w-full rounded-xl border bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500 ${
+                          homeErrors.heroBadge ? "border-red-500" : "border-slate-700"
+                        }`}
+                      />
+                      {homeErrors.heroBadge && (
+                        <p className="text-xs text-red-400">{homeErrors.heroBadge}</p>
+                      )}
+                    </div>
+
+                    {/* Heading */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-300">
+                        Heading
+                      </label>
+                      <input
+                        type="text"
+                        value={homeSettings.heroTrending?.heading || ""}
+                        onChange={(e) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            heroTrending: {
+                              ...prev.heroTrending,
+                              heading: e.target.value,
+                            },
+                          }));
+                        }}
+                        placeholder="Enter heading..."
+                        className={`w-full rounded-xl border bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500 ${
+                          homeErrors.heroHeading ? "border-red-500" : "border-slate-700"
+                        }`}
+                      />
+                      {homeErrors.heroHeading && (
+                        <p className="text-xs text-red-400">{homeErrors.heroHeading}</p>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-300">
+                        Description
+                      </label>
+                      <textarea
+                        value={homeSettings.heroTrending?.description || ""}
+                        onChange={(e) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            heroTrending: {
+                              ...prev.heroTrending,
+                              description: e.target.value,
+                            },
+                          }));
+                        }}
+                        placeholder="Enter description..."
+                        rows={3}
+                        className={`w-full rounded-xl border bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500 resize-none ${
+                          homeErrors.heroDescription ? "border-red-500" : "border-slate-700"
+                        }`}
+                      />
+                      {homeErrors.heroDescription && (
+                        <p className="text-xs text-red-400">{homeErrors.heroDescription}</p>
+                      )}
+                    </div>
+
+                    {/* Search Placeholder */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-300">
+                        Search Placeholder
+                      </label>
+                      <input
+                        type="text"
+                        value={homeSettings.heroTrending?.searchPlaceholder || ""}
+                        onChange={(e) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            heroTrending: {
+                              ...prev.heroTrending,
+                              searchPlaceholder: e.target.value,
+                            },
+                          }));
+                        }}
+                        placeholder="Enter search placeholder..."
+                        className={`w-full rounded-xl border bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500 ${
+                          homeErrors.heroSearchPlaceholder ? "border-red-500" : "border-slate-700"
+                        }`}
+                      />
+                      {homeErrors.heroSearchPlaceholder && (
+                        <p className="text-xs text-red-400">{homeErrors.heroSearchPlaceholder}</p>
+                      )}
+                    </div>
+
+                    {/* CTA Button Text */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-slate-300">
+                        CTA Button Text
+                      </label>
+                      <input
+                        type="text"
+                        value={homeSettings.heroTrending?.buttonText || ""}
+                        onChange={(e) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            heroTrending: {
+                              ...prev.heroTrending,
+                              buttonText: e.target.value,
+                            },
+                          }));
+                        }}
+                        placeholder="Enter button text..."
+                        className={`w-full rounded-xl border bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500 ${
+                          homeErrors.heroButtonText ? "border-red-500" : "border-slate-700"
+                        }`}
+                      />
+                      {homeErrors.heroButtonText && (
+                        <p className="text-xs text-red-400">{homeErrors.heroButtonText}</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
