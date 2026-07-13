@@ -24,9 +24,9 @@ export const getHomeSettings = async () => {
 };
 
 /* ==========================================
-   UPDATE HOME SETTINGS (ADMIN)
-   ========================================== */
-export const updateHomeSettings = async (heroTrending) => {
+    UPDATE HOME SETTINGS (ADMIN)
+    ========================================== */
+export const updateHomeSettings = async (settings) => {
   const token = getAdminToken();
 
   const response = await fetch(`${API_URL}/admin/home-settings`, {
@@ -35,7 +35,7 @@ export const updateHomeSettings = async (heroTrending) => {
       "Content-Type": "application/json",
       ...(token && { Authorization: `Bearer ${token}` }),
     },
-    body: JSON.stringify({ heroTrending }),
+    body: JSON.stringify(settings),
   });
 
   const data = await response.json().catch(() => null);
