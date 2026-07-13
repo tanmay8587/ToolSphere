@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AdminLayout from "../../layout/AdminLayout";
 import { createCategory, deleteUser, getCategories, getAdminUsers, getAllTools, featureTool, updateCategory, deleteCategory, toggleCategoryActive, exportSettingsData, exportToolsData, exportCategoriesData, exportUsersData } from "../../services/adminApi";
 import { uploadFile } from "../../services/uploadService";
-import { FiTool, FiGrid, FiUsers, FiSettings, FiGlobe, FiHome, FiSearch, FiShare2, FiCode, FiTrash2, FiSave, FiRefreshCw, FiMail, FiEdit, FiBarChart2, FiX, FiAlertCircle, FiSend, FiDownload } from "react-icons/fi";
+import { FiTool, FiGrid, FiUsers, FiSettings, FiGlobe, FiHome, FiSearch, FiShare2, FiCode, FiTrash2, FiSave, FiRefreshCw, FiMail, FiEdit, FiBarChart2, FiX, FiAlertCircle, FiSend, FiDownload, FiChevronDown } from "react-icons/fi";
 import CategoryIcon from "../../components/common/CategoryIcon";
 import { getAllSocialLinks, updateSocialLink, initializeSocialLinks } from "../../services/socialService";
 import ToggleSwitch from "../../components/common/ToggleSwitch";
@@ -141,6 +141,7 @@ export default function Settings() {
   });
   const [homeLoading, setHomeLoading] = useState(false);
   const [homeSaving, setHomeSaving] = useState(false);
+  const [heroSectionOpen, setHeroSectionOpen] = useState(true);
 
   // Analytics settings state
   const [analyticsSettings, setAnalyticsSettings] = useState([]);
@@ -1480,6 +1481,24 @@ const loadData = async () => {
           {/* Homepage Tab */}
           {activeTab === "homepage" && (
             <div className="rounded-3xl border border-slate-800 bg-slate-950 p-6 shadow-xl shadow-black/10">
+              {/* Hero Section - Collapsible */}
+              <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+                <button
+                  type="button"
+                  onClick={() => setHeroSectionOpen(prev => !prev)}
+                  className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-slate-900"
+                >
+                  <span className="text-base font-semibold text-white">Hero Section</span>
+                  <FiChevronDown
+                    size={18}
+                    className={`text-slate-400 transition-transform duration-200 ${heroSectionOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {heroSectionOpen && (
+                  <div className="border-t border-slate-800 p-5">
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
