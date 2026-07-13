@@ -83,6 +83,7 @@ export default function SearchModal({ isOpen, onClose }) {
           <button
             onClick={onClose}
             className="rounded-full p-2 text-slate-400 hover:bg-white/10 hover:text-white"
+            aria-label="Close search"
           >
             <FiX className="h-5 w-5" />
           </button>

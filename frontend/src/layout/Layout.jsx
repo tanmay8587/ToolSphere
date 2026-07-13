@@ -305,7 +305,7 @@ export default function Layout() {
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden items-center gap-6 md:flex">
+          <nav className="hidden items-center gap-6 md:flex" aria-label="Main navigation">
             {navItems.map((item) => (
               <NavLink
                 key={item.path}
@@ -316,6 +316,7 @@ export default function Layout() {
                     : "text-slate-300 hover:text-white hover:translate-y-[-1px]"
                   }`
                 }
+                aria-current={({ isActive }) => isActive ? "page" : undefined}
               >
                 {item.name}
               </NavLink>
@@ -379,6 +380,7 @@ export default function Layout() {
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-sm font-medium text-cyan-300 md:hidden"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
             >
               {menuOpen ? (
                 <FiX className="h-5 w-5" />
@@ -402,7 +404,7 @@ export default function Layout() {
                 {brandingSettings.site_name || "ToolSphere"}
               </h2>
 
-            <button onClick={() => setMenuOpen(false)}>
+            <button onClick={() => setMenuOpen(false)} aria-label="Close menu">
               <FiX className="h-7 w-7 text-white" />
             </button>
 
@@ -421,6 +423,7 @@ export default function Layout() {
                     : "text-white hover:bg-white/5"
                   }`
                 }
+                aria-current={({ isActive }) => isActive ? "page" : undefined}
               >
                 {item.name}
               </NavLink>

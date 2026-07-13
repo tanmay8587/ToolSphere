@@ -168,6 +168,7 @@ export default function Sidebar() {
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {collapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
@@ -177,7 +178,7 @@ export default function Sidebar() {
       </div>
 
       {/* NAV - Scrollable */}
-      <nav className="flex-1 min-h-0 space-y-2 px-4 py-6 overflow-y-auto overflow-x-hidden scrollbar-thin">
+      <nav className="flex-1 min-h-0 space-y-2 px-4 py-6 overflow-y-auto overflow-x-hidden scrollbar-thin" aria-label="Admin navigation">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
@@ -189,6 +190,7 @@ export default function Sidebar() {
                   : "text-slate-300 hover:bg-white/5 hover:text-white"
               } ${collapsed ? "justify-center px-3" : ""}`
             }
+            aria-current={({ isActive }) => isActive ? "page" : undefined}
           >
             <span className="flex-shrink-0 transition-colors text-slate-400 group-hover:text-cyan-300">
               {item.icon}
@@ -227,6 +229,7 @@ export default function Sidebar() {
                   : "text-slate-300 hover:bg-white/5 hover:text-white"
               } ${collapsed ? "justify-center px-3" : ""}`
             }
+            aria-current={({ isActive }) => isActive ? "page" : undefined}
           >
             <span className="flex-shrink-0 transition-colors text-slate-400 group-hover:text-cyan-300">
               {item.icon}
@@ -245,6 +248,7 @@ export default function Sidebar() {
             flex w-full items-center justify-center gap-3 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500 hover:text-white
             ${collapsed ? "px-3" : ""}
           `}
+          aria-label="Logout"
         >
           <FiLogOut size={20} />
           {!collapsed && "Logout"}

@@ -116,6 +116,7 @@ export default function Topbar() {
             window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'));
           }}
           className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white lg:hidden"
+          aria-label="Toggle sidebar menu"
         >
           <FiMenu size={20} />
         </button>
@@ -148,16 +149,17 @@ export default function Topbar() {
             className="w-48 sm:w-64 rounded-xl border border-white/10 bg-white/5 py-2 pl-10 pr-10 text-sm text-white outline-none transition focus:border-cyan-400 focus:bg-white/10"
           />
           {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSearchResults(null);
-                searchInputRef.current?.focus();
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-            >
-              <FiX size={14} />
-            </button>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchResults(null);
+                  searchInputRef.current?.focus();
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                aria-label="Clear search"
+              >
+                <FiX size={14} />
+              </button>
           )}
 
           {/* Search Results Dropdown */}

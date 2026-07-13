@@ -30,6 +30,7 @@ export default function PasswordInput({
         type="button"
         onClick={() => setShowPassword(!showPassword)}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+        aria-label={showPassword ? "Hide password" : "Show password"}
         tabIndex={-1}
       >
         {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
