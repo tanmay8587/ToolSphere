@@ -4,6 +4,7 @@ import { FiX, FiArrowRight, FiColumns, FiStar } from "react-icons/fi";
 import { useComparison } from "../context/ComparisonContext";
 import { getToolLogoProps } from "../utils/imageOptimization";
 import EmptyState from "../components/common/EmptyState";
+import { useToast } from "../components/common/Toast";
 
 // Rows to compare. Each row pulls a value from a tool object.
 // `present(t)` reports whether a given tool has a meaningful value for the
@@ -64,12 +65,14 @@ export default function ComparePage() {
   const { compareTools, removeFromCompare, clearCompare, maxCompare } = useComparison();
 
   const [copied, setCopied] = useState(false);
+  const { addToast } = useToast();
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      addToast("Comparison link copied to clipboard", "success");
     } catch {
       /* clipboard may be unavailable; the URL is still in the address bar */
     }
