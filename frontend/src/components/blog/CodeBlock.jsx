@@ -84,7 +84,7 @@ export default function CodeBlock({ code, language = "plaintext" }) {
       {/* Copy button */}
       <button
         onClick={handleCopy}
-        className="absolute top-2 right-2 bg-[#161b22] border border-[#30363d] text-[#8b949e] px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-[#21262d] hover:text-[#e6edf3] flex items-center gap-1 z-10"
+        className="absolute top-2 right-2 bg-[#161b22] border border-[#30363d] text-[#8b949e] px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 hover:bg-[#21262d] hover:text-[#e6edf3] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 flex items-center gap-1 z-10"
         aria-label="Copy code to clipboard"
       >
         {copied ? (

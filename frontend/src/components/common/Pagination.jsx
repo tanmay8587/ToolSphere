@@ -36,7 +36,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className={`flex items-center gap-1 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+        className={`flex items-center gap-1 rounded-xl px-4 py-2.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
           currentPage === 1
             ? "cursor-not-allowed opacity-50 text-slate-500"
             : "text-slate-300 hover:bg-white/10 hover:text-white"
@@ -50,7 +50,7 @@ export default function Pagination({
       {hasLeftEllipsis && (
         <button
           onClick={() => onPageChange(1)}
-          className="rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white"
+          className="rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         >
           1
         </button>
@@ -68,7 +68,7 @@ export default function Pagination({
         <button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`rounded-xl px-3.5 py-2.5 text-sm font-medium transition ${
+          className={`rounded-xl px-3.5 py-2.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
             page === currentPage
               ? "bg-cyan-500 text-white"
               : "text-slate-300 hover:bg-white/10 hover:text-white"
@@ -90,7 +90,7 @@ export default function Pagination({
       {hasRightEllipsis && (
         <button
           onClick={() => onPageChange(totalPages)}
-          className="rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white"
+          className="rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         >
           {totalPages}
         </button>
@@ -100,7 +100,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className={`flex items-center gap-1 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+        className={`flex items-center gap-1 rounded-xl px-4 py-2.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
           currentPage === totalPages
             ? "cursor-not-allowed opacity-50 text-slate-500"
             : "text-slate-300 hover:bg-white/10 hover:text-white"

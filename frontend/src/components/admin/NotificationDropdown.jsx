@@ -422,7 +422,7 @@ export default function NotificationDropdown() {
       <button
         ref={buttonRef}
         onClick={toggle}
-        className="relative rounded-xl border border-white/10 bg-white/5 p-2.5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+        className="relative rounded-xl border border-white/10 bg-white/5 p-2.5 text-slate-300 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -457,14 +457,14 @@ export default function NotificationDropdown() {
                 {notifications.length > 0 && unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
-                    className="text-xs text-cyan-400 transition hover:text-cyan-300"
+                    className="text-xs text-cyan-400 transition hover:text-cyan-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded"
                   >
                     Mark all read
                   </button>
                 )}
                 <button
                   onClick={close}
-                  className="rounded-lg p-1 text-slate-500 transition hover:bg-white/5 hover:text-white"
+                  className="rounded-lg p-1 text-slate-500 transition hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                   aria-label="Close notifications"
                 >
                   <FiX size={16} />
@@ -511,7 +511,7 @@ export default function NotificationDropdown() {
                   </p>
                   <button
                     onClick={() => fetchNotifications(1, false)}
-                    className="rounded-lg bg-cyan-500/20 px-4 py-2 text-xs font-medium text-cyan-400 transition hover:bg-cyan-500/30"
+                    className="rounded-lg bg-cyan-500/20 px-4 py-2 text-xs font-medium text-cyan-400 transition hover:bg-cyan-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                   >
                     Try again
                   </button>
@@ -561,7 +561,7 @@ export default function NotificationDropdown() {
 
                         <button
                           onClick={() => handleNotificationClick(notification)}
-                          className="flex w-full gap-3 px-4 py-3 pl-5 text-left"
+                          className="flex w-full gap-3 px-4 py-3 pl-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-inset"
                           role="menuitem"
                         >
                           {/* Type icon */}
@@ -615,14 +615,14 @@ export default function NotificationDropdown() {
                                   isUnread
                                 )
                               }
-                              className="rounded-md bg-red-500/90 px-2 py-1 text-[11px] font-medium text-white transition hover:bg-red-500"
+                              className="rounded-md bg-red-500/90 px-2 py-1 text-[11px] font-medium text-white transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                               aria-label="Confirm delete"
                             >
                               Yes
                             </button>
                             <button
                               onClick={handleCancelDelete}
-                              className="rounded-md px-2 py-1 text-[11px] font-medium text-slate-300 transition hover:bg-white/10"
+                              className="rounded-md px-2 py-1 text-[11px] font-medium text-slate-300 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                               aria-label="Cancel delete"
                             >
                               No
@@ -633,7 +633,7 @@ export default function NotificationDropdown() {
                             onClick={(e) =>
                               handleDeleteClick(e, notification._id)
                             }
-                            className="absolute right-2 top-2 rounded-lg p-1.5 text-slate-600 opacity-0 transition hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 focus:opacity-100"
+                            className="absolute right-2 top-2 rounded-lg p-1.5 text-slate-600 opacity-0 transition hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                             aria-label="Delete notification"
                             title="Delete notification"
                           >
@@ -664,7 +664,7 @@ export default function NotificationDropdown() {
                   onClick={() => {
                     // Navigate to notifications page (future feature)
                   }}
-                  className="text-xs text-slate-400 transition hover:text-white"
+                  className="text-xs text-slate-400 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded"
                 >
                   View all notifications
                 </button>

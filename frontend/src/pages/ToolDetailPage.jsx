@@ -546,7 +546,7 @@ export default function ToolDetailPage() {
           <button
             onClick={handleBookmark}
             disabled={bookmarkLoading}
-            className={`flex items-center gap-2 rounded-2xl px-4 py-3 transition-all duration-200 disabled:opacity-50 ${
+            className={`flex items-center gap-2 rounded-2xl px-4 py-3 transition-all duration-200 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
               isBookmarked
                 ? "bg-white border border-white text-slate-900 hover:bg-slate-100"
                 : "bg-slate-900/90 border border-white/10 text-white hover:bg-slate-800"
@@ -558,7 +558,7 @@ export default function ToolDetailPage() {
 
           <button
             onClick={handleShare}
-            className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800"
+            className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
             <FiShare2 />
             Share
@@ -578,7 +578,7 @@ export default function ToolDetailPage() {
 
           <button
             onClick={() => setShowReportModal(true)}
-            className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800"
+            className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
             <FiFlag />
             Report
@@ -592,7 +592,7 @@ export default function ToolDetailPage() {
             <button
               onClick={handleBookmark}
               disabled={bookmarkLoading}
-              className={`flex flex-col items-center rounded-2xl px-3 py-1 text-xs disabled:opacity-50 transition-transform duration-200 ${
+              className={`flex flex-col items-center rounded-2xl px-3 py-1 text-xs disabled:opacity-50 transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                 isBookmarked ? "bg-white text-slate-900" : "text-white"
               } ${saveAnim ? "scale-110" : "scale-100"}`}
             >
@@ -602,7 +602,7 @@ export default function ToolDetailPage() {
 
             <button
               onClick={handleShare}
-              className="flex flex-col items-center text-white text-xs"
+              className="flex flex-col items-center text-white text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
             >
               <FiShare2 size={18} />
               Share
@@ -711,7 +711,7 @@ export default function ToolDetailPage() {
               <button
                 type="submit"
                 disabled={reviewLoading}
-                className="w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:opacity-50"
+                className="w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               >
                 {userReview ? 'Update Review' : 'Submit Review'}
               </button>

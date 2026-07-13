@@ -132,7 +132,7 @@ export default function SocialShare({ url, title, text }) {
             <button
               type="button"
               onClick={handleNativeShare}
-              className="group inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-cyan-600 hover:shadow-cyan-500/30 active:scale-95"
+              className="group inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-cyan-600 hover:shadow-cyan-500/30 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               aria-label="Share this article"
               title="Share this article"
             >
@@ -148,7 +148,7 @@ export default function SocialShare({ url, title, text }) {
           <button
             type="button"
             onClick={handleCopyLink}
-            className={`group relative inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
+            className={`group relative inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
               copied
                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
                 : "border-white/10 bg-white/5 text-slate-300 hover:border-cyan-500/40 hover:bg-cyan-500/10 hover:text-cyan-300"
@@ -172,7 +172,7 @@ export default function SocialShare({ url, title, text }) {
               key={key}
               type="button"
               onClick={() => openPlatform(href)}
-              className={`group relative inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${className}`}
+              className={`group relative inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all duration-200 hover:-translate-y-0.5 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${className}`}
               aria-label={tooltip}
               title={tooltip}
             >
