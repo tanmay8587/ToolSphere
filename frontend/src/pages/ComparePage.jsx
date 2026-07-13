@@ -33,6 +33,10 @@ const ROWS = [
     get: (t) =>
       Array.isArray(t.features) && t.features.length ? t.features : null,
     isList: true,
+    // Features are compared explicitly side-by-side even when not every tool
+    // lists them, so missing values are shown gracefully instead of hiding
+    // the whole row.
+    always: true,
     present: (t) => Array.isArray(t.features) && t.features.length > 0,
   },
   {
@@ -82,10 +86,11 @@ export default function ComparePage() {
     );
   }
 
-  // Only show fields that every selected tool has, so the table compares
-  // like-for-like instead of rendering empty placeholders.
-  const commonRows = ROWS.filter((row) =>
-    compareTools.every((tool) => row.present(tool))
+  // Show fields that every selected tool has (like-for-like comparison), plus
+  // any rows explicitly marked `always` (e.g. Features) which are compared
+  // side-by-side with graceful placeholders for missing values.
+  const commonRows = ROWS.filter(
+    (row) => row.always || compareTools.every((tool) => row.present(tool))
   );
 
   return (
@@ -188,10 +193,10 @@ export default function ComparePage() {
                                 </li>
                               ))}
                             </ul>
-                          ) : (
-                            <span className="text-slate-500">—</span>
-                          )
-                        ) : row.isLink ? (
+                        ) : (
+                          <span className="text-slate-500">Not specified</span>
+                        )
+                      ) : row.isLink ? (
                           value ? (
                             <a
                               href={value}
