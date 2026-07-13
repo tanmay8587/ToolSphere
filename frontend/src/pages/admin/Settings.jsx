@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AdminLayout from "../../layout/AdminLayout";
 import { createCategory, deleteUser, getCategories, getAdminUsers, getAllTools, featureTool, updateCategory, deleteCategory, toggleCategoryActive, exportSettingsData, exportToolsData, exportCategoriesData, exportUsersData } from "../../services/adminApi";
 import { uploadFile } from "../../services/uploadService";
-import { FiTool, FiGrid, FiUsers, FiSettings, FiGlobe, FiSearch, FiShare2, FiCode, FiTrash2, FiSave, FiRefreshCw, FiMail, FiEdit, FiBarChart2, FiX, FiAlertCircle, FiSend, FiDownload } from "react-icons/fi";
+import { FiTool, FiGrid, FiUsers, FiSettings, FiGlobe, FiHome, FiSearch, FiShare2, FiCode, FiTrash2, FiSave, FiRefreshCw, FiMail, FiEdit, FiBarChart2, FiX, FiAlertCircle, FiSend, FiDownload } from "react-icons/fi";
 import CategoryIcon from "../../components/common/CategoryIcon";
 import { getAllSocialLinks, updateSocialLink, initializeSocialLinks } from "../../services/socialService";
 import ToggleSwitch from "../../components/common/ToggleSwitch";
@@ -10,6 +10,7 @@ import { useToast, ToastContainer } from "../../components/common/Toast";
 import { getAllContactSettings, updateContactSetting, initializeContactSettings } from "../../services/contactSettingService";
 import { getAllBrandingSettings, updateBrandingSetting, initializeBrandingSettings } from "../../services/websiteBrandingService";
 import { getAllSeoSettings, updateSeoSetting, initializeSeoSettings } from "../../services/seoService";
+import { getHomeSettings, updateHomeSettings } from "../../services/homeSettingsService";
 import { getAllAnalyticsSettings, updateAnalyticsSetting, initializeAnalyticsSettings } from "../../services/analyticsService";
 import { getMaintenanceStatus, toggleMaintenanceMode, updateMaintenanceSettings } from "../../services/maintenanceService";
 import { getAllSmtpSettings, updateSmtpSetting, initializeSmtpSettings, sendTestEmail } from "../../services/smtpService";
@@ -19,6 +20,7 @@ import ImageUploader from "../../components/admin/form/ImageUploader";
 const tabs = [
   { id: "general", label: "General", icon: FiSettings },
   { id: "branding", label: "Branding", icon: FiGlobe },
+  { id: "homepage", label: "Homepage", icon: FiHome },
   { id: "seo", label: "SEO", icon: FiSearch },
   { id: "social", label: "Social Links", icon: FiShare2 },
   { id: "contact", label: "Contact", icon: FiMail },
@@ -132,6 +134,13 @@ export default function Settings() {
   const [seoSettings, setSeoSettings] = useState([]);
   const [seoLoading, setSeoLoading] = useState(false);
   const [seoSaving, setSeoSaving] = useState({});
+
+  // Homepage settings state
+  const [homeSettings, setHomeSettings] = useState({
+    heroTrending: { title: "", subtitle: "", icon: "", tools: [] },
+  });
+  const [homeLoading, setHomeLoading] = useState(false);
+  const [homeSaving, setHomeSaving] = useState(false);
 
   // Analytics settings state
   const [analyticsSettings, setAnalyticsSettings] = useState([]);
@@ -509,6 +518,13 @@ const loadData = async () => {
     }
   }, [activeTab]);
 
+  // Load homepage settings when Homepage tab is active
+  useEffect(() => {
+    if (activeTab === "homepage") {
+      loadHomeSettings();
+    }
+  }, [activeTab]);
+
   // Load analytics settings when analytics tab is active
   useEffect(() => {
     if (activeTab === "analytics") {
@@ -623,6 +639,77 @@ const loadData = async () => {
     } finally {
       setSmtpLoading(false);
     }
+  };
+
+  // Load homepage settings
+  const loadHomeSettings = async () => {
+    setHomeLoading(true);
+    try {
+      const result = await getHomeSettings();
+      if (result.success && result.settings?.heroTrending) {
+        setHomeSettings({ heroTrending: result.settings.heroTrending });
+      }
+    } catch (err) {
+      console.error("Failed to load homepage settings:", err);
+    } finally {
+      setHomeLoading(false);
+    }
+  };
+
+  // Save homepage settings
+  const handleSaveHomeSettings = async () => {
+    setHomeSaving(true);
+    try {
+      const result = await updateHomeSettings(homeSettings.heroTrending);
+      if (result.success) {
+        setStatus({ type: "success", message: "Homepage settings updated successfully" });
+        if (result.settings?.heroTrending) {
+          setHomeSettings({ heroTrending: result.settings.heroTrending });
+        }
+      }
+    } catch (err) {
+      setStatus({ type: "error", message: err.response?.data?.message || err.message || "Failed to update homepage settings" });
+    } finally {
+      setHomeSaving(false);
+    }
+  };
+
+  // Add a new trending tool row
+  const addHomeTool = () => {
+    setHomeSettings(prev => ({
+      ...prev,
+      heroTrending: {
+        ...prev.heroTrending,
+        tools: [
+          ...(prev.heroTrending.tools || []),
+          { name: "", category: "", rating: 0, description: "" },
+        ],
+      },
+    }));
+  };
+
+  // Update a single field of a trending tool
+  const updateHomeTool = (idx, field, value) => {
+    setHomeSettings(prev => ({
+      ...prev,
+      heroTrending: {
+        ...prev.heroTrending,
+        tools: prev.heroTrending.tools.map((t, i) =>
+          i === idx ? { ...t, [field]: value } : t
+        ),
+      },
+    }));
+  };
+
+  // Remove a trending tool row
+  const removeHomeTool = (idx) => {
+    setHomeSettings(prev => ({
+      ...prev,
+      heroTrending: {
+        ...prev.heroTrending,
+        tools: prev.heroTrending.tools.filter((_, i) => i !== idx),
+      },
+    }));
   };
 
   // Update maintenance settings
@@ -1386,6 +1473,167 @@ const loadData = async () => {
               
               <p className="text-sm text-slate-500 mt-4">
                 Configure SEO settings for your website. Text fields are saved automatically when you click outside the input field. Images can be uploaded via drag & drop.
+              </p>
+            </div>
+          )}
+
+          {/* Homepage Tab */}
+          {activeTab === "homepage" && (
+            <div className="rounded-3xl border border-slate-800 bg-slate-950 p-6 shadow-xl shadow-black/10">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-white">Homepage Content</h2>
+                <button
+                  onClick={handleSaveHomeSettings}
+                  disabled={homeSaving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:opacity-50"
+                >
+                  <FiSave size={16} />
+                  {homeSaving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+
+              {homeLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-16 animate-pulse rounded-xl border border-slate-700 bg-slate-900" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Trending Now Card */}
+                  <section className="space-y-4">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Trending Now Card</h3>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Title</label>
+                      <input
+                        type="text"
+                        value={homeSettings.heroTrending.title}
+                        onChange={(e) =>
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            heroTrending: { ...prev.heroTrending, title: e.target.value },
+                          }))
+                        }
+                        placeholder="Trending now"
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Subtitle</label>
+                      <input
+                        type="text"
+                        value={homeSettings.heroTrending.subtitle}
+                        onChange={(e) =>
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            heroTrending: { ...prev.heroTrending, subtitle: e.target.value },
+                          }))
+                        }
+                        placeholder="AI Design Stack"
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Icon</label>
+                      <input
+                        type="text"
+                        value={homeSettings.heroTrending.icon}
+                        onChange={(e) =>
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            heroTrending: { ...prev.heroTrending, icon: e.target.value },
+                          }))
+                        }
+                        placeholder="FiZap"
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                  </section>
+
+                  {/* Trending Tools */}
+                  <section className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Trending Tools</h3>
+                      <button
+                        onClick={addHomeTool}
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-700"
+                      >
+                        <FiEdit size={16} />
+                        Add Tool
+                      </button>
+                    </div>
+
+                    {(homeSettings.heroTrending.tools || []).length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-slate-700 p-6 text-center">
+                        <p className="text-slate-400">No trending tools yet. Click "Add Tool" to add one.</p>
+                      </div>
+                    ) : (
+                      (homeSettings.heroTrending.tools || []).map((tool, idx) => (
+                        <div key={idx} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-300">Tool #{idx + 1}</span>
+                            <button
+                              onClick={() => removeHomeTool(idx)}
+                              className="rounded-xl bg-red-600/20 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-600/30"
+                            >
+                              <FiTrash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Name</label>
+                              <input
+                                type="text"
+                                value={tool.name}
+                                onChange={(e) => updateHomeTool(idx, "name", e.target.value)}
+                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Category</label>
+                              <input
+                                type="text"
+                                value={tool.category}
+                                onChange={(e) => updateHomeTool(idx, "category", e.target.value)}
+                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-slate-400 mb-1">Rating (0-5)</label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                max="5"
+                                value={tool.rating}
+                                onChange={(e) => updateHomeTool(idx, "rating", parseFloat(e.target.value) || 0)}
+                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs text-slate-400 mb-1">Description</label>
+                            <textarea
+                              value={tool.description}
+                              onChange={(e) => updateHomeTool(idx, "description", e.target.value)}
+                              rows={2}
+                              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-cyan-500 resize-none"
+                            />
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </section>
+                </div>
+              )}
+
+              <p className="text-sm text-slate-500 mt-4">
+                Manage the homepage "Trending now" hero card content. Click "Save Changes" to publish updates.
               </p>
             </div>
           )}

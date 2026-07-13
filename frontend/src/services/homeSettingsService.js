@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getAdminToken } from "../utils/auth";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -20,4 +21,28 @@ export const getHomeSettings = async () => {
     console.error("Error fetching home settings:", error);
     throw error;
   }
+};
+
+/* ==========================================
+   UPDATE HOME SETTINGS (ADMIN)
+   ========================================== */
+export const updateHomeSettings = async (heroTrending) => {
+  const token = getAdminToken();
+
+  const response = await fetch(`${API_URL}/admin/home-settings`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify({ heroTrending }),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.message || `Request failed: ${response.status}`);
+  }
+
+  return data;
 };
