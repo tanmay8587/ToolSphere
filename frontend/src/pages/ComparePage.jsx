@@ -5,33 +5,53 @@ import { getToolLogoProps } from "../utils/imageOptimization";
 import EmptyState from "../components/common/EmptyState";
 
 // Rows to compare. Each row pulls a value from a tool object.
+// `present(t)` reports whether a given tool has a meaningful value for the
+// field, so we can show only fields that are common to ALL selected tools.
 const ROWS = [
-  { label: "Category", get: (t) => t.category || "—" },
-  { label: "Pricing", get: (t) => t.pricing || "—" },
-  { label: "Rating", get: (t) => (t.rating ? `${t.rating} / 5` : "—") },
-  { label: "Description", get: (t) => t.description || "—" },
+  {
+    label: "Category",
+    get: (t) => t.category || "—",
+    present: (t) => !!t.category,
+  },
+  {
+    label: "Pricing",
+    get: (t) => t.pricing || "—",
+    present: (t) => !!t.pricing,
+  },
+  {
+    label: "Rating",
+    get: (t) => (t.rating ? `${t.rating} / 5` : "—"),
+    present: (t) => !!t.rating,
+  },
+  {
+    label: "Description",
+    get: (t) => t.description || "—",
+    present: (t) => !!t.description,
+  },
   {
     label: "Features",
     get: (t) =>
-      Array.isArray(t.features) && t.features.length
-        ? t.features
-        : null,
+      Array.isArray(t.features) && t.features.length ? t.features : null,
     isList: true,
+    present: (t) => Array.isArray(t.features) && t.features.length > 0,
   },
   {
     label: "Pros",
     get: (t) => (Array.isArray(t.pros) && t.pros.length ? t.pros : null),
     isList: true,
+    present: (t) => Array.isArray(t.pros) && t.pros.length > 0,
   },
   {
     label: "Cons",
     get: (t) => (Array.isArray(t.cons) && t.cons.length ? t.cons : null),
     isList: true,
+    present: (t) => Array.isArray(t.cons) && t.cons.length > 0,
   },
   {
     label: "Website",
     get: (t) => t.website || null,
     isLink: true,
+    present: (t) => !!t.website,
   },
 ];
 
@@ -61,6 +81,12 @@ export default function ComparePage() {
       </div>
     );
   }
+
+  // Only show fields that every selected tool has, so the table compares
+  // like-for-like instead of rendering empty placeholders.
+  const commonRows = ROWS.filter((row) =>
+    compareTools.every((tool) => row.present(tool))
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -130,58 +156,69 @@ export default function ComparePage() {
             </tr>
           </thead>
           <tbody>
-            {ROWS.map((row) => (
-              <tr key={row.label}>
-                <td className="sticky left-0 z-10 border-b border-white/10 bg-slate-950 p-4 text-sm font-medium text-slate-300">
-                  {row.label}
+            {commonRows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={compareTools.length + 1}
+                  className="border-b border-white/10 bg-slate-900/40 p-6 text-center text-sm text-slate-400"
+                >
+                  No common fields available to compare for the selected tools.
                 </td>
-                {compareTools.map((tool) => {
-                  const value = row.get(tool);
-                  return (
-                    <td
-                      key={tool._id}
-                      className="border-b border-white/10 bg-slate-900/40 p-4 align-top text-sm text-slate-300"
-                    >
-                      {row.isList ? (
-                        value ? (
-                          <ul className="space-y-1">
-                            {value.map((item, i) => (
-                              <li key={i} className="flex gap-2">
-                                <span className="text-cyan-400">•</span>
-                                <span>{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <span className="text-slate-500">—</span>
-                        )
-                      ) : row.isLink ? (
-                        value ? (
-                          <a
-                            href={value}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-cyan-400 hover:underline"
-                          >
-                            Visit
-                            <FiArrowRight size={13} />
-                          </a>
-                        ) : (
-                          <span className="text-slate-500">—</span>
-                        )
-                      ) : row.label === "Rating" && tool.rating ? (
-                        <span className="flex items-center gap-1">
-                          <FiStar className="text-amber-400" size={14} />
-                          {value}
-                        </span>
-                      ) : (
-                        <span className="whitespace-pre-line">{value}</span>
-                      )}
-                    </td>
-                  );
-                })}
               </tr>
-            ))}
+            ) : (
+              commonRows.map((row) => (
+                <tr key={row.label}>
+                  <td className="sticky left-0 z-10 border-b border-white/10 bg-slate-950 p-4 text-sm font-medium text-slate-300">
+                    {row.label}
+                  </td>
+                  {compareTools.map((tool) => {
+                    const value = row.get(tool);
+                    return (
+                      <td
+                        key={tool._id}
+                        className="border-b border-white/10 bg-slate-900/40 p-4 align-top text-sm text-slate-300"
+                      >
+                        {row.isList ? (
+                          value ? (
+                            <ul className="space-y-1">
+                              {value.map((item, i) => (
+                                <li key={i} className="flex gap-2">
+                                  <span className="text-cyan-400">•</span>
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <span className="text-slate-500">—</span>
+                          )
+                        ) : row.isLink ? (
+                          value ? (
+                            <a
+                              href={value}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-cyan-400 hover:underline"
+                            >
+                              Visit
+                              <FiArrowRight size={13} />
+                            </a>
+                          ) : (
+                            <span className="text-slate-500">—</span>
+                          )
+                        ) : row.label === "Rating" && tool.rating ? (
+                          <span className="flex items-center gap-1">
+                            <FiStar className="text-amber-400" size={14} />
+                            {value}
+                          </span>
+                        ) : (
+                          <span className="whitespace-pre-line">{value}</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
