@@ -142,6 +142,11 @@ export default function Settings() {
   const [homeLoading, setHomeLoading] = useState(false);
   const [homeSaving, setHomeSaving] = useState(false);
   const [heroSectionOpen, setHeroSectionOpen] = useState(true);
+  const [trendingCardOpen, setTrendingCardOpen] = useState(true);
+  const [featuredCategoriesOpen, setFeaturedCategoriesOpen] = useState(true);
+  const [statsCounterOpen, setStatsCounterOpen] = useState(true);
+  const [testimonialsOpen, setTestimonialsOpen] = useState(true);
+  const [faqPreviewOpen, setFaqPreviewOpen] = useState(true);
 
   // Analytics settings state
   const [analyticsSettings, setAnalyticsSettings] = useState([]);
@@ -1495,6 +1500,101 @@ const loadData = async () => {
                   />
                 </button>
                 {heroSectionOpen && (
+                  <div className="border-t border-slate-800 p-5">
+                  </div>
+                )}
+              </div>
+
+              {/* Trending Card - Collapsible */}
+              <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+                <button
+                  type="button"
+                  onClick={() => setTrendingCardOpen(prev => !prev)}
+                  className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-slate-900"
+                >
+                  <span className="text-base font-semibold text-white">Trending Card</span>
+                  <FiChevronDown
+                    size={18}
+                    className={`text-slate-400 transition-transform duration-200 ${trendingCardOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {trendingCardOpen && (
+                  <div className="border-t border-slate-800 p-5">
+                  </div>
+                )}
+              </div>
+
+              {/* Featured Categories - Collapsible */}
+              <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+                <button
+                  type="button"
+                  onClick={() => setFeaturedCategoriesOpen(prev => !prev)}
+                  className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-slate-900"
+                >
+                  <span className="text-base font-semibold text-white">Featured Categories</span>
+                  <FiChevronDown
+                    size={18}
+                    className={`text-slate-400 transition-transform duration-200 ${featuredCategoriesOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {featuredCategoriesOpen && (
+                  <div className="border-t border-slate-800 p-5">
+                  </div>
+                )}
+              </div>
+
+              {/* Stats Counter - Collapsible */}
+              <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+                <button
+                  type="button"
+                  onClick={() => setStatsCounterOpen(prev => !prev)}
+                  className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-slate-900"
+                >
+                  <span className="text-base font-semibold text-white">Stats Counter</span>
+                  <FiChevronDown
+                    size={18}
+                    className={`text-slate-400 transition-transform duration-200 ${statsCounterOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {statsCounterOpen && (
+                  <div className="border-t border-slate-800 p-5">
+                  </div>
+                )}
+              </div>
+
+              {/* Testimonials - Collapsible */}
+              <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+                <button
+                  type="button"
+                  onClick={() => setTestimonialsOpen(prev => !prev)}
+                  className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-slate-900"
+                >
+                  <span className="text-base font-semibold text-white">Testimonials</span>
+                  <FiChevronDown
+                    size={18}
+                    className={`text-slate-400 transition-transform duration-200 ${testimonialsOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {testimonialsOpen && (
+                  <div className="border-t border-slate-800 p-5">
+                  </div>
+                )}
+              </div>
+
+              {/* FAQ Preview - Collapsible */}
+              <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+                <button
+                  type="button"
+                  onClick={() => setFaqPreviewOpen(prev => !prev)}
+                  className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-slate-900"
+                >
+                  <span className="text-base font-semibold text-white">FAQ Preview</span>
+                  <FiChevronDown
+                    size={18}
+                    className={`text-slate-400 transition-transform duration-200 ${faqPreviewOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {faqPreviewOpen && (
                   <div className="border-t border-slate-800 p-5">
                   </div>
                 )}

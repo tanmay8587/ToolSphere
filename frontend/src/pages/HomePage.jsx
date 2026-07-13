@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FiArrowRight, FiSearch, FiStar, FiZap, FiLoader, FiCheck } from 'react-icons/fi';
+import { FiArrowRight, FiSearch, FiStar, FiZap, FiLoader, FiCheck, FiChevronDown } from 'react-icons/fi';
 import { Link, useNavigate } from "react-router-dom";
 
 import { useEffect, useState, memo } from "react";
@@ -80,6 +80,12 @@ export default function HomePage() {
   // Newsletter form state
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterLoading, setNewsletterLoading] = useState(false);
+
+  // FAQ Preview state
+  const [faqPreviewOpen, setFaqPreviewOpen] = useState(true);
+
+  // CTA Section state
+  const [ctaSectionOpen, setCtaSectionOpen] = useState(true);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -860,6 +866,74 @@ export default function HomePage() {
           </span>
         </div>
 
+      </section>
+
+      {/* FAQ Preview - Collapsible */}
+      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/50">
+        <button
+          type="button"
+          onClick={() => setFaqPreviewOpen(prev => !prev)}
+          className="flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-slate-900"
+        >
+          <span className="text-lg font-semibold text-white">FAQ Preview</span>
+          <FiChevronDown
+            size={20}
+            className={`text-slate-400 transition-transform duration-200 ${faqPreviewOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {faqPreviewOpen && (
+          <div className="border-t border-white/10 p-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+                <h3 className="text-base font-semibold text-white mb-2">What is ToolSphere?</h3>
+                <p className="text-sm text-slate-300">ToolSphere is a curated platform featuring the best AI tools for various workflows including writing, coding, design, and marketing.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+                <h3 className="text-base font-semibold text-white mb-2">How do I find the right tool?</h3>
+                <p className="text-sm text-slate-300">Use our search feature or browse categories to discover AI tools that match your specific needs and workflow requirements.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+                <h3 className="text-base font-semibold text-white mb-2">Are the tools free to use?</h3>
+                <p className="text-sm text-slate-300">Many tools offer free tiers or trials. Each tool listing includes pricing information to help you choose what fits your budget.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+                <h3 className="text-base font-semibold text-white mb-2">How often are new tools added?</h3>
+                <p className="text-sm text-slate-300">We update our directory weekly with new AI tools and platforms to ensure you have access to the latest innovations.</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* CTA Section - Collapsible */}
+      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/50">
+        <button
+          type="button"
+          onClick={() => setCtaSectionOpen(prev => !prev)}
+          className="flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-slate-900"
+        >
+          <span className="text-lg font-semibold text-white">CTA Section</span>
+          <FiChevronDown
+            size={20}
+            className={`text-slate-400 transition-transform duration-200 ${ctaSectionOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {ctaSectionOpen && (
+          <div className="border-t border-white/10 p-6">
+            <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-fuchsia-500/10 p-8 text-center">
+              <h3 className="text-2xl font-semibold text-white mb-3">Ready to explore AI tools?</h3>
+              <p className="text-base text-slate-300 mb-6 max-w-2xl mx-auto">Join thousands of users discovering the best AI tools for their workflow. Start exploring ToolSphere today.</p>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <Link to="/tools" className="rounded-xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-6 py-3 font-semibold text-white transition hover:opacity-90">
+                  Browse All Tools
+                </Link>
+                <Link to="/categories" className="rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
+                  View Categories
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Toast Container */}
