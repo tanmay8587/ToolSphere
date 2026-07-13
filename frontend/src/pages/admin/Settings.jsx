@@ -2916,7 +2916,90 @@ const loadData = async () => {
                   />
                 </button>
                 {faqPreviewOpen && (
-                  <div className="border-t border-slate-800 p-5">
+                  <div className="border-t border-slate-800 p-5 space-y-5">
+                    {/* Enable/Disable Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300">
+                          Enable FAQ Preview
+                        </label>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Show FAQ preview section on homepage
+                        </p>
+                      </div>
+                      <ToggleSwitch
+                        checked={homeSettings.faqPreview?.enabled ?? true}
+                        onChange={(checked) => {
+                          setHomeSettings(prev => ({
+                            ...prev,
+                            faqPreview: {
+                              ...prev.faqPreview,
+                              enabled: checked,
+                            },
+                          }));
+                        }}
+                        aria-label="Toggle FAQ preview"
+                      />
+                    </div>
+
+                    {/* FAQ Limit Control */}
+                    {homeSettings.faqPreview?.enabled && (
+                      <div className="space-y-3">
+                        <label className="block text-sm font-medium text-slate-300">
+                          FAQ Display Limit
+                        </label>
+                        <p className="text-xs text-slate-400">
+                          Number of FAQ items to display on the homepage
+                        </p>
+                        <div className="flex items-center gap-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currentLimit = homeSettings.faqPreview?.limit || 4;
+                              if (currentLimit > 1) {
+                                setHomeSettings(prev => ({
+                                  ...prev,
+                                  faqPreview: {
+                                    ...prev.faqPreview,
+                                    limit: currentLimit - 1,
+                                  },
+                                }));
+                              }
+                            }}
+                            disabled={(homeSettings.faqPreview?.limit || 4) <= 1}
+                            className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-lg font-semibold text-white transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            −
+                          </button>
+                          <span className="text-2xl font-bold text-white min-w-[3rem] text-center">
+                            {homeSettings.faqPreview?.limit || 4}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currentLimit = homeSettings.faqPreview?.limit || 4;
+                              const maxLimit = (homeSettings.faqPreview?.items?.length || 4);
+                              if (currentLimit < maxLimit) {
+                                setHomeSettings(prev => ({
+                                  ...prev,
+                                  faqPreview: {
+                                    ...prev.faqPreview,
+                                    limit: currentLimit + 1,
+                                  },
+                                }));
+                              }
+                            }}
+                            disabled={(homeSettings.faqPreview?.limit || 4) >= (homeSettings.faqPreview?.items?.length || 4)}
+                            className="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-lg font-semibold text-white transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          Maximum: {homeSettings.faqPreview?.items?.length || 4} (based on available FAQ items)
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
