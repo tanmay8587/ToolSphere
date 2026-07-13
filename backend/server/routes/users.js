@@ -1,5 +1,5 @@
 import express from "express";
-import { getSavedBlogs, getLikedBlogs, addViewedTool, getRecentlyViewedTools } from "../controllers/userController.js";
+import { getSavedBlogs, getLikedBlogs, addViewedTool, getRecentlyViewedTools, addViewedBlog, getRecentlyViewedBlogs } from "../controllers/userController.js";
 import { verifyUser } from "../middleware/auth.js";
 
 /* ===========================
@@ -31,5 +31,17 @@ router.post("/me/viewed-tools", verifyUser, addViewedTool);
  * - Returns the current user's recently viewed tools (populated)
  */
 router.get("/me/recently-viewed-tools", verifyUser, getRecentlyViewedTools);
+
+/**
+ * POST /api/users/me/viewed-blogs
+ * - Adds a blog to the user's recently viewed blogs list
+ */
+router.post("/me/viewed-blogs", verifyUser, addViewedBlog);
+
+/**
+ * GET /api/users/me/recently-viewed-blogs
+ * - Returns the current user's recently viewed blogs (populated)
+ */
+router.get("/me/recently-viewed-blogs", verifyUser, getRecentlyViewedBlogs);
 
 export default router;

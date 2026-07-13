@@ -74,6 +74,12 @@ const userSchema = new mongoose.Schema(
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tool" }],
       default: [],
     },
+
+    // Blogs the user has recently viewed (most recent first, max 10).
+    recentlyViewed: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Blog" }],
+      default: [],
+    },
   },
   {
     timestamps: true,

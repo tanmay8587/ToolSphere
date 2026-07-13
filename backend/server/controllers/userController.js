@@ -926,3 +926,89 @@ export const getRecentlyViewedTools = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch recently viewed tools." });
   }
 };
+
+/* ==========================================
+     RECENTLY VIEWED BLOGS
+     ===================================== */
+
+/**
+ * POST /api/users/me/viewed-blogs
+ * - Adds a blog to the user's recently viewed blogs list
+ * - Stores only blog IDs, most recent first, max 10 items
+ */
+export const addViewedBlog = async (req, res) => {
+  try {
+    const { blogId } = req.body;
+
+    if (!blogId) {
+      return res.status(400).json({ success: false, message: "Blog ID is required." });
+    }
+
+    // Verify blog exists
+    const Blog = (await import("../models/Blog.js")).default;
+    const blog = await Blog.findById(blogId);
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found." });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Remove the blog ID if it already exists (to avoid duplicates)
+    user.recentlyViewed = user.recentlyViewed.filter(
+      (id) => id.toString() !== blogId.toString()
+    );
+
+    // Add the blog ID to the beginning of the array (most recent first)
+    user.recentlyViewed.unshift(blogId);
+
+    // Keep only the most recent 10 items
+    if (user.recentlyViewed.length > 10) {
+      user.recentlyViewed = user.recentlyViewed.slice(0, 10);
+    }
+
+    await user.save();
+
+    res.json({ success: true, message: "Blog added to recently viewed." });
+  } catch (err) {
+    logger.error("[addViewedBlog] Error adding viewed blog:", err);
+    res.status(500).json({ success: false, message: "Failed to add viewed blog." });
+  }
+};
+
+/**
+ * GET /api/users/me/recently-viewed-blogs
+ * - Returns the current user's recently viewed blogs (populated)
+ */
+export const getRecentlyViewedBlogs = async (req, res) => {
+  try {
+    const Blog = (await import("../models/Blog.js")).default;
+
+    const user = await User.findById(req.user.id)
+      .select("recentlyViewed")
+      .populate({
+        path: "recentlyViewed",
+        match: { isDeleted: false, status: "published" },
+        select:
+          "title slug coverImage category excerpt readingTime publishedAt views",
+      });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Filter out any nulls (e.g. blogs that were soft-deleted and not matched)
+    const recentlyViewedBlogs = (user.recentlyViewed || []).filter(Boolean);
+
+    return res.json({
+      success: true,
+      recentlyViewedBlogs,
+      total: recentlyViewedBlogs.length,
+    });
+  } catch (err) {
+    logger.error("[getRecentlyViewedBlogs] Error fetching recently viewed blogs:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch recently viewed blogs." });
+  }
+};
