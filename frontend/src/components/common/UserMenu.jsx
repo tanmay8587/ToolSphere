@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FiUser, FiLogOut, FiChevronDown, FiX } from "react-icons/fi";
+import { FiUser, FiLogOut, FiChevronDown, FiX, FiFolder } from "react-icons/fi";
 
 import { logout as clearUserSession } from "../../utils/auth";
+import { getCollections } from "../../services/collectionsService";
 
 /**
  * UserMenu
@@ -16,8 +17,37 @@ export default function UserMenu({ user }) {
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
 
+  // User collections fetched from the API and stored in component state
+  const [collections, setCollections] = useState([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
+
   const close = useCallback(() => setIsOpen(false), []);
   const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
+
+  // Load the user's collections from the API whenever the menu is opened
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    const loadCollections = async () => {
+      setCollectionsLoading(true);
+      try {
+        const data = await getCollections();
+        if (!cancelled && data.success) {
+          setCollections(data.data || []);
+        }
+      } catch (err) {
+        // Collections are optional content; ignore failures silently
+      } finally {
+        if (!cancelled) setCollectionsLoading(false);
+      }
+    };
+
+    loadCollections();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   // Close on outside click + Escape
   useEffect(() => {
@@ -141,6 +171,48 @@ export default function UserMenu({ user }) {
                 <FiUser size={16} className="text-slate-500" />
                 <span>My Profile</span>
               </Link>
+
+              <Link
+                to="/collections"
+                onClick={close}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                role="menuitem"
+              >
+                <FiFolder size={16} className="text-slate-500" />
+                <span>My Collections</span>
+                {!collectionsLoading && collections.length > 0 && (
+                  <span className="ml-auto rounded-full bg-cyan-500/15 px-2 py-0.5 text-xs font-semibold text-cyan-300">
+                    {collections.length}
+                  </span>
+                )}
+              </Link>
+
+              {/* User's collections list */}
+              {collectionsLoading ? (
+                <div className="px-4 py-2">
+                  <div className="h-4 w-32 animate-pulse rounded bg-slate-800/60" />
+                </div>
+              ) : (
+                collections.length > 0 && (
+                  <div className="max-h-48 overflow-y-auto px-2 py-1">
+                    {collections.map((collection) => (
+                      <Link
+                        key={collection._id}
+                        to="/collections"
+                        onClick={close}
+                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
+                        role="menuitem"
+                      >
+                        <FiFolder size={14} className="shrink-0 text-slate-500" />
+                        <span className="truncate">{collection.name}</span>
+                        <span className="ml-auto text-xs text-slate-500">
+                          {collection.tools?.length || 0}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )
+              )}
             </div>
 
             {/* Divider */}

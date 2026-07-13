@@ -7,14 +7,16 @@ import ReportToolModal from "../components/tool/ReportToolModal";
 import { useEffect, useState, memo } from 'react';
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag } from 'react-icons/fi';
+import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag, FiFolder, FiX } from 'react-icons/fi';
 import { getToolBySlug, getRelatedTools } from '../services/toolsService';
 import { bookmarkTool, getProfile, reviewTool } from '../services/userApi';
 import { addViewedTool } from '../services/recentlyViewedService';
+import { getCollections, addToolToCollection } from '../services/collectionsService';
 import { isLoggedIn } from '../utils/auth';
 import EmptyState from '../components/common/EmptyState';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/common/Toast';
+import CollectionSelector from '../components/collection/CollectionSelector';
 import {
   getToolImage,
   generateToolOgTags,
@@ -122,6 +124,50 @@ const RecentlyViewedCard = memo(({ tool }) => {
   );
 });
 
+// Modal that lets the user pick a collection to add the current tool to
+function CollectionPickerModal({ isOpen, collections, loading, addLoading, toolName, onSelect, onClose }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-white">Add to Collection</h3>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-slate-500 transition hover:bg-white/5 hover:text-white"
+            aria-label="Close"
+          >
+            <FiX size={18} />
+          </button>
+        </div>
+
+        {toolName && (
+          <p className="mt-1 text-sm text-slate-400 truncate">Add “{toolName}” to one of your collections.</p>
+        )}
+
+        <div className="mt-5">
+          <CollectionSelector
+            collections={collections}
+            loading={loading}
+            onSelect={(collection) => onSelect(collection._id)}
+            emptyMessage="You don't have any collections yet. Create one from the Collections page."
+          />
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/10"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ToolDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -140,6 +186,12 @@ export default function ToolDetailPage() {
   const [relatedLoading, setRelatedLoading] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
+
+  // Collections (for "Add to collection")
+  const [collections, setCollections] = useState([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
+  const [showCollectionModal, setShowCollectionModal] = useState(false);
+  const [addToCollectionLoading, setAddToCollectionLoading] = useState(false);
 
   useEffect(() => {
     const loadTool = async () => {
@@ -283,6 +335,70 @@ export default function ToolDetailPage() {
     };
   }, [tool]);
 
+  // Load the user's collections so they can be added to from this page
+  useEffect(() => {
+    if (!tool || !isLoggedIn()) {
+      setCollections([]);
+      return;
+    }
+
+    let cancelled = false;
+    const loadCollections = async () => {
+      setCollectionsLoading(true);
+      try {
+        const data = await getCollections();
+        if (!cancelled && data.success) {
+          setCollections(data.data || []);
+        }
+      } catch (err) {
+        // Collections are optional; ignore failures here
+      } finally {
+        if (!cancelled) setCollectionsLoading(false);
+      }
+    };
+
+    loadCollections();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tool]);
+
+  const refreshCollections = async () => {
+    try {
+      const data = await getCollections();
+      if (data.success) {
+        setCollections(data.data || []);
+      }
+    } catch (err) {
+      // ignore refresh failures
+    }
+  };
+
+  const handleAddToCollection = async (collectionId) => {
+    if (!tool || !ensureLoggedIn()) {
+      return;
+    }
+
+    try {
+      setAddToCollectionLoading(true);
+      const { data } = await addToolToCollection(collectionId, tool._id);
+
+      if (data.success) {
+        addToast(`Added to "${data.data?.name || "collection"}"`, "success");
+        // Refresh collection data to reflect the updated tool list
+        await refreshCollections();
+        setShowCollectionModal(false);
+      } else {
+        addToast(data.message || "Failed to add tool to collection.", "error");
+      }
+    } catch (err) {
+      addToast(err.message || "Failed to add tool to collection.", "error");
+    } finally {
+      setAddToCollectionLoading(false);
+    }
+  };
+
   const ensureLoggedIn = () => {
     if (!isLoggedIn()) {
       navigate('/login');
@@ -308,7 +424,7 @@ export default function ToolDetailPage() {
           setTimeout(() => setSaveAnim(false), 220);
           addToast('Saved to your bookmarks', 'success');
         } else {
-          addToast('Removed from bookmarks', 'info');
+          addToast('Removed from bookmarks', 'success');
         }
       } else {
         setFeedback(data.message || 'Unable to update bookmark.');
@@ -574,6 +690,15 @@ export default function ToolDetailPage() {
             Share
           </button>
 
+          <button
+            onClick={() => setShowCollectionModal(true)}
+            className="flex items-center gap-2 rounded-2xl bg-slate-900/90 border border-white/10 px-4 py-3 text-white hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            aria-label="Add this tool to a collection"
+          >
+            <FiFolder />
+            Save
+          </button>
+
           {tool?.website && (
             <a
               href={tool.website}
@@ -621,6 +746,15 @@ export default function ToolDetailPage() {
             >
               <FiShare2 size={18} />
               Share
+            </button>
+
+            <button
+              onClick={() => setShowCollectionModal(true)}
+              className="flex flex-col items-center text-white text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+              aria-label="Add this tool to a collection"
+            >
+              <FiFolder size={18} />
+              Save
             </button>
 
             {tool?.website && (
@@ -811,6 +945,17 @@ export default function ToolDetailPage() {
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
         tool={tool}
+      />
+
+      {/* Add to Collection Modal */}
+      <CollectionPickerModal
+        isOpen={showCollectionModal}
+        collections={collections}
+        loading={collectionsLoading}
+        addLoading={addToCollectionLoading}
+        toolName={tool?.name}
+        onSelect={handleAddToCollection}
+        onClose={() => setShowCollectionModal(false)}
       />
     </>
   );

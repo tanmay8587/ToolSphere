@@ -46,6 +46,7 @@ const VerifyNewsletter = lazy(() => import("./pages/VerifyNewsletter"));
 const VerifyContact = lazy(() => import("./pages/VerifyContact"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
+const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
 const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
 
 /* Admin Pages - Lazy Loaded */
@@ -125,6 +126,15 @@ function App() {
             element={
               <ProtectedRoute role="user">
                 <EditProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/collections"
+            element={
+              <ProtectedRoute role="user">
+                <CollectionsPage />
               </ProtectedRoute>
             }
           />
