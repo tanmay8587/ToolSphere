@@ -9,7 +9,7 @@ import EmptyState from "../components/common/EmptyState";
 import ToggleSwitch from "../components/common/ToggleSwitch";
 import { useComparison } from "../context/ComparisonContext";
 import { useToast } from "../components/common/Toast";
-import { FiColumns, FiCheck, FiGrid, FiLayers, FiUsers, FiActivity, FiTool } from "react-icons/fi";
+import { FiColumns, FiCheck, FiGrid, FiLayers, FiUsers, FiActivity, FiTool, FiStar } from "react-icons/fi";
 
 function HeroStat({ icon: Icon, value, label }) {
   return (
@@ -345,7 +345,7 @@ export default function ToolsPage() {
             return (
               <div
                 key={tool._id}
-                className="group relative rounded-2xl border border-white/10 bg-slate-900/70 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10"
+                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-cyan-400/60 hover:shadow-xl hover:shadow-cyan-500/20"
               >
                 <button
                   type="button"
@@ -365,46 +365,49 @@ export default function ToolsPage() {
 
                 <Link
                   to={`/tools/${tool.slug}`}
-                  className="block rounded-2xl p-5"
+                  className="block rounded-3xl p-6"
                 >
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <img
                         src={tool.logo || tool.coverImage || "/default-logo.png"}
                         alt={tool.name}
-                        className="h-12 w-12 rounded-xl object-cover border border-white/10 bg-white/5"
+                        className="h-12 w-12 shrink-0 rounded-2xl border border-white/10 bg-white/5 object-cover"
                         onError={(e) => {
                           e.currentTarget.src = "/default-logo.png";
                         }}
                         loading="lazy"
                       />
 
-                      <span className="text-xs text-slate-400">
+                      <span className="truncate rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-300">
                         {tool.category}
                       </span>
                     </div>
 
-                    <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
+                    <span className="shrink-0 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
                       {tool.pricing}
                     </span>
                   </div>
 
-                  <h2 className="mt-4 text-lg font-semibold text-white group-hover:text-cyan-300 transition">
-                    {tool.name}
-                  </h2>
+                  <div className="mt-5 space-y-2">
+                    <h2 className="truncate text-xl font-semibold tracking-tight text-white transition group-hover:text-cyan-300">
+                      {tool.name}
+                    </h2>
 
-                  <p className="mt-2 text-sm text-slate-400 line-clamp-2">
-                    {tool.description}
-                  </p>
+                    <p className="line-clamp-2 text-sm leading-relaxed text-slate-400">
+                      {tool.description}
+                    </p>
+                  </div>
 
-                  <div className="mt-5 flex items-center justify-between">
-                    <span className="text-xs text-slate-500">
-                      ⭐ {tool.rating || 4.5}
+                  <div className="mt-5 flex items-center justify-between border-t border-white/5 pt-4">
+                    <span className="flex items-center gap-1 rounded-full bg-amber-400/10 px-2.5 py-1 text-xs font-medium text-amber-300">
+                      <FiStar className="h-3.5 w-3.5" />
+                      {tool.rating || 4.5}
                     </span>
 
-                    <span className="text-xs text-cyan-400 group-hover:underline">
+                    <span className="text-xs font-medium text-cyan-400 transition group-hover:underline">
                       View Tool →
                     </span>
                   </div>
