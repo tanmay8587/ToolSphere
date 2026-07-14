@@ -33,4 +33,20 @@ export const submitToolRequest = asyncHandler(async (req, res) => {
   });
 });
 
-export default { submitToolRequest };
+/**
+ * GET /api/admin/tool-requests
+ * - Admin only.
+ * - Returns all tool requests, most recent first, with user data populated.
+ */
+export const getAllToolRequests = asyncHandler(async (req, res) => {
+  const toolRequests = await ToolRequest.find()
+    .populate("user", "name email")
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    data: toolRequests,
+  });
+});
+
+export default { submitToolRequest, getAllToolRequests };

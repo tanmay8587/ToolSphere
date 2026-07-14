@@ -39,6 +39,8 @@ import {
   deleteReview,
 } from "../controllers/toolController.js";
 
+import { getAllToolRequests } from "../controllers/toolRequestController.js";
+
 import { verifyAdmin } from "../middleware/auth.js";
 import loginLimiter from "../middleware/loginRateLimiter.js";
 import upload from "../middleware/upload.js";
@@ -175,5 +177,10 @@ router.get("/reviews", verifyAdmin, getPendingReviews);
 router.put("/reviews/:id/approve", verifyAdmin, approveReview);
 router.put("/reviews/:id/reject", verifyAdmin, rejectReview);
 router.delete("/reviews/:id", verifyAdmin, deleteReview);
+
+/* ===========================
+   TOOL REQUESTS (ADMIN)
+   =========================== */
+router.get("/tool-requests", verifyAdmin, getAllToolRequests);
 
 export default router;
