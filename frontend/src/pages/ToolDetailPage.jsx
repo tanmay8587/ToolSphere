@@ -186,6 +186,8 @@ export default function ToolDetailPage() {
   const [feedback, setFeedback] = useState('');
   const [relatedTools, setRelatedTools] = useState([]);
   const [relatedLoading, setRelatedLoading] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
 
@@ -297,6 +299,36 @@ export default function ToolDetailPage() {
 
     loadRelatedTools();
   }, [slug]);
+
+  useEffect(() => {
+    if (!tool?._id) return;
+
+    let cancelled = false;
+
+    const loadRecommendations = async () => {
+      setRecommendationsLoading(true);
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/tools/${tool._id}/recommendations`
+        );
+        const data = await response.json().catch(() => null);
+
+        if (!cancelled && data?.success) {
+          setRecommendations(data.tools || []);
+        }
+      } catch (err) {
+        // Recommendations are optional; ignore failures here
+      } finally {
+        if (!cancelled) setRecommendationsLoading(false);
+      }
+    };
+
+    loadRecommendations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tool]);
 
   useEffect(() => {
     if (!tool || !isLoggedIn()) {
