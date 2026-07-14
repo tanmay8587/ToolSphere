@@ -39,7 +39,10 @@ import {
   deleteReview,
 } from "../controllers/toolController.js";
 
-import { getAllToolRequests } from "../controllers/toolRequestController.js";
+import {
+  getAllToolRequests,
+  updateToolRequestStatus,
+} from "../controllers/toolRequestController.js";
 
 import { verifyAdmin } from "../middleware/auth.js";
 import loginLimiter from "../middleware/loginRateLimiter.js";
@@ -182,5 +185,6 @@ router.delete("/reviews/:id", verifyAdmin, deleteReview);
    TOOL REQUESTS (ADMIN)
    =========================== */
 router.get("/tool-requests", verifyAdmin, getAllToolRequests);
+router.put("/tool-requests/:id/status", verifyAdmin, updateToolRequestStatus);
 
 export default router;

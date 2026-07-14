@@ -49,4 +49,41 @@ export const getAllToolRequests = asyncHandler(async (req, res) => {
   });
 });
 
-export default { submitToolRequest, getAllToolRequests };
+/**
+ * PUT /api/admin/tool-requests/:id/status
+ * - Admin only.
+ * - Updates the status of a tool request (Pending | Approved | Rejected).
+ */
+export const updateToolRequestStatus = asyncHandler(async (req, res) => {
+  const { status } = req.body;
+
+  const allowed = ["Pending", "Approved", "Rejected"];
+
+  if (!status || !allowed.includes(status)) {
+    return sendErrorResponse(
+      res,
+      400,
+      "Status must be one of: Pending, Approved, Rejected."
+    );
+  }
+
+  const toolRequest = await ToolRequest.findById(req.params.id);
+
+  if (!toolRequest) {
+    return sendErrorResponse(res, 404, "Tool request not found.");
+  }
+
+  toolRequest.status = status;
+  await toolRequest.save();
+
+  res.status(200).json({
+    success: true,
+    data: toolRequest,
+  });
+});
+
+export default {
+  submitToolRequest,
+  getAllToolRequests,
+  updateToolRequestStatus,
+};
