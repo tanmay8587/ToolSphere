@@ -347,22 +347,6 @@ export default function ToolsPage() {
                 key={tool._id}
                 className="group relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-cyan-400/60 hover:shadow-xl hover:shadow-cyan-500/20"
               >
-                <button
-                  type="button"
-                  onClick={(e) => handleCompareToggle(tool, e)}
-                  aria-pressed={comparing}
-                  aria-label={comparing ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
-                  title={comparing ? "Remove from comparison" : "Add to comparison"}
-                  className={`absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
-                    comparing
-                      ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
-                      : "border-white/10 bg-slate-800/80 text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
-                  }`}
-                >
-                  {comparing ? <FiCheck size={13} /> : <FiColumns size={13} />}
-                  {comparing ? "Comparing" : "Compare"}
-                </button>
-
                 <Link
                   to={`/tools/${tool.slug}`}
                   className="block rounded-3xl p-6"
@@ -386,9 +370,27 @@ export default function ToolsPage() {
                       </span>
                     </div>
 
-                    <span className="shrink-0 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
-                      {tool.pricing}
-                    </span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => handleCompareToggle(tool, e)}
+                        aria-pressed={comparing}
+                        aria-label={comparing ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+                        title={comparing ? "Remove from comparison" : "Add to comparison"}
+                        className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                          comparing
+                            ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
+                            : "border-white/10 bg-slate-800/80 text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+                        }`}
+                      >
+                        {comparing ? <FiCheck size={13} /> : <FiColumns size={13} />}
+                        {comparing ? "Comparing" : "Compare"}
+                      </button>
+
+                      <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
+                        {tool.pricing}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="mt-5 space-y-2">
