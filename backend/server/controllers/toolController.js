@@ -12,6 +12,7 @@ import { createSlug } from "../utils/slug.js";
 import { normalizeTags, validateToolPayload } from "../utils/validation.js";
 import { notifyNewTool } from "../utils/newsletterEmail.js";
 import logger from "../utils/logger.js";
+import { logActivity } from "../utils/activityLogger.js";
 
 /* =====================================
    PUBLIC - GET TOOLS
@@ -542,6 +543,15 @@ export const addTool = async (req, res) => {
 
     const tool = await Tool.create(payload);
 
+    await logActivity({
+      admin: req.admin?.id,
+      adminName: req.admin?.email || "admin",
+      action: "create",
+      resource: "Tool",
+      resourceId: tool._id,
+      details: `Created tool "${tool.name}"`,
+    });
+
     await Notification.create({
       title: "New Tool Submitted",
       message: "A new tool is waiting for approval.",
@@ -713,6 +723,15 @@ export const updateTool = async (req, res) => {
       });
     }
 
+    await logActivity({
+      admin: req.admin?.id,
+      adminName: req.admin?.email || "admin",
+      action: "update",
+      resource: "Tool",
+      resourceId: tool._id,
+      details: `Updated tool "${tool.name}"`,
+    });
+
     // Send newsletter if requested
     let newsletterResult = null;
     if (req.body.notifyNewsletter === true || req.body.notifyNewsletter === "true") {
@@ -766,6 +785,15 @@ export const deleteTool = async (req, res) => {
         message: "Tool not found",
       });
     }
+
+    await logActivity({
+      admin: req.admin?.id,
+      adminName: req.admin?.email || "admin",
+      action: "delete",
+      resource: "Tool",
+      resourceId: deletedTool._id,
+      details: `Deleted tool "${deletedTool.name}"`,
+    });
 
     // Cascade delete: Remove related reviews and bookmarks
     await Promise.all([
