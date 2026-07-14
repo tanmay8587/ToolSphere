@@ -396,13 +396,13 @@ export default function ToolsPage() {
                       </p>
                     </div>
 
-                    <div className="mt-auto flex items-center justify-between gap-3 border-t border-white/5 pt-4">
-                      <span className="flex items-center gap-1 rounded-full border border-amber-400/20 bg-gradient-to-r from-amber-400/15 to-amber-300/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4">
+                      <span className="flex shrink-0 items-center gap-1 rounded-full border border-amber-400/20 bg-gradient-to-r from-amber-400/15 to-amber-300/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
                         <FiStar className="h-3.5 w-3.5" />
                         {tool.rating || 4.5}
                       </span>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2">
                         <button
                           type="button"
                           onClick={(e) => handleCompareToggle(tool, e)}
@@ -412,7 +412,7 @@ export default function ToolsPage() {
                           className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                             comparing
                               ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
-                            : "border-white/10 bg-slate-800/80 text-slate-300 hover:border-cyan-400/40 hover:bg-slate-800 hover:text-cyan-200"
+                              : "border-white/10 bg-slate-800/80 text-slate-300 hover:border-cyan-400/40 hover:bg-slate-800 hover:text-cyan-200"
                           }`}
                         >
                           {comparing ? <FiCheck size={13} /> : <FiColumns size={13} />}
