@@ -959,6 +959,45 @@ export default function ToolDetailPage() {
         </div>
       </div>
 
+      {/* RECOMMENDED TOOLS */}
+      <div className="mt-16">
+        <h2 className="mb-6 text-2xl font-bold text-white">Recommended Tools</h2>
+
+        {recommendationsLoading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-white/10 bg-slate-900/50 p-5 animate-pulse space-y-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-slate-800" />
+                  <div className="h-3 w-20 bg-slate-800 rounded" />
+                </div>
+                <div className="h-5 w-3/4 bg-slate-800 rounded" />
+                <div className="h-4 w-full bg-slate-800 rounded" />
+                <div className="h-4 w-2/3 bg-slate-800 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : recommendations.length === 0 ? (
+          <EmptyState
+            type="tool"
+            title="No recommendations yet"
+            description="We couldn't find personalized recommendations for this tool right now. Check back later."
+          />
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {recommendations.map((recommendedTool) => (
+              <RelatedToolCard
+                key={recommendedTool._id}
+                tool={recommendedTool}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* RELATED TOOLS */}
       <div className="mt-16">
         <h2 className="mb-6 text-2xl font-bold text-white">Related Tools</h2>
