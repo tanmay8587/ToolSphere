@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { FiSend, FiArrowRight, FiCheckCircle } from "react-icons/fi";
+import { FiSend, FiArrowRight, FiCheckCircle, FiLoader } from "react-icons/fi";
 import { submitToolRequest } from "../services/toolRequestService";
 import { useToast, ToastContainer } from "../components/common/Toast";
 import { isLoggedIn } from "../utils/auth";
@@ -16,6 +16,18 @@ const cardVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 
+const MAX = { toolName: 100, website: 500, category: 100, description: 1000 };
+
+const isValidUrl = (value) => {
+  if (!value) return true; // optional
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 export default function ToolRequestPage() {
   const navigate = useNavigate();
   const { toasts, addToast, removeToast } = useToast();
@@ -26,6 +38,7 @@ export default function ToolRequestPage() {
     category: "",
     description: "",
   });
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -37,23 +50,66 @@ export default function ToolRequestPage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    // Clear the field error as the user types
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const validate = () => {
+    const next = {};
+    const toolName = form.toolName.trim();
+    const category = form.category.trim();
+
+    if (!toolName) {
+      next.toolName = "Tool name is required.";
+    } else if (toolName.length < 2) {
+      next.toolName = "Tool name must be at least 2 characters.";
+    } else if (toolName.length > MAX.toolName) {
+      next.toolName = `Tool name must be ${MAX.toolName} characters or fewer.`;
+    }
+
+    if (!category) {
+      next.category = "Category is required.";
+    } else if (category.length > MAX.category) {
+      next.category = `Category must be ${MAX.category} characters or fewer.`;
+    }
+
+    if (form.website && form.website.trim() && !isValidUrl(form.website.trim())) {
+      next.website = "Please enter a valid URL (http:// or https://).";
+    } else if (form.website.length > MAX.website) {
+      next.website = `Website must be ${MAX.website} characters or fewer.`;
+    }
+
+    if (form.description.trim().length > MAX.description) {
+      next.description = `Description must be ${MAX.description} characters or fewer.`;
+    }
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validate()) {
+      addToast("Please fix the highlighted fields.", "error");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { success: ok, data, message } = await submitToolRequest({
-        toolName: form.toolName,
-        website: form.website,
-        category: form.category,
-        description: form.description,
+        toolName: form.toolName.trim(),
+        website: form.website.trim(),
+        category: form.category.trim(),
+        description: form.description.trim(),
       });
 
       if (ok) {
         setSuccess(true);
         addToast("Tool request submitted successfully.", "success");
         setForm({ toolName: "", website: "", category: "", description: "" });
+        setErrors({});
       } else {
         addToast(message || "Failed to submit tool request.", "error");
       }
@@ -63,6 +119,13 @@ export default function ToolRequestPage() {
       setSubmitting(false);
     }
   };
+
+  const inputClass = (field) =>
+    `w-full rounded-xl border bg-slate-800 px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/20 ${
+      errors[field]
+        ? "border-red-500/60 focus:border-red-400"
+        : "border-slate-700 focus:border-cyan-400"
+    }`;
 
   return (
     <motion.div
@@ -100,7 +163,7 @@ export default function ToolRequestPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5" noValidate>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-300">
                 Tool Name <span className="text-red-400">*</span>
@@ -110,10 +173,13 @@ export default function ToolRequestPage() {
                 name="toolName"
                 value={form.toolName}
                 onChange={handleChange}
-                required
+                maxLength={MAX.toolName}
                 placeholder="e.g. Midjourney"
-                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                className={inputClass("toolName")}
               />
+              {errors.toolName && (
+                <p className="mt-1.5 text-xs text-red-400">{errors.toolName}</p>
+              )}
             </div>
 
             <div>
@@ -125,9 +191,13 @@ export default function ToolRequestPage() {
                 name="website"
                 value={form.website}
                 onChange={handleChange}
+                maxLength={MAX.website}
                 placeholder="https://example.com"
-                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                className={inputClass("website")}
               />
+              {errors.website && (
+                <p className="mt-1.5 text-xs text-red-400">{errors.website}</p>
+              )}
             </div>
 
             <div>
@@ -139,10 +209,13 @@ export default function ToolRequestPage() {
                 name="category"
                 value={form.category}
                 onChange={handleChange}
-                required
+                maxLength={MAX.category}
                 placeholder="e.g. Image Generation"
-                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                className={inputClass("category")}
               />
+              {errors.category && (
+                <p className="mt-1.5 text-xs text-red-400">{errors.category}</p>
+              )}
             </div>
 
             <div>
@@ -154,18 +227,31 @@ export default function ToolRequestPage() {
                 value={form.description}
                 onChange={handleChange}
                 rows={4}
+                maxLength={MAX.description}
                 placeholder="Tell us a bit about this tool..."
-                className="w-full resize-none rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                className={`${inputClass("description")} resize-none`}
               />
+              {errors.description && (
+                <p className="mt-1.5 text-xs text-red-400">{errors.description}</p>
+              )}
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-6 py-3 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-6 py-3 text-sm font-semibold text-white transition-colors duration-300 hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <FiSend className="h-4 w-4" />
-              {submitting ? "Submitting..." : "Submit Request"}
+              {submitting ? (
+                <>
+                  <FiLoader className="h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <FiSend className="h-4 w-4" />
+                  Submit Request
+                </>
+              )}
             </button>
           </form>
         </div>

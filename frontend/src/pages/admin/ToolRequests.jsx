@@ -26,6 +26,30 @@ const STATUS_STYLES = {
   Rejected: "bg-red-500/10 text-red-300 border-red-500/30",
 };
 
+function SkeletonRows() {
+  return (
+    <>
+      {[...Array(4)].map((_, i) => (
+        <tr key={i} className="divide-x divide-slate-800">
+          <td className="px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 animate-pulse rounded-full bg-slate-800" />
+              <div className="h-3 w-24 animate-pulse rounded bg-slate-800" />
+            </div>
+          </td>
+          <td className="px-4 py-4"><div className="h-3 w-28 animate-pulse rounded bg-slate-800" /></td>
+          <td className="px-4 py-4"><div className="h-3 w-20 animate-pulse rounded bg-slate-800" /></td>
+          <td className="px-4 py-4"><div className="h-3 w-24 animate-pulse rounded bg-slate-800" /></td>
+          <td className="px-4 py-4"><div className="h-3 w-40 animate-pulse rounded bg-slate-800" /></td>
+          <td className="px-4 py-4"><div className="h-5 w-16 animate-pulse rounded-full bg-slate-800" /></td>
+          <td className="px-4 py-4"><div className="h-3 w-16 animate-pulse rounded bg-slate-800" /></td>
+          <td className="px-4 py-4"><div className="h-7 w-28 animate-pulse rounded-xl bg-slate-800" /></td>
+        </tr>
+      ))}
+    </>
+  );
+}
+
 export default function ToolRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -213,19 +237,20 @@ export default function ToolRequests() {
             </thead>
             <tbody className="divide-y divide-slate-800">
               {loading ? (
-                <tr>
-                  <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
-                    Loading tool requests...
-                  </td>
-                </tr>
+                <SkeletonRows />
               ) : requests.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-4 py-12 text-center text-slate-500">
-                    <div className="flex flex-col items-center gap-2">
-                      <FiInbox className="h-10 w-10 text-slate-600" />
-                      <p className="font-medium">No tool requests</p>
-                      <p className="text-xs text-slate-600">
-                        Requests submitted by users will appear here.
+                  <td colSpan="8" className="px-4 py-16 text-center text-slate-500">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 ring-1 ring-white/10">
+                        <FiInbox className="h-8 w-8 text-slate-600" />
+                      </div>
+                      <p className="text-base font-semibold text-slate-300">
+                        No tool requests yet
+                      </p>
+                      <p className="max-w-sm text-sm text-slate-600">
+                        When users submit a tool request, it will appear here for
+                        you to review and approve or reject.
                       </p>
                     </div>
                   </td>
