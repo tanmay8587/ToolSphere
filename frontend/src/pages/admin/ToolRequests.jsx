@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { getAdminToken } from "../../utils/auth";
 import AdminLayout from "../../layout/AdminLayout";
-import { FiInbox, FiRefreshCw, FiClock } from "react-icons/fi";
+import { FiInbox, FiRefreshCw, FiClock, FiCheck, FiX } from "react-icons/fi";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -30,6 +30,8 @@ export default function ToolRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [processingId, setProcessingId] = useState(null);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -53,6 +55,41 @@ export default function ToolRequests() {
   useEffect(() => {
     loadRequests();
   }, [loadRequests]);
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => setSuccessMsg(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
+  // Update status of a request (Approve / Reject)
+  const updateStatus = async (id, status) => {
+    setProcessingId(id);
+    setError("");
+    try {
+      const { data } = await adminApi.put(`/admin/tool-requests/${id}/status`, {
+        status,
+      });
+
+      if (data.success) {
+        // Refresh the list after a successful update
+        await loadRequests();
+        setSuccessMsg(`Request ${status.toLowerCase()} successfully.`);
+      } else {
+        setError(data.message || `Failed to ${status.toLowerCase()} request.`);
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          `Failed to ${status.toLowerCase()} request.`
+      );
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   // Format date
   const formatDate = (dateStr) => {
@@ -147,6 +184,13 @@ export default function ToolRequests() {
           </div>
         )}
 
+        {/* Success Message */}
+        {successMsg && (
+          <div className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-emerald-200">
+            {successMsg}
+          </div>
+        )}
+
         {/* Requests Table */}
         <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950 shadow-xl shadow-black/10">
           <table className="min-w-full divide-y divide-slate-800 text-left text-sm text-slate-300">
@@ -164,18 +208,19 @@ export default function ToolRequests() {
                     Date
                   </div>
                 </th>
+                <th className="px-4 py-3 font-semibold text-slate-400">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
                     Loading tool requests...
                   </td>
                 </tr>
               ) : requests.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-4 py-12 text-center text-slate-500">
+                  <td colSpan="8" className="px-4 py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center gap-2">
                       <FiInbox className="h-10 w-10 text-slate-600" />
                       <p className="font-medium">No tool requests</p>
@@ -244,6 +289,29 @@ export default function ToolRequests() {
                     </td>
                     <td className="px-4 py-4 text-slate-400 whitespace-nowrap">
                       {formatDate(req.createdAt)}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateStatus(req._id, "Approved")}
+                          disabled={processingId === req._id}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600/20 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-600/30 disabled:opacity-50"
+                          title="Approve request"
+                        >
+                          <FiCheck size={14} />
+                          Approve
+                        </button>
+
+                        <button
+                          onClick={() => updateStatus(req._id, "Rejected")}
+                          disabled={processingId === req._id}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-red-600/20 px-3 py-2 text-xs font-semibold text-red-300 transition hover:bg-red-600/30 disabled:opacity-50"
+                          title="Reject request"
+                        >
+                          <FiX size={14} />
+                          Reject
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
