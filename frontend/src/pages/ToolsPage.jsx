@@ -356,48 +356,48 @@ export default function ToolsPage() {
               return (
                 <div
                   key={tool._id}
-                  className="group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-800/40 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-cyan-400/50 hover:shadow-xl hover:shadow-cyan-500/25"
+                  className="group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-800/40 shadow-lg shadow-black/30 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-2 hover:border-cyan-400/50 hover:shadow-2xl hover:shadow-cyan-500/30"
                 >
                   <Link
                     to={`/tools/${tool.slug}`}
-                    className="flex h-full flex-col rounded-3xl p-6 outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                    className="flex h-full flex-col rounded-3xl p-6 outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 sm:p-7"
                   >
 
                     <div className="flex items-center justify-between gap-3">
 
-                      <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex min-w-0 items-center gap-3.5">
                         <img
                           src={tool.logo || tool.coverImage || "/default-logo.png"}
                           alt={tool.name}
-                          className="h-12 w-12 shrink-0 rounded-2xl border border-white/10 bg-white/5 object-cover"
+                          className="h-14 w-14 shrink-0 rounded-2xl border border-white/10 bg-white/5 object-cover shadow-md shadow-black/20 transition-transform duration-300 ease-out group-hover:scale-105"
                           onError={(e) => {
                             e.currentTarget.src = "/default-logo.png";
                           }}
                           loading="lazy"
                         />
 
-                        <span className="truncate rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-200">
+                        <span className="truncate rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium tracking-wide text-slate-200">
                           {tool.category}
                         </span>
                       </div>
 
-                      <span className="rounded-full border border-cyan-400/30 bg-gradient-to-r from-cyan-500/15 to-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-300">
+                      <span className="shrink-0 rounded-full border border-cyan-400/30 bg-gradient-to-r from-cyan-500/15 to-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-300">
                         {tool.pricing}
                       </span>
                     </div>
 
-                    <div className="mt-5 space-y-2">
-                      <h2 className="truncate text-xl font-semibold tracking-tight text-white transition-colors duration-300 group-hover:text-cyan-300">
+                    <div className="mt-6 space-y-2.5">
+                      <h2 className="truncate text-xl font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-cyan-300 sm:text-2xl">
                         {tool.name}
                       </h2>
 
-                      <p className="line-clamp-2 text-sm leading-relaxed text-slate-300">
+                      <p className="line-clamp-2 text-sm leading-relaxed text-slate-300/90">
                         {tool.description}
                       </p>
                     </div>
 
-                    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4">
-                      <span className="flex shrink-0 items-center gap-1 rounded-full border border-amber-400/20 bg-gradient-to-r from-amber-400/15 to-amber-300/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-5">
+                      <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-amber-400/20 bg-gradient-to-r from-amber-400/15 to-amber-300/10 px-3 py-1.5 text-xs font-semibold text-amber-300">
                         <FiStar className="h-3.5 w-3.5" />
                         {tool.rating || 4.5}
                       </span>
@@ -409,7 +409,7 @@ export default function ToolsPage() {
                           aria-pressed={comparing}
                           aria-label={comparing ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
                           title={comparing ? "Remove from comparison" : "Add to comparison"}
-                          className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                          className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                             comparing
                               ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
                               : "border-white/10 bg-slate-800/80 text-slate-300 hover:border-cyan-400/40 hover:bg-slate-800 hover:text-cyan-200"
