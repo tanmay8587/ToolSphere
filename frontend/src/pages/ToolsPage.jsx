@@ -13,7 +13,7 @@ import { FiColumns, FiCheck, FiGrid, FiLayers, FiUsers, FiActivity, FiTool, FiSt
 
 function HeroStat({ icon: Icon, value, label }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/60 to-slate-900/40 p-4 transition-colors hover:border-cyan-400/30">
       <Icon className="h-5 w-5 text-cyan-300" />
       <div className="mt-3 text-2xl font-semibold text-white">
         {value?.toLocaleString() ?? "—"}
@@ -174,7 +174,7 @@ export default function ToolsPage() {
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
 
       {/* HERO */}
-      <section className="rounded-[2rem] border border-white/10 bg-white/10 p-8 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl sm:p-10 lg:p-12">
+      <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.12] to-white/[0.04] p-8 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl sm:p-10 lg:p-12">
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200">
             <FiGrid className="h-4 w-4" />
@@ -228,7 +228,7 @@ export default function ToolsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search AI tools..."
-            className="w-full rounded-2xl bg-slate-900 py-5 pl-14 pr-5 text-base text-white placeholder:text-slate-500 border border-slate-700 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 transition sm:text-lg"
+          className="w-full rounded-2xl border border-slate-700 bg-slate-900 py-5 pl-14 pr-5 text-base text-white placeholder:text-slate-500 outline-none transition-all duration-300 ease-out hover:border-slate-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 sm:text-lg"
           />
         </div>
 
@@ -238,7 +238,7 @@ export default function ToolsPage() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="h-12 w-full rounded-2xl bg-slate-900 border border-slate-700 px-4 text-white text-sm outline-none focus:border-cyan-500 transition sm:w-56"
+            className="h-12 w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 text-white text-sm outline-none transition-all duration-300 ease-out hover:border-slate-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 sm:w-56"
           >
             <option value="all">All Categories</option>
             {categoriesLoading ? (
@@ -255,7 +255,7 @@ export default function ToolsPage() {
           <select
             value={pricing}
             onChange={(e) => setPricing(e.target.value)}
-            className="h-12 w-full rounded-2xl bg-slate-900 border border-slate-700 px-4 text-white text-sm outline-none focus:border-cyan-500 transition sm:w-44"
+            className="h-12 w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 text-white text-sm outline-none transition-all duration-300 ease-out hover:border-slate-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 sm:w-44"
           >
             <option value="all">All Pricing</option>
             <option value="Free">Free</option>
@@ -263,7 +263,7 @@ export default function ToolsPage() {
             <option value="Paid">Paid</option>
           </select>
 
-          <label className="flex h-12 w-full items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/60 px-4 text-white text-sm transition sm:w-auto">
+          <label className="flex h-12 w-full items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/60 px-4 text-white text-sm transition-colors hover:border-white/20 focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-500/30 sm:w-auto">
             <ToggleSwitch
               checked={featured}
               onChange={setFeatured}
@@ -296,11 +296,11 @@ export default function ToolsPage() {
 
       {/* ERROR */}
       {error && (
-        <div className="rounded-2xl bg-red-500/10 border border-red-500/20 px-5 py-4 text-red-200 flex items-center justify-between">
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200 flex items-center justify-between">
           <span>{error}</span>
           <button
             onClick={fetchTools}
-            className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
+            className="rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all duration-300 hover:from-cyan-400 hover:to-cyan-300 hover:shadow-cyan-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
             Retry
           </button>
@@ -345,11 +345,11 @@ export default function ToolsPage() {
             return (
               <div
                 key={tool._id}
-                className="group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-cyan-400/60 hover:shadow-xl hover:shadow-cyan-500/20"
+                className="group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-800/40 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-cyan-400/50 hover:shadow-xl hover:shadow-cyan-500/25"
               >
                 <Link
                   to={`/tools/${tool.slug}`}
-                  className="flex h-full flex-col rounded-3xl p-6"
+                  className="flex h-full flex-col rounded-3xl p-6 outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                 >
 
                   <div className="flex items-center justify-between gap-3">
@@ -365,7 +365,7 @@ export default function ToolsPage() {
                         loading="lazy"
                       />
 
-                      <span className="truncate rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-300">
+                      <span className="truncate rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-200">
                         {tool.category}
                       </span>
                     </div>
@@ -377,39 +377,39 @@ export default function ToolsPage() {
                         aria-pressed={comparing}
                         aria-label={comparing ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
                         title={comparing ? "Remove from comparison" : "Add to comparison"}
-                        className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                        className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                           comparing
                             ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
-                            : "border-white/10 bg-slate-800/80 text-slate-300 hover:border-cyan-400/40 hover:text-cyan-200"
+                          : "border-white/10 bg-slate-800/80 text-slate-300 hover:border-cyan-400/40 hover:bg-slate-800 hover:text-cyan-200"
                         }`}
                       >
                         {comparing ? <FiCheck size={13} /> : <FiColumns size={13} />}
                         {comparing ? "Comparing" : "Compare"}
                       </button>
 
-                      <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
+                      <span className="rounded-full border border-cyan-400/30 bg-gradient-to-r from-cyan-500/15 to-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-300">
                         {tool.pricing}
                       </span>
                     </div>
                   </div>
 
                   <div className="mt-5 space-y-2">
-                    <h2 className="truncate text-xl font-semibold tracking-tight text-white transition group-hover:text-cyan-300">
+                    <h2 className="truncate text-xl font-semibold tracking-tight text-white transition-colors duration-300 group-hover:text-cyan-300">
                       {tool.name}
                     </h2>
 
-                    <p className="line-clamp-2 text-sm leading-relaxed text-slate-400">
+                    <p className="line-clamp-2 text-sm leading-relaxed text-slate-300">
                       {tool.description}
                     </p>
                   </div>
 
                   <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-4">
-                    <span className="flex items-center gap-1 rounded-full bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
+                    <span className="flex items-center gap-1 rounded-full border border-amber-400/20 bg-gradient-to-r from-amber-400/15 to-amber-300/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
                       <FiStar className="h-3.5 w-3.5" />
                       {tool.rating || 4.5}
                     </span>
 
-                    <span className="flex items-center gap-1 text-xs font-semibold text-cyan-400 transition-colors group-hover:text-cyan-300">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-cyan-400 transition-all duration-300 group-hover:text-cyan-300">
                       View Tool
                       <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                     </span>
