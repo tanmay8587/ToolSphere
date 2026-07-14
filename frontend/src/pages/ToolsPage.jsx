@@ -9,7 +9,7 @@ import EmptyState from "../components/common/EmptyState";
 import ToggleSwitch from "../components/common/ToggleSwitch";
 import { useComparison } from "../context/ComparisonContext";
 import { useToast } from "../components/common/Toast";
-import { FiColumns, FiCheck, FiGrid, FiLayers, FiUsers, FiActivity, FiTool, FiStar } from "react-icons/fi";
+import { FiColumns, FiCheck, FiGrid, FiLayers, FiUsers, FiActivity, FiTool, FiStar, FiPlus } from "react-icons/fi";
 
 function HeroStat({ icon: Icon, value, label }) {
   return (
@@ -177,20 +177,10 @@ export default function ToolsPage() {
       <section className="rounded-[2rem] border border-white/10 bg-white/10 p-8 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl sm:p-10 lg:p-12">
         <div className="space-y-8">
 
-          {/* TOP ROW: BADGE + REQUEST TOOL */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200">
-              <FiGrid className="h-4 w-4" />
-              Explore the directory
-            </div>
-
-            <Link
-              to="/request-tool"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500 to-cyan-400 px-5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all duration-300 ease-out hover:from-cyan-400 hover:to-cyan-300 hover:shadow-cyan-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
-            >
-              <FiTool className="h-4 w-4" />
-              Request a Tool
-            </Link>
+          {/* BADGE */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200">
+            <FiGrid className="h-4 w-4" />
+            Explore the directory
           </div>
 
           {/* HEADING + DESCRIPTION */}
@@ -204,19 +194,29 @@ export default function ToolsPage() {
             </p>
           </div>
 
-          {/* SEARCH (inside hero) */}
-          <div className="relative">
-            <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search AI tools..."
-              className="w-full rounded-2xl border border-slate-700 bg-slate-900 py-5 pl-14 pr-5 text-base text-white placeholder:text-slate-500 outline-none transition-all duration-300 ease-out hover:border-slate-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 sm:text-lg"
-            />
+          {/* SEARCH + ACTIONS (inside hero) */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search AI tools..."
+                className="w-full rounded-2xl border border-slate-700 bg-slate-900 py-5 pl-14 pr-5 text-base text-white placeholder:text-slate-500 outline-none transition-all duration-300 ease-out hover:border-slate-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 sm:text-lg"
+              />
+            </div>
+
+            <Link
+              to="/request-tool"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500 to-cyan-400 px-5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all duration-300 ease-out hover:from-cyan-400 hover:to-cyan-300 hover:shadow-cyan-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 sm:w-auto"
+            >
+              <FiPlus className="h-4 w-4" />
+              Request a Tool
+            </Link>
           </div>
 
           {/* FILTERS (inside hero, below search) */}
