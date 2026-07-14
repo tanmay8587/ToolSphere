@@ -827,7 +827,7 @@ export default function ToolDetailPage() {
               aria-label={comparing ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
               aria-pressed={comparing}
             >
-              <FiGitCompare size={18} />
+              <FiColumns size={18} />
               Compare
             </button>
 
