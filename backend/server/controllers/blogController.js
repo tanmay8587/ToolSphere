@@ -8,6 +8,7 @@ import { notifyNewBlog } from "../utils/newsletterEmail.js";
 import { sendErrorResponse, AppError } from "../utils/errorResponse.js";
 import logger from "../utils/logger.js";
 import { logActivity } from "../utils/activityLogger.js";
+import { createNotification } from "../utils/notificationHelper.js";
 
 /* ===========================
    VIEW TRACKING HELPERS
@@ -81,8 +82,38 @@ const recordUniqueView = async (blog, userId, visitorId) => {
 };
 
 /* =====================================
-   PUBLIC - GET BLOGS (paginated + filters)
+   NOTIFICATION HELPER
    ===================================== */
+
+/**
+ * Notify all users that a blog has been published.
+ * Uses the shared createNotification helper; failures are logged and
+ * never break the calling request flow.
+ *
+ * @param {object} blog - The published blog document.
+ */
+const notifyUsersOfPublishedBlog = async (blog) => {
+  try {
+    const users = await User.find({}, "_id");
+    await Promise.all(
+      users.map((u) =>
+        createNotification({
+          user: u._id,
+          title: "New blog published",
+          message: `A new blog "${blog.title}" has been published.`,
+          type: "blog_published",
+          relatedId: blog._id,
+        })
+      )
+    );
+  } catch (err) {
+    logger.error("[notifyUsersOfPublishedBlog] Failed to notify users:", err);
+  }
+};
+
+/* =====================================
+    PUBLIC - GET BLOGS (paginated + filters)
+    ===================================== */
 export const getBlogs = async (req, res) => {
   try {
     const {
@@ -508,6 +539,11 @@ export const createBlog = async (req, res) => {
       details: `Created blog "${blog.title}"`,
     });
 
+    // Notify users when the blog is published
+    if (payload.status === "published") {
+      notifyUsersOfPublishedBlog(blog);
+    }
+
     // Send newsletter if requested
     let newsletterResult = null;
     if (req.body.notifyNewsletter === true || req.body.notifyNewsletter === "true") {
@@ -665,6 +701,11 @@ export const updateBlog = async (req, res) => {
       details: `Updated blog "${blog.title}"`,
     });
 
+    // Notify users when the blog transitions to published
+    if (payload.status === "published" && existing.status !== "published") {
+      notifyUsersOfPublishedBlog(blog);
+    }
+
     // Send newsletter if requested
     let newsletterResult = null;
     if (req.body.notifyNewsletter === true || req.body.notifyNewsletter === "true") {
@@ -774,6 +815,8 @@ export const updateStatus = async (req, res) => {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
+    const wasPublished = blog.status === "published";
+
       blog.status = status;
 
       // Use a provided publish date if valid
@@ -790,6 +833,11 @@ export const updateStatus = async (req, res) => {
       }
 
     await blog.save();
+
+    // Notify users when the blog transitions to published
+    if (status === "published" && !wasPublished) {
+      notifyUsersOfPublishedBlog(blog);
+    }
 
     return res.json({
       success: true,
