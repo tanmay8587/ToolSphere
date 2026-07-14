@@ -174,20 +174,22 @@ export default function ToolsPage() {
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
 
       {/* HERO */}
-      <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.12] to-white/[0.04] p-8 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl sm:p-10 lg:p-12">
-        <div className="max-w-3xl">
+      <section className="rounded-[2rem] border border-white/10 bg-white/10 p-8 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl sm:p-10 lg:p-12">
+        <div className="max-w-3xl space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200">
             <FiGrid className="h-4 w-4" />
             Explore the directory
           </div>
 
-          <h1 className="mt-5 text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
-            Discover AI tools for every workflow
-          </h1>
+          <div className="space-y-4">
+            <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
+              Discover AI tools for every workflow
+            </h1>
 
-          <p className="mt-4 max-w-2xl text-base text-slate-200 sm:text-lg">
-            Search, filter, and compare the best AI tools across writing, coding, design, marketing, and more — all in one place.
-          </p>
+            <p className="max-w-2xl text-lg text-slate-200 sm:text-xl">
+              Search, filter, and compare the best AI tools across writing, coding, design, marketing, and more — all in one place.
+            </p>
+          </div>
         </div>
 
         {/* SMALL STATISTICS */}
