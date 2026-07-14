@@ -215,62 +215,64 @@ export default function ToolsPage() {
       </section>
 
       {/* CONTROLS */}
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
 
-      {/* SEARCH */}
-      <div className="relative">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search AI tools..."
-          className="w-full rounded-2xl bg-slate-900 px-5 py-4 pl-12 text-white border border-slate-700 outline-none focus:border-cyan-500 transition"
-        />
-        <svg className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </div>
-
-      {/* FILTERS */}
-      <div className="flex gap-4 flex-wrap">
-
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="rounded-xl bg-slate-900 border border-slate-700 px-4 py-2.5 text-white text-sm outline-none focus:border-cyan-500"
-        >
-          <option value="all">All Categories</option>
-          {categoriesLoading ? (
-            <option value="" disabled>Loading...</option>
-          ) : categories.length === 0 ? (
-            <option value="" disabled>No categories</option>
-          ) : (
-            categories.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))
-          )}
-        </select>
-
-        <select
-          value={pricing}
-          onChange={(e) => setPricing(e.target.value)}
-          className="rounded-xl bg-slate-900 border border-slate-700 px-4 py-2.5 text-white text-sm outline-none focus:border-cyan-500"
-        >
-          <option value="all">All Pricing</option>
-          <option value="Free">Free</option>
-          <option value="Freemium">Freemium</option>
-          <option value="Paid">Paid</option>
-        </select>
-
-        <label className="flex items-center gap-2 text-white text-sm">
-          <ToggleSwitch
-            checked={featured}
-            onChange={setFeatured}
-            aria-label="Featured Only"
+        {/* SEARCH */}
+        <div className="relative">
+          <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400">
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search AI tools..."
+            className="w-full rounded-2xl bg-slate-900 py-5 pl-14 pr-5 text-base text-white placeholder:text-slate-500 border border-slate-700 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 transition sm:text-lg"
           />
-          <span className="select-none">⭐ Featured Only</span>
-        </label>
+        </div>
 
-      </div>
+        {/* FILTERS */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="h-12 w-full rounded-2xl bg-slate-900 border border-slate-700 px-4 text-white text-sm outline-none focus:border-cyan-500 transition sm:w-56"
+          >
+            <option value="all">All Categories</option>
+            {categoriesLoading ? (
+              <option value="" disabled>Loading...</option>
+            ) : categories.length === 0 ? (
+              <option value="" disabled>No categories</option>
+            ) : (
+              categories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))
+            )}
+          </select>
+
+          <select
+            value={pricing}
+            onChange={(e) => setPricing(e.target.value)}
+            className="h-12 w-full rounded-2xl bg-slate-900 border border-slate-700 px-4 text-white text-sm outline-none focus:border-cyan-500 transition sm:w-44"
+          >
+            <option value="all">All Pricing</option>
+            <option value="Free">Free</option>
+            <option value="Freemium">Freemium</option>
+            <option value="Paid">Paid</option>
+          </select>
+
+          <label className="flex h-12 w-full items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/60 px-4 text-white text-sm transition sm:w-auto">
+            <ToggleSwitch
+              checked={featured}
+              onChange={setFeatured}
+              aria-label="Featured Only"
+            />
+            <span className="select-none">⭐ Featured Only</span>
+          </label>
+
+        </div>
 
       </div>
 
