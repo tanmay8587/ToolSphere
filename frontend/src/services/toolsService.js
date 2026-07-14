@@ -119,6 +119,46 @@ export async function getRelatedTools(slug) {
 }
 
 /* ===========================
+   RECOMMENDED TOOLS
+   =========================== */
+export async function getRecommendedTools(toolId) {
+  const cacheKey = `tool:${toolId}:recommendations`;
+
+  return withDeduplication(
+    async () => {
+      const url = `${API_BASE}/tools/${toolId}/recommendations`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          // Log the exact URL and status code so failed recommendation
+          // requests are easy to diagnose in both dev and production.
+          console.error(
+            `[toolsService] getRecommendedTools failed: ${response.status} ${response.statusText} for URL ${url}`
+          );
+          return { success: false, tools: [] };
+        }
+
+        return {
+          success: data?.success ?? false,
+          tools: data?.tools ?? [],
+        };
+      } catch (err) {
+        console.error(
+          `[toolsService] getRecommendedTools request error for URL ${url}:`,
+          err
+        );
+        return { success: false, tools: [] };
+      }
+    },
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
+}
+
+/* ===========================
    REPORT TOOL
 =========================== */
 export async function reportTool(toolId, toolName, reason, comment = "") {

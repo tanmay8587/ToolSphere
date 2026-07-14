@@ -8,7 +8,7 @@ import { useEffect, useState, memo } from 'react';
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag, FiFolder, FiX, FiColumns } from 'react-icons/fi';
-import { getToolBySlug, getRelatedTools } from '../services/toolsService';
+import { getToolBySlug, getRelatedTools, getRecommendedTools } from '../services/toolsService';
 import { bookmarkTool, getProfile, reviewTool } from '../services/userApi';
 import { addViewedTool } from '../services/recentlyViewedService';
 import { getCollections, addToolToCollection } from '../services/collectionsService';
@@ -308,10 +308,7 @@ export default function ToolDetailPage() {
     const loadRecommendations = async () => {
       setRecommendationsLoading(true);
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/tools/${tool._id}/recommendations`
-        );
-        const data = await response.json().catch(() => null);
+        const data = await getRecommendedTools(tool._id);
 
         if (!cancelled && data?.success) {
           setRecommendations(data.tools || []);
