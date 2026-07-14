@@ -68,6 +68,7 @@ const ContactMessageDetail = lazy(() => import("./pages/admin/ContactMessageDeta
   const BlogForm = lazy(() => import("./pages/admin/BlogForm"));
   const BlogComments = lazy(() => import("./pages/admin/BlogComments"));
   const BlogCategories = lazy(() => import("./pages/admin/BlogCategories"));
+  const ToolRequests = lazy(() => import("./pages/admin/ToolRequests"));
 
 function App() {
 
@@ -312,6 +313,15 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <BlogCategories />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/tool-requests"
+            element={
+              <ProtectedRoute role="admin">
+                <ToolRequests />
               </ProtectedRoute>
             }
           />
