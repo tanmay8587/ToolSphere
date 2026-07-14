@@ -7,6 +7,7 @@ import { normalizeTags } from "../utils/validation.js";
 import { notifyNewBlog } from "../utils/newsletterEmail.js";
 import { sendErrorResponse, AppError } from "../utils/errorResponse.js";
 import logger from "../utils/logger.js";
+import { logActivity } from "../utils/activityLogger.js";
 
 /* ===========================
    VIEW TRACKING HELPERS
@@ -498,6 +499,15 @@ export const createBlog = async (req, res) => {
 
     const blog = await Blog.create(payload);
 
+    await logActivity({
+      admin: req.admin?.id,
+      adminName: req.admin?.email || "admin",
+      action: "create",
+      resource: "Blog",
+      resourceId: blog._id,
+      details: `Created blog "${blog.title}"`,
+    });
+
     // Send newsletter if requested
     let newsletterResult = null;
     if (req.body.notifyNewsletter === true || req.body.notifyNewsletter === "true") {
@@ -646,6 +656,15 @@ export const updateBlog = async (req, res) => {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
+    await logActivity({
+      admin: req.admin?.id,
+      adminName: req.admin?.email || "admin",
+      action: "update",
+      resource: "Blog",
+      resourceId: blog._id,
+      details: `Updated blog "${blog.title}"`,
+    });
+
     // Send newsletter if requested
     let newsletterResult = null;
     if (req.body.notifyNewsletter === true || req.body.notifyNewsletter === "true") {
@@ -691,6 +710,15 @@ export const deleteBlog = async (req, res) => {
     if (!blog) {
       return sendErrorResponse(res, 404, "Blog not found");
     }
+
+    await logActivity({
+      admin: req.admin?.id,
+      adminName: req.admin?.email || "admin",
+      action: "delete",
+      resource: "Blog",
+      resourceId: blog._id,
+      details: `Deleted blog "${blog.title}"`,
+    });
 
     return res.json({
       success: true,
