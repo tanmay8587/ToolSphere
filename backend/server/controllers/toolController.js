@@ -1245,30 +1245,71 @@ export const getAdminUsers = async (req, res) => {
 export const updateAdminUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { isVerified, emailVerificationToken, emailVerificationExpire } = req.body;
+    const {
+      isVerified,
+      emailVerificationToken,
+      emailVerificationExpire,
+      role,
+      isSuspended,
+    } = req.body;
+
+    const existingUser = await User.findById(id).select("-password");
+
+    if (!existingUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
     const updateData = {};
-    
+
     if (isVerified !== undefined) {
       updateData.isVerified = isVerified;
     }
-    
+
     if (emailVerificationToken !== undefined) {
       updateData.emailVerificationToken = emailVerificationToken;
     }
-    
+
     if (emailVerificationExpire !== undefined) {
       updateData.emailVerificationExpire = emailVerificationExpire;
     }
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    ).select("-password");
+    if (role !== undefined && ["user", "admin"].includes(role)) {
+      updateData.role = role;
+    }
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    if (isSuspended !== undefined) {
+      updateData.isSuspended = isSuspended;
+    }
+
+    const user = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    // Log role change
+    if (role !== undefined && role !== existingUser.role && ["user", "admin"].includes(role)) {
+      await logActivity({
+        admin: req.admin?.id,
+        adminName: req.admin?.email || "admin",
+        action: "role_change",
+        resource: "User",
+        resourceId: existingUser._id,
+        details: `Changed role of "${existingUser.name || existingUser.email}" from "${existingUser.role}" to "${role}"`,
+      });
+    }
+
+    // Log status (suspend) change
+    if (isSuspended !== undefined && isSuspended !== existingUser.isSuspended) {
+      await logActivity({
+        admin: req.admin?.id,
+        adminName: req.admin?.email || "admin",
+        action: "status_change",
+        resource: "User",
+        resourceId: existingUser._id,
+        details: isSuspended
+          ? `Suspended user "${existingUser.name || existingUser.email}"`
+          : `Unsuspended user "${existingUser.name || existingUser.email}"`,
+      });
     }
 
     res.json({ success: true, user });
@@ -1287,6 +1328,15 @@ export const deleteAdminUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
+
+    await logActivity({
+      admin: req.admin?.id,
+      adminName: req.admin?.email || "admin",
+      action: "delete",
+      resource: "User",
+      resourceId: user._id,
+      details: `Deleted user "${user.name || user.email}"`,
+    });
 
     // Cascade delete: Remove related reviews and bookmarks
     await Promise.all([
