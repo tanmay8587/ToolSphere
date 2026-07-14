@@ -403,14 +403,15 @@ export default function ToolsPage() {
                     </p>
                   </div>
 
-                  <div className="mt-5 flex items-center justify-between border-t border-white/5 pt-4">
-                    <span className="flex items-center gap-1 rounded-full bg-amber-400/10 px-2.5 py-1 text-xs font-medium text-amber-300">
+                  <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
+                    <span className="flex items-center gap-1 rounded-full bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-300">
                       <FiStar className="h-3.5 w-3.5" />
                       {tool.rating || 4.5}
                     </span>
 
-                    <span className="text-xs font-medium text-cyan-400 transition group-hover:underline">
-                      View Tool →
+                    <span className="flex items-center gap-1 text-xs font-semibold text-cyan-400 transition-colors group-hover:text-cyan-300">
+                      View Tool
+                      <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                     </span>
                   </div>
 
