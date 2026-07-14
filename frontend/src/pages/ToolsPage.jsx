@@ -2,13 +2,26 @@ import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import useDebounce from "../hooks/useDebounce";
 import { getTools, getCategories } from "../services/toolsService";
+import { getStatistics } from "../services/statisticsService";
 import { Link } from "react-router-dom";
 import Pagination from "../components/common/Pagination";
 import EmptyState from "../components/common/EmptyState";
 import ToggleSwitch from "../components/common/ToggleSwitch";
 import { useComparison } from "../context/ComparisonContext";
 import { useToast } from "../components/common/Toast";
-import { FiColumns, FiCheck } from "react-icons/fi";
+import { FiColumns, FiCheck, FiGrid, FiLayers, FiUsers, FiActivity, FiTool } from "react-icons/fi";
+
+function HeroStat({ icon: Icon, value, label }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+      <Icon className="h-5 w-5 text-cyan-300" />
+      <div className="mt-3 text-2xl font-semibold text-white">
+        {value?.toLocaleString() ?? "—"}
+      </div>
+      <p className="mt-1 text-xs text-slate-400">{label}</p>
+    </div>
+  );
+}
 
 export default function ToolsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -38,6 +51,9 @@ export default function ToolsPage() {
     searchParams.get("featured") === "true"
   );
   const [loading, setLoading] = useState(false);
+
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const { isComparing, toggleCompare, maxCompare } = useComparison();
   const { addToast } = useToast();
@@ -73,6 +89,28 @@ export default function ToolsPage() {
       }
     };
     loadCategories();
+  }, []);
+
+  // Load site statistics for the hero section (non-blocking, display only)
+  useEffect(() => {
+    let active = true;
+    const loadStats = async () => {
+      try {
+        setStatsLoading(true);
+        const data = await getStatistics();
+        if (active && data?.success && data?.statistics) {
+          setStats(data.statistics);
+        }
+      } catch (err) {
+        // Hero stats are decorative; ignore failures
+      } finally {
+        if (active) setStatsLoading(false);
+      }
+    };
+    loadStats();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const debouncedSearch = useDebounce(search, 400);
@@ -133,10 +171,54 @@ export default function ToolsPage() {
   }, [tools, featured]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
+
+      {/* HERO */}
+      <section className="rounded-[2rem] border border-white/10 bg-white/10 p-8 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl sm:p-10 lg:p-12">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200">
+            <FiGrid className="h-4 w-4" />
+            Explore the directory
+          </div>
+
+          <h1 className="mt-5 text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
+            Discover AI tools for every workflow
+          </h1>
+
+          <p className="mt-4 max-w-2xl text-base text-slate-200 sm:text-lg">
+            Search, filter, and compare the best AI tools across writing, coding, design, marketing, and more — all in one place.
+          </p>
+        </div>
+
+        {/* SMALL STATISTICS */}
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {statsLoading || !stats ? (
+            [1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 animate-pulse"
+              >
+                <div className="h-5 w-5 rounded bg-slate-800" />
+                <div className="mt-3 h-7 w-16 rounded bg-slate-800" />
+                <div className="mt-2 h-3 w-20 rounded bg-slate-800" />
+              </div>
+            ))
+          ) : (
+            <>
+              <HeroStat icon={FiTool} value={stats.totalTools} label="AI Tools" />
+              <HeroStat icon={FiLayers} value={stats.totalCategories} label="Categories" />
+              <HeroStat icon={FiUsers} value={stats.monthlyVisitors} label="Monthly Visitors" />
+              <HeroStat icon={FiActivity} value={stats.totalSubscribers} label="Subscribers" />
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* CONTROLS */}
+      <div className="space-y-6">
 
       {/* SEARCH */}
-      <div className="relative mb-6">
+      <div className="relative">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -149,7 +231,7 @@ export default function ToolsPage() {
       </div>
 
       {/* FILTERS */}
-      <div className="mb-8 flex gap-4 flex-wrap">
+      <div className="flex gap-4 flex-wrap">
 
         <select
           value={category}
@@ -190,9 +272,29 @@ export default function ToolsPage() {
 
       </div>
 
+      </div>
+
+      {/* RESULTS */}
+      <section className="space-y-6">
+
+      {/* RESULTS HEADER */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">
+            Browse
+          </p>
+          <h2 className="text-2xl font-semibold text-white sm:text-3xl">
+            All AI tools
+          </h2>
+        </div>
+        <span className="text-sm text-slate-400">
+          {pagination.total} {pagination.total === 1 ? "result" : "results"}
+        </span>
+      </div>
+
       {/* ERROR */}
       {error && (
-        <div className="mb-6 rounded-2xl bg-red-500/10 border border-red-500/20 px-5 py-4 text-red-200 flex items-center justify-between">
+        <div className="rounded-2xl bg-red-500/10 border border-red-500/20 px-5 py-4 text-red-200 flex items-center justify-between">
           <span>{error}</span>
           <button
             onClick={fetchTools}
@@ -312,6 +414,8 @@ export default function ToolsPage() {
         )}
 
       </div>
+
+      </section>
 
       {/* PAGINATION */}
       <Pagination
