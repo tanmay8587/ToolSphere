@@ -112,7 +112,16 @@ export const searchTools = getTools;
 
 export const getRecommendedTools = async (req, res) => {
   try {
-    const currentTool = await Tool.findById(req.params.id);
+    const { id } = req.params;
+
+    // Resolve the tool by _id when a valid ObjectId is supplied, otherwise
+    // fall back to the slug. This keeps the endpoint working regardless of
+    // whether the client sends the tool's _id or its slug, preventing the
+    // "Tool not found" 404 caused by an identifier mismatch.
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+    const currentTool = isObjectId
+      ? await Tool.findById(id)
+      : await Tool.findOne({ slug: id });
 
     if (!currentTool) {
       return res.status(404).json({

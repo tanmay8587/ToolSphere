@@ -49,16 +49,10 @@ router.get("/categories", getCategories);
 router.get("/:slug/related", getRelatedTools);
 
 /**
- * GET /api/tools/:toolId/recommendations
+ * GET /api/tools/:id/recommendations
  * - Recommended tools (same category)
  */
-router.get("/:toolId/recommendations", getRecommendedTools);
-
-/**
- * GET /api/tools/:id/recommendations
- * - Recommendations (same category)
- */
-router.get("/:id/recommendations", getRecommendations);
+router.get("/:id/recommendations", getRecommendedTools);
 
 /**
  * GET /api/tools/:slug
