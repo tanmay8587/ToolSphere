@@ -13,6 +13,7 @@ import { normalizeTags, validateToolPayload } from "../utils/validation.js";
 import { notifyNewTool } from "../utils/newsletterEmail.js";
 import logger from "../utils/logger.js";
 import { logActivity } from "../utils/activityLogger.js";
+import { createNotification } from "../utils/notificationHelper.js";
 
 /* =====================================
    PUBLIC - GET TOOLS
@@ -106,6 +107,36 @@ export const getTools = async (req, res) => {
 };
 
 export const searchTools = getTools;
+
+/* =====================================
+   NOTIFICATION HELPER
+   ===================================== */
+
+/**
+ * Notify all users that a tool has become featured.
+ * Uses the shared createNotification helper; failures are logged and
+ * never break the calling request flow.
+ *
+ * @param {object} tool - The featured tool document.
+ */
+const notifyUsersOfFeaturedTool = async (tool) => {
+  try {
+    const users = await User.find({}, "_id");
+    await Promise.all(
+      users.map((u) =>
+        createNotification({
+          user: u._id,
+          title: "New featured tool",
+          message: `"${tool.name}" has been featured. Check it out!`,
+          type: "tool_featured",
+          relatedId: tool._id,
+        })
+      )
+    );
+  } catch (err) {
+    logger.error("[notifyUsersOfFeaturedTool] Failed to notify users:", err);
+  }
+};
 
 /* =====================================
     GET RECOMMENDED TOOLS
@@ -902,11 +933,17 @@ export const toggleFeaturedTool = async (req, res) => {
       });
     }
 
+    const wasFeatured = tool.featured;
     tool.featured = !tool.featured;
     tool.featuredAt = tool.featured ? Date.now() : null;
     tool.updatedBy = req.admin?.email || "admin";
 
     await tool.save();
+
+    // Notify users when the tool transitions to featured
+    if (tool.featured && !wasFeatured) {
+      notifyUsersOfFeaturedTool(tool);
+    }
 
     res.json({
       success: true,
