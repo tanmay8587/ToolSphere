@@ -192,6 +192,17 @@ export default function ToolsPage() {
           </div>
         </div>
 
+        {/* HERO ACTIONS */}
+        <div className="mt-6 flex justify-end">
+          <Link
+            to="/request-tool"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500 to-cyan-400 px-5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all duration-300 ease-out hover:from-cyan-400 hover:to-cyan-300 hover:shadow-cyan-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 sm:w-auto"
+          >
+            <FiTool className="h-4 w-4" />
+            Request a Tool
+          </Link>
+        </div>
+
         {/* SMALL STATISTICS */}
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {statsLoading || !stats ? (
@@ -273,14 +284,6 @@ export default function ToolsPage() {
             />
             <span className="select-none">⭐ Featured Only</span>
           </label>
-
-          <Link
-            to="/request-tool"
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500 to-cyan-400 px-5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all duration-300 ease-out hover:from-cyan-400 hover:to-cyan-300 hover:shadow-cyan-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 sm:w-auto sm:ml-auto"
-          >
-            <FiTool className="h-4 w-4" />
-            Request a Tool
-          </Link>
 
         </div>
 
