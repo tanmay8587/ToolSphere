@@ -77,6 +77,8 @@ import {
 
 import { getAdminNotifications } from "../controllers/notificationController.js";
 
+import { getActivityLogs } from "../controllers/activityLogController.js";
+
 const router = express.Router();
 
 /* ===========================
@@ -186,5 +188,10 @@ router.delete("/reviews/:id", verifyAdmin, deleteReview);
    =========================== */
 router.get("/tool-requests", verifyAdmin, getAllToolRequests);
 router.put("/tool-requests/:id/status", verifyAdmin, updateToolRequestStatus);
+
+/* ===========================
+   ACTIVITY LOGS (ADMIN)
+   =========================== */
+router.get("/activity-logs", verifyAdmin, getActivityLogs);
 
 export default router;
