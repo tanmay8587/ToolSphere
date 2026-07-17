@@ -8,6 +8,7 @@ import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
 import ToggleSwitch from "../components/common/ToggleSwitch";
 import PasswordInput from "../components/common/PasswordInput";
+import StatCard from "../components/profile/StatCard";
 import { FiLock, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 
 // Confirmation Dialog Component
@@ -933,87 +934,91 @@ export default function Profile() {
             </div>
 
             {/* Summary panel */}
-            <div className="w-full max-w-xl lg:flex-1">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-semibold text-white">Summary</h2>
-                  <p className="mt-2 text-sm text-slate-400">Quick access to your saved tools and reviews.</p>
+              <div className="w-full max-w-xl lg:flex-1">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-white">Dashboard</h2>
+                    <p className="mt-2 text-sm text-slate-400">Overview of your activity and saved content.</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="rounded-2xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-colors duration-300 hover:bg-red-600"
+                  >
+                    Sign Out
+                  </button>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="rounded-2xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-colors duration-300 hover:bg-red-600"
-                >
-                  Sign Out
-                </button>
-              </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-                {/* Bookmarks */}
-                <motion.div
-                  whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(34,211,238,0.3)" }}
-                  transition={liftSpring}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-cyan-400/40 hover:bg-white/10"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-500/15 text-cyan-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                      <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <p className="mt-4 text-3xl font-semibold text-white">{bookmarks.length}</p>
-                  <p className="mt-1 text-sm text-slate-400">Bookmarks</p>
-                </motion.div>
+                <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
+                  <StatCard
+                    icon={
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-cyan-300">
+                        <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clipRule="evenodd" />
+                      </svg>
+                    }
+                    label="Saved Tools"
+                    count={bookmarks.length}
+                    color="bg-cyan-500/15"
+                    hoverColor="hover:border-cyan-400/40 hover:bg-white/10"
+                    index={0}
+                    onClick={() => setActiveTab("bookmarks")}
+                  />
 
-                {/* Reviews */}
-                <motion.div
-                  whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(251,191,36,0.3)" }}
-                  transition={liftSpring}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-amber-400/40 hover:bg-white/10"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                      <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006Z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <p className="mt-4 text-3xl font-semibold text-white">{reviews.length}</p>
-                  <p className="mt-1 text-sm text-slate-400">Reviews</p>
-                </motion.div>
+                  <StatCard
+                    icon={
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-emerald-300">
+                        <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.133 2.75.382a.75.75 0 0 0 1-.707V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+                      </svg>
+                    }
+                    label="Saved Blogs"
+                    count={savedBlogs.length}
+                    color="bg-emerald-500/15"
+                    hoverColor="hover:border-emerald-400/40 hover:bg-white/10"
+                    index={1}
+                    onClick={() => setActiveTab("saved-blogs")}
+                  />
 
-                {/* Favorite Categories */}
-                <motion.div
-                  whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(99,102,241,0.3)" }}
-                  transition={liftSpring}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-indigo-400/40 hover:bg-white/10"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                      <path fillRule="evenodd" d="M5.25 2.25a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3V5.25a3 3 0 0 0-3-3H5.25Zm0 9a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-4a3 3 0 0 0-3-3H5.25Zm9-9a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3V5.25Zm0 9a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3v-4Z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <p className="mt-4 text-3xl font-semibold text-white">
-                    {new Set(bookmarks.map((b) => b.category).filter(Boolean)).size}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-400">Favorite Categories</p>
-                </motion.div>
+                  <StatCard
+                    icon={
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-pink-300">
+                        <path d="M11.645 20.91l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488-.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0l-.007-.003-.022-.012a5.309 5.309 0 0 1-.028-.02 5.335 5.335 0 0 1-.81-.993 5.185 5.185 0 0 1-.351-1.338 5.278 5.278 0 0 1 .073-1.857.75.75 0 0 1 1.488.186 3.809 3.809 0 0 0 .514 1.88l.022.038.022.038a3.778 3.778 0 0 0 .617.781 3.756 3.756 0 0 0 1.256.867 3.832 3.832 0 0 0 1.488.3 3.756 3.756 0 0 0 1.488-.3 3.756 3.756 0 0 0 1.256-.867 3.778 3.778 0 0 0 .617-.781l.022-.038.022-.038a3.809 3.809 0 0 0 .514-1.88.75.75 0 1 1 1.488.186 5.278 5.278 0 0 1 .073 1.857 5.185 5.185 0 0 1-.351 1.338 5.335 5.335 0 0 1-.81.993 5.309 5.309 0 0 1-.028.02l-.022.012-.007.003-.007.003a.75.75 0 0 1-.704 0Z" clipRule="evenodd" />
+                      </svg>
+                    }
+                    label="Liked Blogs"
+                    count={likedBlogs.length}
+                    color="bg-pink-500/15"
+                    hoverColor="hover:border-pink-400/40 hover:bg-white/10"
+                    index={2}
+                    onClick={() => setActiveTab("liked-blogs")}
+                  />
 
-                {/* Member Since */}
-                <motion.div
-                  whileHover={{ y: -10, boxShadow: "0 22px 45px -12px rgba(168,85,247,0.3)" }}
-                  transition={liftSpring}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-md transition-colors duration-300 hover:border-purple-400/40 hover:bg-white/10"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                      <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75A2.25 2.25 0 0 1 21 6.75v12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18.75v-12A2.25 2.25 0 0 1 5.25 4.5H6V3a.75.75 0 0 1 .75-.75Zm-3 9a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 4.5a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <p className="mt-4 text-xl font-semibold text-white">
-                    {profile?.createdAt
-                      ? new Date(profile.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "short" })
-                      : "-"}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-400">Member Since</p>
-                </motion.div>
-              </div>
+                  <StatCard
+                    icon={
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-amber-300">
+                        <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006Z" clipRule="evenodd" />
+                      </svg>
+                    }
+                    label="Reviews"
+                    count={reviews.length}
+                    color="bg-amber-500/15"
+                    hoverColor="hover:border-amber-400/40 hover:bg-white/10"
+                    index={3}
+                    onClick={() => setActiveTab("reviews")}
+                  />
+
+                  <StatCard
+                    icon={
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-purple-300">
+                        <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 1 .75.75v6c0 .414.336.75.75.75h4.5a.75.75 0 0 1 0 1.5h-3.75V6a.75.75 0 0 1 .75-.75Zm0 15a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-1.5 0V18a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                      </svg>
+                    }
+                    label="Recently Viewed"
+                    count={recentlyViewedTools.length}
+                    color="bg-purple-500/15"
+                    hoverColor="hover:border-purple-400/40 hover:bg-white/10"
+                    index={4}
+                    onClick={() => setActiveTab("recently-viewed")}
+                  />
+                </div>
 
               {/* Quick Actions */}
               <div className="mt-6">
