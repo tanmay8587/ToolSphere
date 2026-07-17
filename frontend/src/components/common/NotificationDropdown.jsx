@@ -90,7 +90,11 @@ export default function NotificationDropdown() {
       setNotifications((prev) =>
         prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      // Refresh unread count from server
+      const countResult = await getUnreadCount();
+      if (countResult.success) {
+        setUnreadCount(countResult.count || 0);
+      }
     } catch (err) {
       // Silently fail
     }
@@ -100,7 +104,11 @@ export default function NotificationDropdown() {
     try {
       await markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setUnreadCount(0);
+      // Refresh unread count from server
+      const countResult = await getUnreadCount();
+      if (countResult.success) {
+        setUnreadCount(countResult.count || 0);
+      }
     } catch (err) {
       // Silently fail
     }
