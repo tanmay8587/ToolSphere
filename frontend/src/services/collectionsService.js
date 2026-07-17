@@ -5,9 +5,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 /**
  * Creates a new collection for the logged-in user.
  * @param {string} name - The collection name.
+ * @param {boolean} isPublic - Whether the collection is public.
  * @returns {Promise<{success: boolean, data?: object, message?: string}>}
  */
-export const createCollection = async (name) => {
+export const createCollection = async (name, isPublic = false) => {
   try {
     const token = getToken();
     if (!token) return { success: false, message: "Authentication required." };
@@ -18,7 +19,7 @@ export const createCollection = async (name) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, isPublic }),
     });
 
     const data = await response.json();
@@ -86,9 +87,10 @@ export const addToolToCollection = async (collectionId, toolId) => {
  * Renames a collection.
  * @param {string} collectionId
  * @param {string} name
+ * @param {boolean} isPublic - Whether the collection is public.
  * @returns {Promise<{success: boolean, data?: object, message?: string}>}
  */
-export const renameCollection = async (collectionId, name) => {
+export const renameCollection = async (collectionId, name, isPublic) => {
   try {
     const token = getToken();
     if (!token) return { success: false, message: "Authentication required." };
@@ -99,7 +101,7 @@ export const renameCollection = async (collectionId, name) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, isPublic }),
     });
 
     const data = await response.json();

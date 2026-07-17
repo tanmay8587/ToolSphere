@@ -50,6 +50,7 @@ const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
 const UserToolListsPage = lazy(() => import("./pages/UserToolListsPage"));
 const ToolRequestPage = lazy(() => import("./pages/ToolRequestPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
+const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
 
 /* Admin Pages - Lazy Loaded */
@@ -106,6 +107,7 @@ function App() {
               <Route path="terms" element={<TermsPage />} />
               <Route path="cookies" element={<CookiePage />} />
               <Route path="disclaimer" element={<DisclaimerPage />} />
+              <Route path="users/:userId" element={<PublicProfilePage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
 

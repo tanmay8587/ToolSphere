@@ -213,9 +213,9 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, avatar } = req.body;
+    const { name, avatar, bio } = req.body;
 
-    if (!name && !avatar) {
+    if (!name && !avatar && !bio) {
       return res.status(400).json({ success: false, message: "Nothing to update." });
     }
 
@@ -226,6 +226,10 @@ export const updateProfile = async (req, res) => {
         return res.status(400).json({ success: false, message: "Name cannot be empty." });
       }
       updateFields.name = sanitizedName;
+    }
+    if (bio !== undefined) {
+      const sanitizedBio = sanitizeInput(bio);
+      updateFields.bio = sanitizedBio;
     }
     if (avatar) {
       updateFields.avatar = avatar;
@@ -901,8 +905,72 @@ export const getRecentlyViewedTools = async (req, res) => {
 };
 
 /* ==========================================
-     RECENTLY VIEWED BLOGS
-     ===================================== */
+      PUBLIC USER PROFILE
+      ===================================== */
+
+/**
+ * GET /api/users/public/:userId
+ * - Public endpoint (no auth required).
+ * - Returns public profile data for a user including:
+ *   - User info (name, avatar, bio)
+ *   - Public tool lists
+ *   - Approved reviews
+ *   - Public collections
+ */
+export const getPublicUserProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the user (exclude sensitive fields)
+    const user = await User.findById(userId).select("-password -email -resetPasswordToken -resetPasswordExpire -emailVerificationToken -emailVerificationExpire");
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Get public tool lists
+    const UserToolList = (await import("../models/UserToolList.js")).default;
+    const publicToolLists = await UserToolList.find({ 
+      user: userId, 
+      isPublic: true 
+    }).populate("tools", "name slug category description pricing rating logo coverImage");
+
+    // Get approved reviews by this user
+    const reviews = await Review.find({ 
+      user: userId, 
+      status: "approved" 
+    }).populate("tool", "name slug category description pricing rating logo coverImage");
+
+    // Get public collections
+    const collections = await Collection.find({ 
+      user: userId, 
+      isPublic: true 
+    }).populate("tools", "name slug category description pricing rating logo coverImage");
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          avatar: user.avatar,
+          bio: user.bio,
+          createdAt: user.createdAt,
+        },
+        toolLists: publicToolLists,
+        reviews,
+        collections,
+      },
+    });
+  } catch (err) {
+    logger.error("[getPublicUserProfile] Error fetching public profile:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch public profile." });
+  }
+};
+
+/* ==========================================
+      RECENTLY VIEWED BLOGS
+      ===================================== */
 
 /**
  * POST /api/users/me/viewed-blogs

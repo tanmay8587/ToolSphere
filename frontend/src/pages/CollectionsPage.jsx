@@ -58,12 +58,14 @@ function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel, loading })
   );
 }
 
-function RenameModal({ isOpen, initialName, onSave, onCancel, loading }) {
+function RenameModal({ isOpen, initialName, initialIsPublic, onSave, onCancel, loading }) {
   const [name, setName] = useState(initialName || "");
+  const [isPublic, setIsPublic] = useState(initialIsPublic || false);
 
   useEffect(() => {
     setName(initialName || "");
-  }, [initialName, isOpen]);
+    setIsPublic(initialIsPublic || false);
+  }, [initialName, initialIsPublic, isOpen]);
 
   if (!isOpen) return null;
 
@@ -82,6 +84,18 @@ function RenameModal({ isOpen, initialName, onSave, onCancel, loading }) {
           placeholder="Collection name"
           className="mt-4 w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
         />
+        <div className="mt-4 flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="isPublic"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-2 focus:ring-cyan-400/20"
+          />
+          <label htmlFor="isPublic" className="text-sm text-slate-300">
+            Make this collection public
+          </label>
+        </div>
         <div className="mt-6 flex gap-3 justify-end">
           <button
             onClick={onCancel}
@@ -91,7 +105,7 @@ function RenameModal({ isOpen, initialName, onSave, onCancel, loading }) {
             Cancel
           </button>
           <button
-            onClick={() => onSave(name)}
+            onClick={() => onSave(name, isPublic)}
             disabled={loading || !name.trim()}
             className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-600 disabled:opacity-50"
           >
@@ -105,9 +119,11 @@ function RenameModal({ isOpen, initialName, onSave, onCancel, loading }) {
 
 function CreateModal({ isOpen, onCreate, onCancel, loading }) {
   const [name, setName] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
 
   useEffect(() => {
     setName("");
+    setIsPublic(false);
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -127,6 +143,18 @@ function CreateModal({ isOpen, onCreate, onCancel, loading }) {
           placeholder="Collection name"
           className="mt-4 w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
         />
+        <div className="mt-4 flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="isPublic"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-2 focus:ring-cyan-400/20"
+          />
+          <label htmlFor="isPublic" className="text-sm text-slate-300">
+            Make this collection public
+          </label>
+        </div>
         <div className="mt-6 flex gap-3 justify-end">
           <button
             onClick={onCancel}
@@ -136,7 +164,7 @@ function CreateModal({ isOpen, onCreate, onCancel, loading }) {
             Cancel
           </button>
           <button
-            onClick={() => onCreate(name)}
+            onClick={() => onCreate(name, isPublic)}
             disabled={loading || !name.trim()}
             className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-600 disabled:opacity-50"
           >
@@ -219,10 +247,10 @@ export default function CollectionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleCreate = async (name) => {
+  const handleCreate = async (name, isPublic) => {
     setCreateLoading(true);
     try {
-      const { data } = await createCollection(name);
+      const { data } = await createCollection(name, isPublic);
       if (data.success) {
         setCollections((prev) => [data.data, ...prev]);
         setCreateOpen(false);
@@ -237,14 +265,14 @@ export default function CollectionsPage() {
     }
   };
 
-  const handleRename = async (name) => {
+  const handleRename = async (name, isPublic) => {
     if (!renameTarget) return;
     setRenameLoading(true);
     try {
-      const { data } = await renameCollection(renameTarget._id, name);
+      const { data } = await renameCollection(renameTarget._id, name, isPublic);
       if (data.success) {
         setCollections((prev) =>
-          prev.map((c) => (c._id === renameTarget._id ? { ...c, name: data.data.name } : c))
+          prev.map((c) => (c._id === renameTarget._id ? { ...c, name: data.data.name, isPublic: data.data.isPublic } : c))
         );
         setRenameTarget(null);
         addToast("Collection renamed successfully.", "success");
@@ -473,6 +501,7 @@ export default function CollectionsPage() {
       <RenameModal
         isOpen={!!renameTarget}
         initialName={renameTarget?.name}
+        initialIsPublic={renameTarget?.isPublic}
         onSave={handleRename}
         onCancel={() => setRenameTarget(null)}
         loading={renameLoading}

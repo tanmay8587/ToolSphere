@@ -9,7 +9,7 @@ import { sendErrorResponse } from "../utils/errorResponse.js";
  * - Returns the created collection.
  */
 export const createCollection = asyncHandler(async (req, res) => {
-  const { name } = req.body;
+  const { name, isPublic } = req.body;
 
   if (!name || !name.trim()) {
     return sendErrorResponse(res, 400, "Collection name is required.");
@@ -19,6 +19,7 @@ export const createCollection = asyncHandler(async (req, res) => {
     user: req.user.id,
     name: name.trim(),
     tools: [],
+    isPublic: isPublic || false,
   });
 
   res.status(201).json({
@@ -101,7 +102,7 @@ export const removeToolFromCollection = asyncHandler(async (req, res) => {
 });
 
 export const renameCollection = asyncHandler(async (req, res) => {
-  const { name } = req.body;
+  const { name, isPublic } = req.body;
 
   if (!name || !name.trim()) {
     return sendErrorResponse(res, 400, "Collection name is required.");
@@ -114,6 +115,9 @@ export const renameCollection = asyncHandler(async (req, res) => {
   }
 
   collection.name = name.trim();
+  if (isPublic !== undefined) {
+    collection.isPublic = isPublic;
+  }
   await collection.save();
 
   res.status(200).json({

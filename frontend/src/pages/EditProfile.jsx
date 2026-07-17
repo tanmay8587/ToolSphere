@@ -26,6 +26,7 @@ export default function EditProfile() {
   const fileInputRef = useRef(null);
   const [profile, setProfile] = useState(null);
   const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
   const [avatar, setAvatar] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -43,6 +44,7 @@ export default function EditProfile() {
         if (data.success) {
           setProfile(data.user);
           setName(data.user.name || "");
+          setBio(data.user.bio || "");
           setAvatar(data.user.avatar || "");
           if (data.user.avatar) {
             setAvatarPreview(data.user.avatar);
@@ -109,6 +111,9 @@ export default function EditProfile() {
       const updateData = {};
       if (name.trim() !== (profile?.name || "")) {
         updateData.name = name.trim();
+      }
+      if (bio !== (profile?.bio || "")) {
+        updateData.bio = bio.trim();
       }
       if (avatarUrl !== (profile?.avatar || "")) {
         updateData.avatar = avatarUrl;
@@ -294,6 +299,21 @@ export default function EditProfile() {
                 placeholder="Your name"
                 required
                 className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-slate-500 shadow-lg backdrop-blur-md transition-colors duration-300 focus:border-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+              />
+            </div>
+
+            {/* Bio Field */}
+            <div>
+              <label htmlFor="bio" className="block text-sm font-medium text-slate-400 mb-2">
+                Bio
+              </label>
+              <textarea
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell us about yourself..."
+                rows={4}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-slate-500 shadow-lg backdrop-blur-md transition-colors duration-300 focus:border-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 resize-none"
               />
             </div>
 

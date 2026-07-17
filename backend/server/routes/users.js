@@ -1,10 +1,10 @@
 import express from "express";
-import { getSavedBlogs, getLikedBlogs, addViewedTool, getRecentlyViewedTools, addViewedBlog, getRecentlyViewedBlogs } from "../controllers/userController.js";
+import { getSavedBlogs, getLikedBlogs, addViewedTool, getRecentlyViewedTools, addViewedBlog, getRecentlyViewedBlogs, getPublicUserProfile } from "../controllers/userController.js";
 import { verifyUser } from "../middleware/auth.js";
 
 /* ===========================
    USER ROUTES  (/api/users)
-   All routes require an authenticated user.
+   All routes require an authenticated user unless specified.
    =========================== */
 const router = express.Router();
 
@@ -43,5 +43,12 @@ router.post("/me/viewed-blogs", verifyUser, addViewedBlog);
  * - Returns the current user's recently viewed blogs (populated)
  */
 router.get("/me/recently-viewed-blogs", verifyUser, getRecentlyViewedBlogs);
+
+/**
+ * GET /api/users/public/:userId
+ * - Public endpoint (no auth required).
+ * - Returns public profile data for a user.
+ */
+router.get("/public/:userId", getPublicUserProfile);
 
 export default router;
