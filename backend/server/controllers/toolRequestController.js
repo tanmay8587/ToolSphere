@@ -1,6 +1,7 @@
 import asyncHandler from "../middleware/asyncHandler.js";
 import ToolRequest from "../models/ToolRequest.js";
 import { sendErrorResponse } from "../utils/errorResponse.js";
+import { createNotification } from "../utils/notificationHelper.js";
 
 /**
  * POST /api/tool-requests
@@ -75,6 +76,31 @@ export const updateToolRequestStatus = asyncHandler(async (req, res) => {
 
   toolRequest.status = status;
   await toolRequest.save();
+
+  // Notify the requesting user about the status change
+  try {
+    const statusTitleMap = {
+      Pending: "Tool Request Pending",
+      Approved: "Tool Request Approved",
+      Rejected: "Tool Request Rejected",
+    };
+    const statusMessageMap = {
+      Pending: `Your tool request "${toolRequest.toolName}" is now pending review.`,
+      Approved: `Your tool request "${toolRequest.toolName}" has been approved.`,
+      Rejected: `Your tool request "${toolRequest.toolName}" has been rejected.`,
+    };
+
+    await createNotification({
+      user: toolRequest.user,
+      title: statusTitleMap[status] || "Tool Request Updated",
+      message: statusMessageMap[status] || `Your tool request "${toolRequest.toolName}" status has been updated to ${status}.`,
+      type: "tool_request_update",
+      relatedId: toolRequest._id,
+    });
+  } catch (err) {
+    // Log but do not fail the request if notification fails
+    console.error("[updateToolRequestStatus] Failed to notify user:", err);
+  }
 
   res.status(200).json({
     success: true,
