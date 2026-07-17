@@ -10,6 +10,7 @@ import { FaLinkedin } from 'react-icons/fa6';
 // code (and its debounce hook / tools service) into every page load.
 const SearchModal = lazy(() => import('../components/common/SearchModal'));
 import UserMenu from '../components/common/UserMenu';
+import NotificationDropdown from '../components/common/NotificationDropdown';
 import { ToastContainer, useToast } from '../components/common/Toast';
 import ComparisonBar from '../components/tool/ComparisonBar';
 import { isLoggedIn, getUser, logout as logoutUser } from '../utils/auth';
@@ -111,7 +112,10 @@ const Navbar = memo(function Navbar({ brandingSettings, authUser, menuOpen, setM
 
           {/* Auth UI - Desktop & Mobile */}
           {authUser ? (
-            <UserMenu user={authUser} />
+            <>
+              <NotificationDropdown />
+              <UserMenu user={authUser} />
+            </>
           ) : (
             <>
               {/* Text labels - desktop & tablet */}
