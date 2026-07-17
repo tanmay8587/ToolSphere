@@ -8,7 +8,14 @@ import Notification from "../models/Notification.js";
 export const getNotifications = async (req, res) => {
   try {
     const { page = 1, limit = 20, type } = req.query;
-    const userId = req.admin.id;
+    const userId = req.user?.id || req.admin?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     const result = await Notification.getPaginated(userId, {
       page: parseInt(page, 10),
@@ -35,7 +42,15 @@ export const getNotifications = async (req, res) => {
 
 export const getUnreadCount = async (req, res) => {
   try {
-    const userId = req.admin.id;
+    const userId = req.user?.id || req.admin?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     const count = await Notification.getUnreadCount(userId);
 
     res.json({
@@ -58,12 +73,18 @@ export const getUnreadCount = async (req, res) => {
 export const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.id || req.admin?.id;
 
-    // Admin-only route (verifyAdmin). Notifications shown in the admin
-    // dropdown are platform-wide and may not be scoped to a single user,
-    // so we update by _id directly to persist isRead in MongoDB.
-    const notification = await Notification.findByIdAndUpdate(
-      id,
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // For user-scoped requests, ensure the notification belongs to the user.
+    const notification = await Notification.findOneAndUpdate(
+      { _id: id, user: userId },
       { $set: { isRead: true } },
       { new: true }
     );
@@ -95,11 +116,18 @@ export const markAsRead = async (req, res) => {
 
 export const markAllAsRead = async (req, res) => {
   try {
-    // Admin-only route (verifyAdmin). The admin dropdown shows platform-wide
-    // notifications that are not scoped to a single user, so we mark every
-    // unread notification as read regardless of user.
+    const userId = req.user?.id || req.admin?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // For user-scoped requests, mark only that user's unread notifications.
     const result = await Notification.updateMany(
-      { isRead: false },
+      { user: userId, isRead: false },
       { $set: { isRead: true } }
     );
 
@@ -124,11 +152,20 @@ export const markAllAsRead = async (req, res) => {
 export const deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.id || req.admin?.id;
 
-    // Admin-only route (verifyAdmin). The admin dropdown shows platform-wide
-    // notifications that are not scoped to a single user, so we delete by
-    // _id directly.
-    const notification = await Notification.findByIdAndDelete(id);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // For user-scoped requests, ensure the notification belongs to the user.
+    const notification = await Notification.findOneAndDelete({
+      _id: id,
+      user: userId,
+    });
 
     if (!notification) {
       return res.status(404).json({
