@@ -2,6 +2,7 @@ import ToolDetailSkeleton from '../components/skeletons/ToolDetailSkeleton';
 import ToolHero from "../components/tool/ToolHero";
 import ToolGallery from "../components/tool/ToolGallery";
 import ToolFeatures from "../components/tool/ToolFeatures";
+import ToolTimeline from "../components/tool/ToolTimeline";
 import ReportToolModal from "../components/tool/ReportToolModal";
 
 import { useEffect, useState, memo } from 'react';
@@ -886,6 +887,11 @@ export default function ToolDetailPage() {
                 <p className="text-sm text-slate-400">No tags available</p>
               )}
             </div>
+          </div>
+
+          {/* Tool Timeline */}
+          <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/70 p-6">
+            <ToolTimeline toolSlug={tool.slug} toolName={tool.name} />
           </div>
         </div>
 

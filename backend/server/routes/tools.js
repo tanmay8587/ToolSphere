@@ -10,6 +10,10 @@ import {
   getRecommendations,
   searchTools,
   reportTool,
+  getToolTimeline,
+  addToolTimeline,
+  updateToolTimeline,
+  deleteToolTimeline,
 } from "../controllers/toolController.js";
 
 const router = express.Router();
@@ -65,5 +69,29 @@ router.get("/:slug", getToolBySlug);
  * - Report a tool
  */
 router.post("/report", reportTool);
+
+/**
+ * GET /api/tools/:slug/timeline
+ * - Get timeline for a tool
+ */
+router.get("/:slug/timeline", getToolTimeline);
+
+/**
+ * POST /api/tools/:slug/timeline
+ * - Add timeline entry (admin)
+ */
+router.post("/:slug/timeline", addToolTimeline);
+
+/**
+ * PUT /api/tools/timeline/:id
+ * - Update timeline entry (admin)
+ */
+router.put("/timeline/:id", updateToolTimeline);
+
+/**
+ * DELETE /api/tools/timeline/:id
+ * - Delete timeline entry (admin)
+ */
+router.delete("/timeline/:id", deleteToolTimeline);
 
 export default router;

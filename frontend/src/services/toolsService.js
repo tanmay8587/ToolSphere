@@ -183,3 +183,21 @@ export async function reportTool(toolId, toolName, reason, comment = "") {
 
   return data;
 }
+
+/* ===========================
+   TOOL TIMELINE
+=========================== */
+export async function getToolTimeline(slug) {
+  const cacheKey = `tool:${slug}:timeline`;
+
+  const data = await withDeduplication(
+    () => request(`/tools/${slug}/timeline`),
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
+
+  return {
+    success: data?.success ?? false,
+    timeline: data?.timeline ?? [],
+  };
+}

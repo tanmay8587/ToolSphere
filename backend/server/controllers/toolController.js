@@ -5,6 +5,7 @@ import Review from "../models/Review.js";
 import Report from "../models/Report.js";
 import Bookmark from "../models/Bookmark.js";
 import Notification from "../models/Notification.js";
+import ToolTimeline from "../models/ToolTimeline.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 
@@ -1497,6 +1498,157 @@ export const reportTool = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to submit report",
+    });
+  }
+};
+
+/* =====================================
+   TOOL TIMELINE
+   ===================================== */
+
+/**
+ * GET /api/tools/:slug/timeline
+ * Public: fetch timeline entries for a tool
+ */
+export const getToolTimeline = async (req, res) => {
+  try {
+    const tool = await Tool.findOne({ slug: req.params.slug, isDeleted: false });
+
+    if (!tool) {
+      return res.status(404).json({
+        success: false,
+        message: "Tool not found",
+      });
+    }
+
+    const timeline = await ToolTimeline.find({ tool: tool._id })
+      .sort({ releasedAt: -1, createdAt: -1 })
+      .lean();
+
+    res.json({
+      success: true,
+      timeline,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tool timeline",
+    });
+  }
+};
+
+/**
+ * POST /api/tools/:slug/timeline
+ * Admin: add a new timeline entry
+ */
+export const addToolTimeline = async (req, res) => {
+  try {
+    const tool = await Tool.findOne({ slug: req.params.slug, isDeleted: false });
+
+    if (!tool) {
+      return res.status(404).json({
+        success: false,
+        message: "Tool not found",
+      });
+    }
+
+    const { version, title, description, changes, releasedAt, isMajor } = req.body;
+
+    if (!version || !title || !description) {
+      return res.status(400).json({
+        success: false,
+        message: "Version, title, and description are required",
+      });
+    }
+
+    const timelineEntry = await ToolTimeline.create({
+      tool: tool._id,
+      version: String(version).trim(),
+      title: String(title).trim(),
+      description: String(description).trim(),
+      changes: Array.isArray(changes) ? changes : [],
+      releasedAt: releasedAt ? new Date(releasedAt) : new Date(),
+      isMajor: Boolean(isMajor),
+      createdBy: req.admin?.email || "admin",
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Timeline entry added",
+      timeline: timelineEntry,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to add timeline entry",
+    });
+  }
+};
+
+/**
+ * PUT /api/tools/timeline/:id
+ * Admin: update a timeline entry
+ */
+export const updateToolTimeline = async (req, res) => {
+  try {
+    const timelineEntry = await ToolTimeline.findById(req.params.id);
+
+    if (!timelineEntry) {
+      return res.status(404).json({
+        success: false,
+        message: "Timeline entry not found",
+      });
+    }
+
+    const { version, title, description, changes, releasedAt, isMajor } = req.body;
+
+    if (version !== undefined) timelineEntry.version = String(version).trim();
+    if (title !== undefined) timelineEntry.title = String(title).trim();
+    if (description !== undefined) timelineEntry.description = String(description).trim();
+    if (changes !== undefined) timelineEntry.changes = Array.isArray(changes) ? changes : timelineEntry.changes;
+    if (releasedAt !== undefined) timelineEntry.releasedAt = new Date(releasedAt);
+    if (isMajor !== undefined) timelineEntry.isMajor = Boolean(isMajor);
+
+    await timelineEntry.save();
+
+    res.json({
+      success: true,
+      message: "Timeline entry updated",
+      timeline: timelineEntry,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update timeline entry",
+    });
+  }
+};
+
+/**
+ * DELETE /api/tools/timeline/:id
+ * Admin: delete a timeline entry
+ */
+export const deleteToolTimeline = async (req, res) => {
+  try {
+    const timelineEntry = await ToolTimeline.findById(req.params.id);
+
+    if (!timelineEntry) {
+      return res.status(404).json({
+        success: false,
+        message: "Timeline entry not found",
+      });
+    }
+
+    await timelineEntry.deleteOne();
+
+    res.json({
+      success: true,
+      message: "Timeline entry deleted",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete timeline entry",
     });
   }
 };
