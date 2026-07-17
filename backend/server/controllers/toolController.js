@@ -867,6 +867,24 @@ export const approveTool = async (req, res) => {
 
     await tool.save();
 
+    // Notify the tool owner/creator about the approval
+    if (tool.createdBy && tool.createdBy !== "admin" && tool.createdBy !== "system") {
+      try {
+        const owner = await User.findOne({ email: tool.createdBy.toLowerCase() });
+        if (owner) {
+          await createNotification({
+            user: owner._id,
+            title: "Tool Approved",
+            message: `Your tool "${tool.name}" has been approved and is now live.`,
+            type: "tool_approved",
+            relatedId: tool._id,
+          });
+        }
+      } catch (err) {
+        logger.error("[approveTool] Failed to notify tool owner:", err);
+      }
+    }
+
     res.json({
       success: true,
       message: "Tool approved successfully",
