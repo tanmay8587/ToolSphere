@@ -47,6 +47,7 @@ const VerifyContact = lazy(() => import("./pages/VerifyContact"));
 const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
 const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
+const UserToolListsPage = lazy(() => import("./pages/UserToolListsPage"));
 const ToolRequestPage = lazy(() => import("./pages/ToolRequestPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
@@ -141,6 +142,15 @@ function App() {
             element={
               <ProtectedRoute role="user">
                 <CollectionsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/lists"
+            element={
+              <ProtectedRoute role="user">
+                <UserToolListsPage />
               </ProtectedRoute>
             }
           />
