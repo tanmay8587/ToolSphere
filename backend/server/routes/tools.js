@@ -10,6 +10,7 @@ import {
   getRecommendations,
   searchTools,
   reportTool,
+  getToolAlternatives,
   getToolTimeline,
   addToolTimeline,
   updateToolTimeline,
@@ -57,6 +58,12 @@ router.get("/:slug/related", getRelatedTools);
  * - Recommended tools (same category)
  */
 router.get("/:id/recommendations", getRecommendedTools);
+
+/**
+ * GET /api/tools/:id/alternatives
+ * - Tool alternatives based on category, tags, and pricing
+ */
+router.get("/:id/alternatives", getToolAlternatives);
 
 /**
  * GET /api/tools/:slug

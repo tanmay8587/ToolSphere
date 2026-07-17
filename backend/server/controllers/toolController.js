@@ -1503,8 +1503,86 @@ export const reportTool = async (req, res) => {
 };
 
 /* =====================================
-   TOOL TIMELINE
-   ===================================== */
+    GET TOOL ALTERNATIVES
+    ===================================== */
+
+export const getToolAlternatives = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Resolve the tool by _id or slug
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+    const currentTool = isObjectId
+      ? await Tool.findById(id)
+      : await Tool.findOne({ slug: id });
+
+    if (!currentTool) {
+      return res.status(404).json({
+        success: false,
+        message: "Tool not found",
+      });
+    }
+
+    const currentTags = Array.isArray(currentTool.tags) ? currentTool.tags : [];
+
+    // Find tools that share category, tags, OR pricing with the current tool
+    const matchConditions = [
+      { category: currentTool.category },
+    ];
+    if (currentTags.length > 0) {
+      matchConditions.push({ tags: { $in: currentTags } });
+    }
+    if (currentTool.pricing) {
+      matchConditions.push({ pricing: currentTool.pricing });
+    }
+
+    const filters = {
+      _id: { $ne: currentTool._id },
+      approved: true,
+      isDeleted: false,
+      status: "active",
+      $or: matchConditions,
+    };
+
+    const candidateTools = await Tool.find(filters).lean();
+
+    // Score by relevance: shared tags > category match > pricing match
+    const scored = candidateTools.map((tool) => {
+      const toolTags = Array.isArray(tool.tags) ? tool.tags : [];
+      const sharedTags = currentTags.filter((tag) => toolTags.includes(tag)).length;
+      const categoryMatch = tool.category === currentTool.category ? 3 : 0;
+      const pricingMatch = tool.pricing === currentTool.pricing ? 2 : 0;
+      const score = sharedTags * 4 + categoryMatch + pricingMatch;
+      return { tool, score };
+    });
+
+    // Sort by score descending, then rating, then newest
+    scored.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const ratingA = a.tool.rating || 0;
+      const ratingB = b.tool.rating || 0;
+      if (ratingB !== ratingA) return ratingB - ratingA;
+      return new Date(b.tool.createdAt) - new Date(a.tool.createdAt);
+    });
+
+    // Return top 6 alternatives
+    const tools = scored.slice(0, 6).map((entry) => entry.tool);
+
+    res.json({
+      success: true,
+      tools,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tool alternatives",
+    });
+  }
+};
+
+/* =====================================
+    TOOL TIMELINE
+    ===================================== */
 
 /**
  * GET /api/tools/:slug/timeline

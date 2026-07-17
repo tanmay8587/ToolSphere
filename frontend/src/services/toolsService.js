@@ -185,6 +185,24 @@ export async function reportTool(toolId, toolName, reason, comment = "") {
 }
 
 /* ===========================
+   TOOL ALTERNATIVES
+=========================== */
+export async function getToolAlternatives(id) {
+  const cacheKey = `tool:${id}:alternatives`;
+
+  const data = await withDeduplication(
+    () => request(`/tools/${id}/alternatives`),
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
+
+  return {
+    success: data?.success ?? false,
+    tools: data?.tools ?? [],
+  };
+}
+
+/* ===========================
    TOOL TIMELINE
 =========================== */
 export async function getToolTimeline(slug) {

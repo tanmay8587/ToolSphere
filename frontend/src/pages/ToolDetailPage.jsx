@@ -3,13 +3,14 @@ import ToolHero from "../components/tool/ToolHero";
 import ToolGallery from "../components/tool/ToolGallery";
 import ToolFeatures from "../components/tool/ToolFeatures";
 import ToolTimeline from "../components/tool/ToolTimeline";
+import ToolAlternatives from "../components/tool/ToolAlternatives";
 import ReportToolModal from "../components/tool/ReportToolModal";
 
 import { useEffect, useState, memo } from 'react';
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag, FiFolder, FiX, FiColumns } from 'react-icons/fi';
-import { getToolBySlug, getRelatedTools, getRecommendedTools } from '../services/toolsService';
+import { getToolBySlug, getRelatedTools, getRecommendedTools, getToolAlternatives } from '../services/toolsService';
 import { bookmarkTool, getProfile, reviewTool } from '../services/userApi';
 import { addViewedTool } from '../services/recentlyViewedService';
 import { getCollections, addToolToCollection } from '../services/collectionsService';
@@ -145,7 +146,7 @@ function CollectionPickerModal({ isOpen, collections, loading, addLoading, toolN
         </div>
 
         {toolName && (
-          <p className="mt-1 text-sm text-slate-400 truncate">Add “{toolName}” to one of your collections.</p>
+          <p className="mt-1 text-sm text-slate-400 truncate">Add &ldquo;{toolName}&rdquo; to one of your collections.</p>
         )}
 
         <div className="mt-5">
@@ -189,6 +190,8 @@ export default function ToolDetailPage() {
   const [relatedLoading, setRelatedLoading] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [alternatives, setAlternatives] = useState([]);
+  const [alternativesLoading, setAlternativesLoading] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
 
@@ -322,6 +325,32 @@ export default function ToolDetailPage() {
     };
 
     loadRecommendations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tool]);
+
+  useEffect(() => {
+    if (!tool?._id) return;
+
+    let cancelled = false;
+
+    const loadAlternatives = async () => {
+      setAlternativesLoading(true);
+      try {
+        const data = await getToolAlternatives(tool._id);
+        if (!cancelled && data?.success) {
+          setAlternatives(data.tools || []);
+        }
+      } catch (err) {
+        // Alternatives are optional; ignore failures here
+      } finally {
+        if (!cancelled) setAlternativesLoading(false);
+      }
+    };
+
+    loadAlternatives();
 
     return () => {
       cancelled = true;
@@ -961,6 +990,15 @@ export default function ToolDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* TOOL ALTERNATIVES */}
+      {(alternativesLoading || alternatives.length > 0) && (
+        <ToolAlternatives
+          tools={alternatives}
+          loading={alternativesLoading}
+          currentToolId={tool._id}
+        />
+      )}
 
       {/* RECOMMENDED TOOLS */}
       {(recommendationsLoading || recommendations.length > 0) && (
