@@ -10,6 +10,7 @@ import { getTrendingBlogs } from "../services/publicBlogService";
 import { getHomeSettings } from "../services/homeSettingsService";
 import { getRecentlyViewedTools } from "../services/recentlyViewedService";
 import { getActiveAnnouncements } from "../services/announcementService";
+import { getPersonalizedFeed } from "../services/feedService";
 import { ToastContainer, useToast } from "../components/common/Toast";
 import CategoryIcon from "../components/common/CategoryIcon";
 import EmptyState from "../components/common/EmptyState";
@@ -158,6 +159,11 @@ export default function HomePage() {
   // Recently Viewed Tools state
   const [recentlyViewedTools, setRecentlyViewedTools] = useState([]);
   const [recentlyViewedLoading, setRecentlyViewedLoading] = useState(true);
+
+  // Personalized Feed state
+  const [personalizedFeed, setPersonalizedFeed] = useState(null);
+  const [feedLoading, setFeedLoading] = useState(true);
+  const [feedError, setFeedError] = useState(null);
 
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -546,6 +552,43 @@ export default function HomePage() {
     }
 
     loadRecentlyViewed();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Fetch personalized feed for logged-in users
+  useEffect(() => {
+    let active = true;
+
+    async function loadPersonalizedFeed() {
+      if (!isLoggedIn()) {
+        setFeedLoading(false);
+        return;
+      }
+
+      try {
+        setFeedLoading(true);
+        setFeedError(null);
+        const data = await getPersonalizedFeed();
+
+        if (active && data?.success) {
+          setPersonalizedFeed(data.feed);
+        } else if (active) {
+          setFeedError(data?.message || "Failed to load feed");
+        }
+      } catch (err) {
+        if (active) {
+          setFeedError(err.message || "Failed to load personalized feed");
+          console.error("Error loading personalized feed:", err);
+        }
+      } finally {
+        if (active) setFeedLoading(false);
+      }
+    }
+
+    loadPersonalizedFeed();
 
     return () => {
       active = false;
@@ -1066,6 +1109,366 @@ export default function HomePage() {
             </div>
           )}
         </section>
+      )}
+
+      {/* PERSONALIZED FEED - Only for logged-in users */}
+      {isLoggedIn() && (
+        <>
+          {/* TOOLS FROM FOLLOWED USERS */}
+          <section>
+            <div className="mb-6 flex items-end justify-between">
+              <div>
+                <p className="text-sm font-medium uppercase tracking-[0.3em] text-fuchsia-300">
+                  Following
+                </p>
+                <h2 className="text-2xl font-semibold">Tools from followed users</h2>
+              </div>
+            </div>
+
+            {feedLoading ? (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-6 animate-pulse space-y-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="h-12 w-12 rounded-2xl bg-slate-800" />
+                      <div className="h-6 w-20 rounded-full bg-slate-800" />
+                    </div>
+                    <div className="h-5 w-3/4 bg-slate-800 rounded" />
+                    <div className="h-3 w-full bg-slate-800 rounded" />
+                    <div className="h-3 w-2/3 bg-slate-800 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : feedError ? (
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-center">
+                <p className="text-sm text-red-300">{feedError}</p>
+              </div>
+            ) : personalizedFeed?.toolsFromFollowed?.length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {personalizedFeed.toolsFromFollowed.map((tool) => (
+                  <Link
+                    key={tool._id}
+                    to={`/tools/${tool.slug}`}
+                    className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-slate-950/40 transition hover:bg-slate-900/90"
+                  >
+                    <div className="flex items-center justify-between">
+                      <img
+                        src={tool.logo || tool.coverImage || "/default-logo.png"}
+                        alt={tool.name}
+                        className="h-12 w-12 rounded-2xl object-cover border border-white/10 bg-white/5"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "/default-logo.png";
+                        }}
+                        loading="lazy"
+                      />
+                      <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
+                        {tool.pricing}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-5 text-xl font-semibold">{tool.name}</h3>
+                    <p className="mt-2 text-sm text-slate-300 line-clamp-2">{tool.description}</p>
+
+                    <div className="mt-4 flex items-center justify-between text-sm text-slate-300">
+                      <span>{tool.category}</span>
+                      {tool.rating && (
+                        <span className="flex items-center gap-1 text-amber-400">
+                          <FiStar className="h-4 w-4" /> {tool.rating}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : !feedLoading && (
+              <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-8 text-center">
+                <p className="text-sm text-slate-300">
+                  {personalizedFeed?.meta?.totalFollowing > 0
+                    ? "No tools found from users you follow. Follow more users to see their activity here!"
+                    : "You are not following anyone yet. Follow other users to see tools they review and bookmark."}
+                </p>
+                <Link
+                  to="/categories"
+                  className="mt-3 inline-flex items-center gap-2 text-sm text-cyan-300 hover:text-cyan-200"
+                >
+                  Browse categories to discover users
+                  <FiArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            )}
+          </section>
+
+          {/* LATEST REVIEWS */}
+          <section>
+            <div className="mb-6 flex items-end justify-between">
+              <div>
+                <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">
+                  Reviews
+                </p>
+                <h2 className="text-2xl font-semibold">Latest reviews</h2>
+              </div>
+            </div>
+
+            {feedLoading ? (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-6 animate-pulse space-y-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-slate-800" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-1/3 bg-slate-800 rounded" />
+                        <div className="h-3 w-1/4 bg-slate-800 rounded" />
+                      </div>
+                    </div>
+                    <div className="h-4 w-full bg-slate-800 rounded" />
+                    <div className="h-4 w-2/3 bg-slate-800 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : personalizedFeed?.latestReviews?.length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {personalizedFeed.latestReviews.map((review) => (
+                  <div
+                    key={review._id}
+                    className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-slate-950/40"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-fuchsia-500 text-sm font-semibold text-white">
+                        {review.user?.name?.charAt(0) || "U"}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">{review.user?.name || "Anonymous"}</p>
+                        <div className="flex items-center gap-1 text-amber-400">
+                          {[...Array(5)].map((_, i) => (
+                            <svg
+                              key={i}
+                              className={`h-3 w-3 ${i < review.rating ? "fill-current" : "fill-none stroke-current"}`}
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {review.comment && (
+                      <p className="text-sm text-slate-300 mb-3 line-clamp-3">"{review.comment}"</p>
+                    )}
+
+                    {review.tool && (
+                      <Link
+                        to={`/tools/${review.tool.slug}`}
+                        className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-white/10"
+                      >
+                        {review.tool.name}
+                        <FiArrowRight className="h-3 w-3" />
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : !feedLoading && (
+              <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-8 text-center">
+                <p className="text-sm text-slate-300">No reviews yet. Be the first to review a tool!</p>
+              </div>
+            )}
+          </section>
+
+          {/* NEW BLOGS */}
+          <section>
+            <div className="mb-6 flex items-end justify-between">
+              <div>
+                <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">
+                  New Blogs
+                </p>
+                <h2 className="text-2xl font-semibold">Latest blog posts</h2>
+              </div>
+              <Link to="/blog" className="text-sm text-cyan-300 transition hover:text-cyan-200">
+                View all
+              </Link>
+            </div>
+
+            {feedLoading ? (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="rounded-2xl border border-white/10 bg-slate-900/50 p-5 animate-pulse space-y-4"
+                  >
+                    <div className="h-40 bg-slate-800 rounded-xl" />
+                    <div className="h-4 w-1/3 bg-slate-800 rounded" />
+                    <div className="h-5 w-3/4 bg-slate-800 rounded" />
+                    <div className="h-4 w-full bg-slate-800 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : personalizedFeed?.newBlogs?.length > 0 ? (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {personalizedFeed.newBlogs.map((blog) => (
+                  <Link
+                    key={blog._id || blog.slug}
+                    to={`/blog/${blog.slug}`}
+                    className="group rounded-2xl border border-white/10 bg-slate-900/50 p-5 transition hover:bg-slate-900/70"
+                  >
+                    {blog.coverImage && (
+                      <div className="mb-4 overflow-hidden rounded-xl">
+                        <img
+                          src={blog.coverImage}
+                          alt={blog.title}
+                          className="h-40 w-full object-cover transition group-hover:scale-105"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+                      {blog.category && (
+                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5">
+                          {blog.category}
+                        </span>
+                      )}
+                      {blog.readingTime && (
+                        <span>{blog.readingTime} min read</span>
+                      )}
+                    </div>
+                    <h3 className="text-base font-semibold text-white line-clamp-2 group-hover:text-cyan-300 transition">
+                      {blog.title}
+                    </h3>
+                    {blog.excerpt && (
+                      <p className="mt-2 text-sm text-slate-300 line-clamp-2">{blog.excerpt}</p>
+                    )}
+                    <div className="mt-3 flex items-center gap-3 text-xs text-slate-400">
+                      {blog.views > 0 && (
+                        <span>{blog.views} views</span>
+                      )}
+                      {blog.publishedAt && (
+                        <span>{new Date(blog.publishedAt).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : !feedLoading && (
+              <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-8 text-center">
+                <p className="text-sm text-slate-300">No blog posts available yet.</p>
+              </div>
+            )}
+          </section>
+
+          {/* TRENDING TOOLS */}
+          <section>
+            <div className="mb-6 flex items-end justify-between">
+              <div>
+                <p className="text-sm font-medium uppercase tracking-[0.3em] text-fuchsia-300">
+                  Trending
+                </p>
+                <h2 className="text-2xl font-semibold">Trending tools</h2>
+              </div>
+              <Link to="/tools" className="text-sm text-cyan-300 transition hover:text-cyan-200">
+                View all
+              </Link>
+            </div>
+
+            {feedLoading ? (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-6 animate-pulse space-y-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="h-12 w-12 rounded-2xl bg-slate-800" />
+                      <div className="h-6 w-20 rounded-full bg-slate-800" />
+                    </div>
+                    <div className="h-5 w-3/4 bg-slate-800 rounded" />
+                    <div className="h-3 w-full bg-slate-800 rounded" />
+                    <div className="h-3 w-2/3 bg-slate-800 rounded" />
+                    <div className="h-9 w-full bg-slate-800 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            ) : personalizedFeed?.trendingTools?.length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {personalizedFeed.trendingTools.map((tool) => (
+                  <div key={tool._id} className="rounded-[1.5rem] border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-slate-950/40">
+                    <div className="flex items-center justify-between">
+                      <img
+                        src={tool.logo || tool.coverImage || "/default-logo.png"}
+                        alt={tool.name}
+                        className="h-12 w-12 rounded-2xl object-cover border border-white/10 bg-white/5"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "/default-logo.png";
+                        }}
+                        loading="lazy"
+                      />
+                      <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
+                        {tool.pricing}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-5 text-xl font-semibold">{tool.name}</h3>
+                    <p className="mt-2 text-sm text-slate-300 line-clamp-2">{tool.description}</p>
+
+                    <div className="mt-4 flex items-center justify-between text-sm text-slate-300">
+                      <span>{tool.category}</span>
+                      <div className="flex items-center gap-3">
+                        {tool.rating && (
+                          <span className="flex items-center gap-1 text-amber-400">
+                            <FiStar className="h-4 w-4" /> {tool.rating}
+                          </span>
+                        )}
+                        {tool.views > 0 && (
+                          <span className="text-slate-400">{tool.views} views</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={(e) => handleCompareToggle(tool, e)}
+                        aria-pressed={isComparing(tool._id)}
+                        aria-label={isComparing(tool._id) ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+                        title={isComparing(tool._id) ? "Remove from comparison" : "Add to comparison"}
+                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+                          isComparing(tool._id)
+                            ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-200"
+                            : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                        }`}
+                      >
+                        {isComparing(tool._id) ? <FiCheck size={14} /> : <FiColumns size={14} />}
+                        {isComparing(tool._id) ? "Comparing" : "Compare"}
+                      </button>
+
+                      <Link
+                        to={`/tools/${tool.slug}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                      >
+                        View Details
+                        <FiArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : !feedLoading && (
+              <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-8 text-center">
+                <p className="text-sm text-slate-300">No trending tools available yet.</p>
+              </div>
+            )}
+          </section>
+        </>
       )}
 
       {/* CATEGORIES */}

@@ -1,5 +1,6 @@
 import express from "express";
 import { getSavedBlogs, getLikedBlogs, addViewedTool, getRecentlyViewedTools, addViewedBlog, getRecentlyViewedBlogs, getPublicUserProfile, followUser, unfollowUser } from "../controllers/userController.js";
+import { getPersonalizedFeed } from "../controllers/feedController.js";
 import { verifyUser, optionalUser } from "../middleware/auth.js";
 
 /* ===========================
@@ -55,6 +56,13 @@ router.post("/:userId/follow", verifyUser, followUser);
  * - Unfollow a user (requires auth)
  */
 router.delete("/:userId/follow", verifyUser, unfollowUser);
+
+/**
+ * GET /api/users/me/personalized-feed
+ * - Returns personalized feed for the authenticated user
+ * - Sections: tools from followed users, latest reviews, new blogs, trending tools
+ */
+router.get("/me/personalized-feed", verifyUser, getPersonalizedFeed);
 
 /**
  * GET /api/users/public/:userId
