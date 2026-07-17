@@ -15,6 +15,7 @@ import {
   addToolTimeline,
   updateToolTimeline,
   deleteToolTimeline,
+  getToolRecommendationScore,
 } from "../controllers/toolController.js";
 
 const router = express.Router();
@@ -70,6 +71,12 @@ router.get("/:id/alternatives", getToolAlternatives);
  * - Single tool detail page
  */
 router.get("/:slug", getToolBySlug);
+
+/**
+ * GET /api/tools/:id/recommendation-score
+ * - Get AI recommendation score for a tool
+ */
+router.get("/:id/recommendation-score", getToolRecommendationScore);
 
 /**
  * POST /api/tools/report

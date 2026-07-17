@@ -285,6 +285,39 @@ export const getToolBySlug = async (req, res) => {
 };
 
 /* =====================================
+    GET TOOL RECOMMENDATION SCORE
+==================================== */
+
+export const getToolRecommendationScore = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Resolve the tool by _id or slug
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+    const tool = isObjectId
+      ? await Tool.findById(id)
+      : await Tool.findOne({ slug: id });
+
+    if (!tool) {
+      return res.status(404).json({
+        success: false,
+        message: "Tool not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      score: tool.recommendationScore,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch recommendation score",
+    });
+  }
+};
+
+/* =====================================
    GET CATEGORIES
 ===================================== */
 

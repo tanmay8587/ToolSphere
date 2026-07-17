@@ -10,7 +10,7 @@ import { useEffect, useState, memo } from 'react';
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag, FiFolder, FiX, FiColumns } from 'react-icons/fi';
-import { getToolBySlug, getRelatedTools, getRecommendedTools, getToolAlternatives } from '../services/toolsService';
+import { getToolBySlug, getRelatedTools, getRecommendedTools, getToolAlternatives, getToolRecommendationScore } from '../services/toolsService';
 import { bookmarkTool, getProfile, reviewTool } from '../services/userApi';
 import { addViewedTool } from '../services/recentlyViewedService';
 import { getCollections, addToolToCollection } from '../services/collectionsService';
@@ -192,6 +192,8 @@ export default function ToolDetailPage() {
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [alternatives, setAlternatives] = useState([]);
   const [alternativesLoading, setAlternativesLoading] = useState(false);
+  const [recommendationScore, setRecommendationScore] = useState(0);
+  const [scoreLoading, setScoreLoading] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
 
@@ -351,6 +353,32 @@ export default function ToolDetailPage() {
     };
 
     loadAlternatives();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tool]);
+
+  useEffect(() => {
+    if (!tool?._id) return;
+
+    let cancelled = false;
+
+    const loadRecommendationScore = async () => {
+      setScoreLoading(true);
+      try {
+        const data = await getToolRecommendationScore(tool._id);
+        if (!cancelled && data?.success) {
+          setRecommendationScore(data.score || 0);
+        }
+      } catch (err) {
+        // Score is optional; ignore failures here
+      } finally {
+        if (!cancelled) setScoreLoading(false);
+      }
+    };
+
+    loadRecommendationScore();
 
     return () => {
       cancelled = true;
@@ -886,6 +914,66 @@ export default function ToolDetailPage() {
         onBookmark={handleBookmark}
         onShare={handleShare}
       />
+
+      {/* RECOMMENDATION SCORE */}
+      {!loading && tool && (
+        <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-slate-950/70 p-6">
+          <h2 className="text-xl font-semibold text-white">AI Recommendation Score</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            This score is calculated based on reviews, bookmarks, views, and ratings.
+          </p>
+          <div className="mt-4 flex items-center gap-4">
+            <div className="relative h-16 w-16">
+              <svg className="h-16 w-16 transform -rotate-90">
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  stroke="currentColor"
+                  strokeWidth="6"
+                  fill="none"
+                  className="text-slate-800"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  stroke="currentColor"
+                  strokeWidth="6"
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 28}`}
+                  strokeDashoffset={`${2 * Math.PI * 28 * (1 - recommendationScore / 100)}`}
+                  className="text-cyan-500 transition-all duration-1000 ease-out"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold text-white">
+                  {scoreLoading ? "..." : recommendationScore}
+                </span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 text-sm text-slate-300">
+                <span className="text-cyan-400">⭐</span>
+                <span>Rating: {tool.rating || 0}/5</span>
+              </div>
+              <div className="mt-1 flex items-center gap-2 text-sm text-slate-300">
+                <span className="text-cyan-400">💬</span>
+                <span>Reviews: {tool.reviewCount || 0}</span>
+              </div>
+              <div className="mt-1 flex items-center gap-2 text-sm text-slate-300">
+                <span className="text-cyan-400">👁️</span>
+                <span>Views: {tool.views || 0}</span>
+              </div>
+              <div className="mt-1 flex items-center gap-2 text-sm text-slate-300">
+                <span className="text-cyan-400">🔖</span>
+                <span>Bookmarks: {tool.bookmarkCount || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ToolGallery tool={tool} />
 

@@ -290,10 +290,16 @@ export const toggleBookmark = async (req, res) => {
     const existing = await Bookmark.findOne({ user: req.user.id, tool: tool._id });
     if (existing) {
       await Bookmark.deleteOne({ _id: existing._id });
+      // Decrement bookmark count
+      tool.bookmarkCount = Math.max(0, (tool.bookmarkCount || 0) - 1);
+      await tool.save();
       return res.json({ success: true, bookmarked: false });
     }
 
     await Bookmark.create({ user: req.user.id, tool: tool._id });
+    // Increment bookmark count
+    tool.bookmarkCount = (tool.bookmarkCount || 0) + 1;
+    await tool.save();
     res.json({ success: true, bookmarked: true });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to update bookmark." });
@@ -329,6 +335,7 @@ export const addReview = async (req, res) => {
     const averageRating = reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length;
 
     tool.rating = Number(averageRating.toFixed(1));
+    tool.reviewCount = reviews.length;
     await tool.save();
 
     res.json({ success: true, review, reviews });

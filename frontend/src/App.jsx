@@ -63,15 +63,15 @@ const ChangePassword = lazy(() => import("./pages/admin/ChangePassword"));
 const ManageUsers = lazy(() => import("./pages/admin/ManageUsers"));
 const ContactMessages = lazy(() => import("./pages/admin/ContactMessages"));
 const ContactMessageDetail = lazy(() => import("./pages/admin/ContactMessageDetail"));
-  const NewsletterSubscribers = lazy(() => import("./pages/admin/NewsletterSubscribers"));
-  const Reviews = lazy(() => import("./pages/admin/Reviews"));
-  const Blogs = lazy(() => import("./pages/admin/Blogs"));
-  const BlogForm = lazy(() => import("./pages/admin/BlogForm"));
-  const BlogComments = lazy(() => import("./pages/admin/BlogComments"));
-  const BlogCategories = lazy(() => import("./pages/admin/BlogCategories"));
-  const ToolRequests = lazy(() => import("./pages/admin/ToolRequests"));
-  const ActivityLogs = lazy(() => import("./pages/admin/ActivityLogs"));
-  const Announcements = lazy(() => import("./pages/admin/Announcements"));
+const NewsletterSubscribers = lazy(() => import("./pages/admin/NewsletterSubscribers"));
+const Reviews = lazy(() => import("./pages/admin/Reviews"));
+const Blogs = lazy(() => import("./pages/admin/Blogs"));
+const BlogForm = lazy(() => import("./pages/admin/BlogForm"));
+const BlogComments = lazy(() => import("./pages/admin/BlogComments"));
+const BlogCategories = lazy(() => import("./pages/admin/BlogCategories"));
+const ToolRequests = lazy(() => import("./pages/admin/ToolRequests"));
+const ActivityLogs = lazy(() => import("./pages/admin/ActivityLogs"));
+const Announcements = lazy(() => import("./pages/admin/Announcements"));
 
 function App() {
 
@@ -87,284 +87,284 @@ function App() {
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
 
-          {/* PUBLIC ROUTES */}
-          <Route path="/" element={<Layout />}>
-            <Route index element={<HomePage />} />
+            {/* PUBLIC ROUTES */}
+            <Route path="/" element={<Layout />}>
+              <Route index element={<HomePage />} />
 
-            <Route path="/tool/:slug" element={<ToolDetailPage />} />
+              <Route path="/tool/:slug" element={<ToolDetailPage />} />
 
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="tools" element={<ToolsPage />} />
-            <Route path="tools/:slug" element={<ToolDetailPage />} />
-            <Route path="compare" element={<ComparePage />} />
-            <Route path="blog" element={<BlogPage />} />
-            <Route path="blog/:slug" element={<BlogDetailPage />} />
-            <Route path="about" element={<AboutPage />} />
-            <Route path="contact" element={<ContactPage />} />
-            <Route path="faq" element={<FAQPage />} />
-            <Route path="privacy" element={<PrivacyPage />} />
-            <Route path="terms" element={<TermsPage />} />
-            <Route path="cookies" element={<CookiePage />} />
-            <Route path="disclaimer" element={<DisclaimerPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Route>
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="tools" element={<ToolsPage />} />
+              <Route path="tools/:slug" element={<ToolDetailPage />} />
+              <Route path="compare" element={<ComparePage />} />
+              <Route path="blog" element={<BlogPage />} />
+              <Route path="blog/:slug" element={<BlogDetailPage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="contact" element={<ContactPage />} />
+              <Route path="faq" element={<FAQPage />} />
+              <Route path="privacy" element={<PrivacyPage />} />
+              <Route path="terms" element={<TermsPage />} />
+              <Route path="cookies" element={<CookiePage />} />
+              <Route path="disclaimer" element={<DisclaimerPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
 
-{/* AUTH */}
-<Route path="/login" element={<Login />} />
-<Route path="/register" element={<Login />} />
-<Route path="/register-success" element={<RegisterSuccess />} />
-<Route path="/forgot-password" element={<ForgotPassword />} />
-<Route path="/reset-password/:token" element={<ResetPassword />} />
-<Route path="/verify-email/:token" element={<VerifyEmail />} />
-<Route path="/verify-newsletter/:token" element={<VerifyNewsletter />} />
-<Route path="/verify-contact/:token" element={<VerifyContact />} />
+            {/* AUTH */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Login />} />
+            <Route path="/register-success" element={<RegisterSuccess />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            <Route path="/verify-newsletter/:token" element={<VerifyNewsletter />} />
+            <Route path="/verify-contact/:token" element={<VerifyContact />} />
 
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute role="user">
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute role="user">
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/profile/edit"
-            element={
-              <ProtectedRoute role="user">
-                <EditProfile />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/profile/edit"
+              element={
+                <ProtectedRoute role="user">
+                  <EditProfile />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/collections"
-            element={
-              <ProtectedRoute role="user">
-                <CollectionsPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/collections"
+              element={
+                <ProtectedRoute role="user">
+                  <CollectionsPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/lists"
-            element={
-              <ProtectedRoute role="user">
-                <UserToolListsPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/lists"
+              element={
+                <ProtectedRoute role="user">
+                  <UserToolListsPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/request-tool"
-            element={
-              <ProtectedRoute role="user">
-                <ToolRequestPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/request-tool"
+              element={
+                <ProtectedRoute role="user">
+                  <ToolRequestPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
 
-          {/* ADMIN */}
-          <Route
-            path="/admin/dashboard"
-            element={
-              <ProtectedRoute role="admin">
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* ADMIN */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute role="admin">
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/tools"
-            element={
-              <ProtectedRoute role="admin">
-                <Tools />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/tools"
+              element={
+                <ProtectedRoute role="admin">
+                  <Tools />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/tools/add"
-            element={
-              <ProtectedRoute role="admin">
-                <ToolForm />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/tools/add"
+              element={
+                <ProtectedRoute role="admin">
+                  <ToolForm />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/tools/:id/edit"
-            element={
-              <ProtectedRoute role="admin">
-                <ToolForm />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/tools/:id/edit"
+              element={
+                <ProtectedRoute role="admin">
+                  <ToolForm />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/settings"
-            element={
-              <ProtectedRoute role="admin">
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/settings"
+              element={
+                <ProtectedRoute role="admin">
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/profile"
-            element={
-              <ProtectedRoute role="admin">
-                <AdminProfilePage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/profile"
+              element={
+                <ProtectedRoute role="admin">
+                  <AdminProfilePage />
+                </ProtectedRoute>
+              }
+            />
 
-<Route
-            path="/admin/change-password"
-            element={
-              <ProtectedRoute role="admin">
-                <ChangePassword />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/change-password"
+              element={
+                <ProtectedRoute role="admin">
+                  <ChangePassword />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/users"
-            element={
-              <ProtectedRoute role="admin">
-                <ManageUsers />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute role="admin">
+                  <ManageUsers />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/contact-messages"
-            element={
-              <ProtectedRoute role="admin">
-                <ContactMessages />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/contact-messages"
+              element={
+                <ProtectedRoute role="admin">
+                  <ContactMessages />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/contact-messages/:id"
-            element={
-              <ProtectedRoute role="admin">
-                <ContactMessageDetail />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/contact-messages/:id"
+              element={
+                <ProtectedRoute role="admin">
+                  <ContactMessageDetail />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/newsletter-subscribers"
-            element={
-              <ProtectedRoute role="admin">
-                <NewsletterSubscribers />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/newsletter-subscribers"
+              element={
+                <ProtectedRoute role="admin">
+                  <NewsletterSubscribers />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/blogs"
-            element={
-              <ProtectedRoute role="admin">
-                <Blogs />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/blogs"
+              element={
+                <ProtectedRoute role="admin">
+                  <Blogs />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/blogs/add"
-            element={
-              <ProtectedRoute role="admin">
-                <BlogForm />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/blogs/add"
+              element={
+                <ProtectedRoute role="admin">
+                  <BlogForm />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/blogs/new"
-            element={
-              <ProtectedRoute role="admin">
-                <BlogForm />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/blogs/new"
+              element={
+                <ProtectedRoute role="admin">
+                  <BlogForm />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/blogs/:id/edit"
-            element={
-              <ProtectedRoute role="admin">
-                <BlogForm />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/blogs/:id/edit"
+              element={
+                <ProtectedRoute role="admin">
+                  <BlogForm />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/reviews"
-            element={
-              <ProtectedRoute role="admin">
-                <Reviews />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/reviews"
+              element={
+                <ProtectedRoute role="admin">
+                  <Reviews />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/blog-comments"
-            element={
-              <ProtectedRoute role="admin">
-                <BlogComments />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/blog-comments"
+              element={
+                <ProtectedRoute role="admin">
+                  <BlogComments />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/blog-categories"
-            element={
-              <ProtectedRoute role="admin">
-                <BlogCategories />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/blog-categories"
+              element={
+                <ProtectedRoute role="admin">
+                  <BlogCategories />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/tool-requests"
-            element={
-              <ProtectedRoute role="admin">
-                <ToolRequests />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/tool-requests"
+              element={
+                <ProtectedRoute role="admin">
+                  <ToolRequests />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/activity-logs"
-            element={
-              <ProtectedRoute role="admin">
-                <ActivityLogs />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/activity-logs"
+              element={
+                <ProtectedRoute role="admin">
+                  <ActivityLogs />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/announcements"
-            element={
-              <ProtectedRoute role="admin">
-                <Announcements />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/announcements"
+              element={
+                <ProtectedRoute role="admin">
+                  <Announcements />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* MAINTENANCE PAGE - Standalone route for maintenance mode */}
-          <Route path="/maintenance" element={<MaintenancePage />} />
+            {/* MAINTENANCE PAGE - Standalone route for maintenance mode */}
+            <Route path="/maintenance" element={<MaintenancePage />} />
 
-          {/* ERROR PAGES */}
-          <Route path="/500" element={<ServerErrorPage />} />
-          
-        </Routes>
-      </Suspense>
-    </ErrorBoundary>
+            {/* ERROR PAGES */}
+            <Route path="/500" element={<ServerErrorPage />} />
+
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </>
   );
 }

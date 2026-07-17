@@ -147,6 +147,11 @@ const toolSchema = new mongoose.Schema(
       default: 0,
     },
 
+    bookmarkCount: {
+      type: Number,
+      default: 0,
+    },
+
     createdBy: {
       type: String,
       default: "admin",
@@ -341,6 +346,66 @@ toolSchema.pre(["findOneAndUpdate", "updateOne", "updateMany"], function(next) {
     sanitizeUpdate(update);
   }
   next();
+});
+
+/* ===========================
+   VIRTUAL FIELD: RECOMMENDATION SCORE
+=========================== */
+
+/**
+ * Calculate AI Recommendation Score based on:
+ * - Reviews (count and average rating)
+ * - Bookmarks/Saves
+ * - Views
+ * 
+ * Score formula (0-100):
+ * - Reviews: up to 40 points (10 reviews * 4 points each, max 40)
+ * - Bookmarks: up to 30 points (15 bookmarks * 2 points each, max 30)
+ * - Views: up to 30 points (logarithmic scale, max 30)
+ * - Rating bonus: up to 10 points (rating * 2)
+ * 
+ * Total: max 110 points, normalized to 100
+ */
+toolSchema.virtual("recommendationScore").get(function () {
+  const reviews = this.reviewCount || 0;
+  const bookmarks = this.bookmarkCount || 0;
+  const views = this.views || 0;
+  const rating = this.rating || 0;
+
+  // Reviews score: 4 points per review, max 40
+  const reviewScore = Math.min(reviews * 4, 40);
+
+  // Bookmarks score: 2 points per bookmark, max 30
+  const bookmarkScore = Math.min(bookmarks * 2, 30);
+
+  // Views score: logarithmic scale, max 30
+  // log10(views + 1) * 10 gives us a nice scale
+  // 10 views = ~10 points, 100 views = ~20 points, 1000 views = ~30 points
+  const viewScore = Math.min(Math.log10(views + 1) * 10, 30);
+
+  // Rating bonus: 2 points per star, max 10
+  const ratingBonus = Math.min(rating * 2, 10);
+
+  // Total score (max 110, normalize to 100)
+  const totalScore = reviewScore + bookmarkScore + viewScore + ratingBonus;
+  const normalizedScore = Math.min(Math.round((totalScore / 110) * 100), 100);
+
+  return normalizedScore;
+});
+
+// Ensure virtual fields are included in JSON output
+toolSchema.set("toJSON", {
+  virtuals: true,
+  transform: function (doc, ret) {
+    return ret;
+  },
+});
+
+toolSchema.set("toObject", {
+  virtuals: true,
+  transform: function (doc, ret) {
+    return ret;
+  },
 });
 
 export default mongoose.model("Tool", toolSchema);

@@ -203,7 +203,7 @@ export async function getToolAlternatives(id) {
 }
 
 /* ===========================
-   TOOL TIMELINE
+    TOOL TIMELINE
 =========================== */
 export async function getToolTimeline(slug) {
   const cacheKey = `tool:${slug}:timeline`;
@@ -217,5 +217,23 @@ export async function getToolTimeline(slug) {
   return {
     success: data?.success ?? false,
     timeline: data?.timeline ?? [],
+  };
+}
+
+/* ===========================
+    TOOL RECOMMENDATION SCORE
+=========================== */
+export async function getToolRecommendationScore(toolId) {
+  const cacheKey = `tool:${toolId}:recommendation-score`;
+
+  const data = await withDeduplication(
+    () => request(`/tools/${toolId}/recommendation-score`),
+    cacheKey,
+    5 * 60 * 1000 // 5 minutes cache
+  );
+
+  return {
+    success: data?.success ?? false,
+    score: data?.score ?? 0,
   };
 }
