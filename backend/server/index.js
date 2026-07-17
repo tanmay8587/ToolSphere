@@ -39,6 +39,7 @@ import userRoutes from "./routes/users.js";
 import collectionRoutes from "./routes/collections.js";
 import toolRequestRoutes from "./routes/toolRequests.js";
 import homeSettingsRoutes from "./routes/homeSettings.js";
+import announcementRoutes from "./routes/announcements.js";
 import logger from "./utils/logger.js";
 import validateEnvironment from "./utils/envValidation.js";
 import { checkMaintenanceMode } from "./middleware/maintenance.js";
@@ -376,6 +377,7 @@ app.use("/api/tool-requests", toolRequestRoutes);
 app.use("/api/admin", adminBlogRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api", homeSettingsRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 /* ===========================
    404 HANDLER

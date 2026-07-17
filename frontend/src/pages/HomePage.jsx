@@ -9,6 +9,7 @@ import { getStatistics } from "../services/statisticsService";
 import { getTrendingBlogs } from "../services/publicBlogService";
 import { getHomeSettings } from "../services/homeSettingsService";
 import { getRecentlyViewedTools } from "../services/recentlyViewedService";
+import { getActiveAnnouncements } from "../services/announcementService";
 import { ToastContainer, useToast } from "../components/common/Toast";
 import CategoryIcon from "../components/common/CategoryIcon";
 import EmptyState from "../components/common/EmptyState";
@@ -125,6 +126,19 @@ export default function HomePage() {
 
   // FAQ Preview state
   const [faqPreviewOpen, setFaqPreviewOpen] = useState(true);
+
+  // Announcements state
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  const [dismissedAnnouncements, setDismissedAnnouncements] = useState(() => {
+    // Load dismissed announcements from localStorage
+    try {
+      const stored = localStorage.getItem("dismissed-announcements");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // CTA Section state (dynamic, from Home Settings API)
   const [ctaSection, setCtaSection] = useState({ 
@@ -538,6 +552,47 @@ export default function HomePage() {
     };
   }, []);
 
+  // Fetch active announcements
+  useEffect(() => {
+    let active = true;
+
+    async function loadAnnouncements() {
+      try {
+        setAnnouncementsLoading(true);
+        const data = await getActiveAnnouncements(10);
+
+        if (active && data?.success) {
+          setAnnouncements(data.announcements || []);
+        }
+      } catch (err) {
+        // Silently fail - announcements are optional content
+        console.error("Error loading announcements:", err);
+      } finally {
+        if (active) setAnnouncementsLoading(false);
+      }
+    }
+
+    loadAnnouncements();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Dismiss announcement
+  const dismissAnnouncement = (announcementId) => {
+    setDismissedAnnouncements((prev) => {
+      const updated = [...prev, announcementId];
+      localStorage.setItem("dismissed-announcements", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Filter out dismissed announcements
+  const visibleAnnouncements = announcements.filter(
+    (ann) => !dismissedAnnouncements.includes(ann._id)
+  );
+
   useEffect(() => {
     let active = true;
 
@@ -575,6 +630,40 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 py-10 sm:px-6 lg:px-8">
+
+      {/* ANNOUNCEMENTS */}
+      {!announcementsLoading && visibleAnnouncements.length > 0 && (
+        <div className="space-y-3">
+          {visibleAnnouncements.map((announcement) => {
+            const typeStyles = {
+              info: "border-blue-500/30 bg-blue-500/5 text-blue-200",
+              success: "border-green-500/30 bg-green-500/5 text-green-200",
+              warning: "border-amber-500/30 bg-amber-500/5 text-amber-200",
+              error: "border-red-500/30 bg-red-500/5 text-red-200",
+            };
+            const style = typeStyles[announcement.type] || typeStyles.info;
+
+            return (
+              <div
+                key={announcement._id}
+                className={`relative flex items-start gap-3 rounded-xl border p-4 ${style}`}
+              >
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-sm">{announcement.title}</h3>
+                  <p className="mt-1 text-sm opacity-90 line-clamp-2">{announcement.message}</p>
+                </div>
+                <button
+                  onClick={() => dismissAnnouncement(announcement._id)}
+                  className="flex-shrink-0 rounded-lg p-1 transition hover:bg-white/10"
+                  aria-label="Dismiss announcement"
+                >
+                  <FiX size={18} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* HERO SECTION */}
       <section className="grid items-center gap-8 rounded-[2rem] border border-white/10 bg-white/10 p-8 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl lg:grid-cols-[1.15fr_0.85fr] lg:p-12">

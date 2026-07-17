@@ -17,6 +17,7 @@ import {
   FiMessageSquare,
   FiFolder,
   FiActivity,
+  FiBell,
 } from "react-icons/fi";
 import { useState, useEffect } from "react";
 
@@ -128,6 +129,11 @@ export default function Sidebar() {
       name: "Activity Logs",
       icon: <FiActivity size={20} />,
       path: "/admin/activity-logs",
+    },
+    {
+      name: "Announcements",
+      icon: <FiBell size={20} />,
+      path: "/admin/announcements",
     },
     {
       name: "Settings",

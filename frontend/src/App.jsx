@@ -70,6 +70,7 @@ const ContactMessageDetail = lazy(() => import("./pages/admin/ContactMessageDeta
   const BlogCategories = lazy(() => import("./pages/admin/BlogCategories"));
   const ToolRequests = lazy(() => import("./pages/admin/ToolRequests"));
   const ActivityLogs = lazy(() => import("./pages/admin/ActivityLogs"));
+  const Announcements = lazy(() => import("./pages/admin/Announcements"));
 
 function App() {
 
@@ -332,6 +333,15 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <ActivityLogs />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/announcements"
+            element={
+              <ProtectedRoute role="admin">
+                <Announcements />
               </ProtectedRoute>
             }
           />
