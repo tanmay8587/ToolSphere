@@ -52,6 +52,7 @@ const SharedCollectionPage = lazy(() => import("./pages/SharedCollectionPage"));
 const ToolRequestPage = lazy(() => import("./pages/ToolRequestPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
+const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
 const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
 
 /* Admin Pages - Lazy Loaded */
@@ -109,6 +110,7 @@ function App() {
               <Route path="cookies" element={<CookiePage />} />
               <Route path="disclaimer" element={<DisclaimerPage />} />
               <Route path="users/:userId" element={<PublicProfilePage />} />
+              <Route path="leaderboard" element={<LeaderboardPage />} />
               <Route path="shared/:shareId" element={<SharedCollectionPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

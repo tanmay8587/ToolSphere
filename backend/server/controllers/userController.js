@@ -1024,14 +1024,41 @@ export const unfollowUser = async (req, res) => {
       ===================================== */
 
 /**
- * GET /api/users/public/:userId
- * - Public endpoint (no auth required).
- * - Returns public profile data for a user including:
- *   - User info (name, avatar, bio)
- *   - Public tool lists
- *   - Approved reviews
- *   - Public collections
+ * POST /api/users/me/reviews/:reviewId/like
+ * - Toggle the current user's like on a review.
+ * - Requires authentication.
  */
+export const toggleReviewLike = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+
+    const review = await Review.findById(reviewId);
+    if (!review) {
+      return res.status(404).json({ success: false, message: "Review not found." });
+    }
+
+    const userId = req.user.id;
+    const alreadyLiked = review.likes.some((id) => id.toString() === userId);
+
+    if (alreadyLiked) {
+      review.likes = review.likes.filter((id) => id.toString() !== userId);
+    } else {
+      review.likes.push(userId);
+    }
+
+    await review.save();
+
+    res.json({
+      success: true,
+      liked: !alreadyLiked,
+      likeCount: review.likes.length,
+    });
+  } catch (err) {
+    logger.error("[toggleReviewLike] Error toggling review like:", err);
+    res.status(500).json({ success: false, message: "Failed to update review like." });
+  }
+};
+
 export const getPublicUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;

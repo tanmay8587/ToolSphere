@@ -1,5 +1,5 @@
 import express from "express";
-import { getSavedBlogs, getLikedBlogs, addViewedTool, getRecentlyViewedTools, addViewedBlog, getRecentlyViewedBlogs, getPublicUserProfile, followUser, unfollowUser } from "../controllers/userController.js";
+import { getSavedBlogs, getLikedBlogs, addViewedTool, getRecentlyViewedTools, addViewedBlog, getRecentlyViewedBlogs, getPublicUserProfile, followUser, unfollowUser, toggleReviewLike } from "../controllers/userController.js";
 import { getPersonalizedFeed } from "../controllers/feedController.js";
 import { verifyUser, optionalUser } from "../middleware/auth.js";
 
@@ -70,5 +70,11 @@ router.get("/me/personalized-feed", verifyUser, getPersonalizedFeed);
  * - Returns public profile data for a user.
  */
 router.get("/public/:userId", optionalUser, getPublicUserProfile);
+
+/**
+ * POST /api/users/me/reviews/:reviewId/like
+ * - Toggle the current user's like on a review (requires auth).
+ */
+router.post("/me/reviews/:reviewId/like", verifyUser, toggleReviewLike);
 
 export default router;

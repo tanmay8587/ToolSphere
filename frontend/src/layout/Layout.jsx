@@ -26,6 +26,7 @@ const navItems = [
   { name: 'Categories', path: '/categories' },
   { name: 'Tools', path: '/tools' },
   { name: 'Blog', path: '/blog' },
+  { name: 'Leaderboard', path: '/leaderboard' },
   { name: 'About', path: '/about' },
   { name: 'FAQ', path: '/faq' },
   { name: 'Contact', path: '/contact' }
@@ -641,10 +642,11 @@ export default function Layout() {
                 </h3>
                 <ul className="mt-5 flex w-full flex-col items-stretch gap-1">
                   {[
-                    { name: "Home", path: "/" },
+                     { name: "Home", path: "/" },
                     { name: "Categories", path: "/categories" },
                     { name: "Tools", path: "/tools" },
                     { name: "Blog", path: "/blog" },
+                    { name: "Leaderboard", path: "/leaderboard" },
                     { name: "About", path: "/about" },
                   ].map((link) => (
                     <li key={link.path}>
