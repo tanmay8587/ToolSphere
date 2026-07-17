@@ -1,14 +1,30 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import { getPublicUserProfile } from "../services/userService";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { getPublicUserProfile, followUser, unfollowUser } from "../services/userService";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function PublicProfilePage() {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+
+  const currentUserId = (() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("authUser") || "null");
+      return user?.id || null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const isOwnProfile = currentUserId === userId;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -19,6 +35,9 @@ function PublicProfilePage() {
       
       if (result.success && result.data) {
         setProfile(result.data);
+        setIsFollowing(result.data.isFollowing || false);
+        setFollowersCount(result.data.user.followersCount || 0);
+        setFollowingCount(result.data.user.followingCount || 0);
       } else {
         setError("User not found or profile is not public.");
       }
@@ -30,6 +49,34 @@ function PublicProfilePage() {
       fetchProfile();
     }
   }, [userId]);
+
+  const handleFollowToggle = async () => {
+    if (!localStorage.getItem("token")) {
+      navigate("/login");
+      return;
+    }
+
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        const result = await unfollowUser(userId);
+        if (result.success) {
+          setIsFollowing(false);
+          setFollowersCount((prev) => Math.max(0, prev - 1));
+        }
+      } else {
+        const result = await followUser(userId);
+        if (result.success) {
+          setIsFollowing(true);
+          setFollowersCount((prev) => prev + 1);
+        }
+      }
+    } catch (err) {
+      // Silently handle
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -85,21 +132,64 @@ function PublicProfilePage() {
 
             {/* User Info */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{user.name}</h1>
-              {user.bio && (
-                <p className="text-slate-300 text-lg mb-4 max-w-2xl">{user.bio}</p>
-              )}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-slate-400">
-                <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
-                {toolLists.length > 0 && (
-                  <span>• {toolLists.length} public list{toolLists.length !== 1 ? 's' : ''}</span>
-                )}
-                {reviews.length > 0 && (
-                  <span>• {reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
-                )}
-                {collections.length > 0 && (
-                  <span>• {collections.length} collection{collections.length !== 1 ? 's' : ''}</span>
-                )}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{user.name}</h1>
+                  {user.bio && (
+                    <p className="text-slate-300 text-lg mb-4 max-w-2xl">{user.bio}</p>
+                  )}
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-slate-400">
+                    <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
+                    {toolLists.length > 0 && (
+                      <span>• {toolLists.length} public list{toolLists.length !== 1 ? 's' : ''}</span>
+                    )}
+                    {reviews.length > 0 && (
+                      <span>• {reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
+                    )}
+                    {collections.length > 0 && (
+                      <span>• {collections.length} collection{collections.length !== 1 ? 's' : ''}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Follow Button & Stats */}
+                <div className="flex flex-col items-center md:items-end gap-3">
+                  {/* Followers / Following counts */}
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="text-center">
+                      <span className="block text-xl font-bold text-white">{followersCount}</span>
+                      <span className="text-slate-400">Followers</span>
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-xl font-bold text-white">{followingCount}</span>
+                      <span className="text-slate-400">Following</span>
+                    </div>
+                  </div>
+
+                  {/* Follow / Unfollow button */}
+                  {!isOwnProfile && (
+                    <button
+                      onClick={handleFollowToggle}
+                      disabled={followLoading}
+                      className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 ${
+                        isFollowing
+                          ? "bg-slate-800 text-slate-300 border border-slate-700 hover:bg-red-500 hover:text-white hover:border-red-500"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
+                    >
+                      {followLoading ? (
+                        <span className="flex items-center gap-2">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-500 border-t-white"></div>
+                          {isFollowing ? "Unfollowing..." : "Following..."}
+                        </span>
+                      ) : isFollowing ? (
+                        "Unfollow"
+                      ) : (
+                        "Follow"
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

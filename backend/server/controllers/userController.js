@@ -905,6 +905,121 @@ export const getRecentlyViewedTools = async (req, res) => {
 };
 
 /* ==========================================
+   FOLLOW / UNFOLLOW
+   ========================================== */
+
+/**
+ * POST /api/users/:userId/follow
+ * - Follow another user
+ * - Requires authentication
+ */
+export const followUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user.id;
+
+    // Cannot follow yourself
+    if (userId === currentUserId.toString()) {
+      return res.status(400).json({ success: false, message: "You cannot follow yourself." });
+    }
+
+    // Find target user
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Find current user
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "Current user not found." });
+    }
+
+    // Check if already following
+    const alreadyFollowing = currentUser.following.some(
+      (id) => id.toString() === userId
+    );
+
+    if (alreadyFollowing) {
+      return res.status(400).json({ success: false, message: "You are already following this user." });
+    }
+
+    // Add to following array of current user
+    currentUser.following.push(userId);
+    await currentUser.save();
+
+    // Add to followers array of target user
+    targetUser.followers.push(currentUserId);
+    await targetUser.save();
+
+    res.json({
+      success: true,
+      message: "User followed successfully.",
+      followersCount: targetUser.followers.length,
+      followingCount: currentUser.following.length,
+    });
+  } catch (err) {
+    logger.error("[followUser] Error following user:", err);
+    res.status(500).json({ success: false, message: "Failed to follow user." });
+  }
+};
+
+/**
+ * DELETE /api/users/:userId/follow
+ * - Unfollow another user
+ * - Requires authentication
+ */
+export const unfollowUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user.id;
+
+    // Find target user
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Find current user
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "Current user not found." });
+    }
+
+    // Check if actually following
+    const isFollowing = currentUser.following.some(
+      (id) => id.toString() === userId
+    );
+
+    if (!isFollowing) {
+      return res.status(400).json({ success: false, message: "You are not following this user." });
+    }
+
+    // Remove from following array of current user
+    currentUser.following = currentUser.following.filter(
+      (id) => id.toString() !== userId
+    );
+    await currentUser.save();
+
+    // Remove from followers array of target user
+    targetUser.followers = targetUser.followers.filter(
+      (id) => id.toString() !== currentUserId.toString()
+    );
+    await targetUser.save();
+
+    res.json({
+      success: true,
+      message: "User unfollowed successfully.",
+      followersCount: targetUser.followers.length,
+      followingCount: currentUser.following.length,
+    });
+  } catch (err) {
+    logger.error("[unfollowUser] Error unfollowing user:", err);
+    res.status(500).json({ success: false, message: "Failed to unfollow user." });
+  }
+};
+
+/* ==========================================
       PUBLIC USER PROFILE
       ===================================== */
 
@@ -947,6 +1062,17 @@ export const getPublicUserProfile = async (req, res) => {
       isPublic: true 
     }).populate("tools", "name slug category description pricing rating logo coverImage");
 
+    // Check if the requesting user is following this profile user
+    let isFollowing = false;
+    if (req.user && req.user.id) {
+      const currentUser = await User.findById(req.user.id).select("following");
+      if (currentUser) {
+        isFollowing = currentUser.following.some(
+          (id) => id.toString() === userId
+        );
+      }
+    }
+
     res.json({
       success: true,
       data: {
@@ -956,7 +1082,10 @@ export const getPublicUserProfile = async (req, res) => {
           avatar: user.avatar,
           bio: user.bio,
           createdAt: user.createdAt,
+          followersCount: user.followers.length,
+          followingCount: user.following.length,
         },
+        isFollowing,
         toolLists: publicToolLists,
         reviews,
         collections,

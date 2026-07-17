@@ -27,14 +27,35 @@ async function request(path) {
    GET PUBLIC USER PROFILE
 =========================== */
 export async function getPublicUserProfile(userId) {
-  const cacheKey = `user:public:${userId}`;
+  const token = localStorage.getItem("token");
 
-  const data = await request(`/users/public/${userId}`);
+  try {
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
 
-  return {
-    success: data?.success ?? false,
-    data: data?.data ?? null,
-  };
+    const response = await fetch(`${API_BASE}/users/public/${userId}`, {
+      headers,
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return { success: false, data: null };
+    }
+
+    return {
+      success: data?.success ?? false,
+      data: data?.data ?? null,
+    };
+  } catch (error) {
+    console.error("[userService] getPublicUserProfile failed:", error);
+    return {
+      success: false,
+      data: null,
+    };
+  }
 }
 
 /* ===========================
@@ -71,6 +92,79 @@ export async function getProfile() {
     return {
       success: false,
       message: error.message || "Failed to fetch profile",
+    };
+  }
+}
+
+/* ===========================
+   FOLLOW / UNFOLLOW USER
+=========================== */
+export async function followUser(userId) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return { success: false, message: "Not authenticated" };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/users/${userId}/follow`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(data?.message || `Request failed: ${response.status}`);
+    }
+
+    return {
+      success: data?.success ?? false,
+      message: data?.message ?? "User followed successfully.",
+      followersCount: data?.followersCount ?? 0,
+      followingCount: data?.followingCount ?? 0,
+    };
+  } catch (error) {
+    console.error("[userService] followUser failed:", error);
+    return {
+      success: false,
+      message: error.message || "Failed to follow user",
+    };
+  }
+}
+
+export async function unfollowUser(userId) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return { success: false, message: "Not authenticated" };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/users/${userId}/follow`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(data?.message || `Request failed: ${response.status}`);
+    }
+
+    return {
+      success: data?.success ?? false,
+      message: data?.message ?? "User unfollowed successfully.",
+      followersCount: data?.followersCount ?? 0,
+      followingCount: data?.followingCount ?? 0,
+    };
+  } catch (error) {
+    console.error("[userService] unfollowUser failed:", error);
+    return {
+      success: false,
+      message: error.message || "Failed to unfollow user",
     };
   }
 }

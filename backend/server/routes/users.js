@@ -1,6 +1,6 @@
 import express from "express";
-import { getSavedBlogs, getLikedBlogs, addViewedTool, getRecentlyViewedTools, addViewedBlog, getRecentlyViewedBlogs, getPublicUserProfile } from "../controllers/userController.js";
-import { verifyUser } from "../middleware/auth.js";
+import { getSavedBlogs, getLikedBlogs, addViewedTool, getRecentlyViewedTools, addViewedBlog, getRecentlyViewedBlogs, getPublicUserProfile, followUser, unfollowUser } from "../controllers/userController.js";
+import { verifyUser, optionalUser } from "../middleware/auth.js";
 
 /* ===========================
    USER ROUTES  (/api/users)
@@ -45,10 +45,22 @@ router.post("/me/viewed-blogs", verifyUser, addViewedBlog);
 router.get("/me/recently-viewed-blogs", verifyUser, getRecentlyViewedBlogs);
 
 /**
+ * POST /api/users/:userId/follow
+ * - Follow a user (requires auth)
+ */
+router.post("/:userId/follow", verifyUser, followUser);
+
+/**
+ * DELETE /api/users/:userId/follow
+ * - Unfollow a user (requires auth)
+ */
+router.delete("/:userId/follow", verifyUser, unfollowUser);
+
+/**
  * GET /api/users/public/:userId
  * - Public endpoint (no auth required).
  * - Returns public profile data for a user.
  */
-router.get("/public/:userId", getPublicUserProfile);
+router.get("/public/:userId", optionalUser, getPublicUserProfile);
 
 export default router;
