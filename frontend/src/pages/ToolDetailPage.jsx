@@ -35,6 +35,13 @@ const DISPLAY_RECENT_TOOLS = 6;
 
 // Memoized related tool card
 const RelatedToolCard = memo(({ tool }) => {
+  const awards = [];
+  if (tool.awards?.bestAiTool) awards.push("🏆 Best AI Tool");
+  if (tool.awards?.editorsChoice) awards.push("⭐ Editor's Choice");
+  if (tool.awards?.trending) awards.push("🔥 Trending");
+  if (tool.awards?.fastGrowing) awards.push("📈 Fast Growing");
+  if (tool.awards?.newArrival) awards.push("✨ New Arrival");
+
   return (
     <Link
       to={`/tools/${tool.slug}`}
@@ -68,6 +75,19 @@ const RelatedToolCard = memo(({ tool }) => {
       <p className="mt-2 text-sm text-slate-400 line-clamp-2">
         {tool.description}
       </p>
+
+      {awards.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {awards.map((award, index) => (
+            <span
+              key={index}
+              className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-300"
+            >
+              {award}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="mt-5 flex items-center justify-between">
         <span className="text-xs text-slate-500">
@@ -84,6 +104,13 @@ const RelatedToolCard = memo(({ tool }) => {
 
 // Memoized recently viewed tool card
 const RecentlyViewedCard = memo(({ tool }) => {
+  const awards = [];
+  if (tool.awards?.bestAiTool) awards.push("🏆 Best AI Tool");
+  if (tool.awards?.editorsChoice) awards.push("⭐ Editor's Choice");
+  if (tool.awards?.trending) awards.push("🔥 Trending");
+  if (tool.awards?.fastGrowing) awards.push("📈 Fast Growing");
+  if (tool.awards?.newArrival) awards.push("✨ New Arrival");
+
   return (
     <Link
       to={`/tools/${tool.slug}`}
@@ -117,6 +144,19 @@ const RecentlyViewedCard = memo(({ tool }) => {
       <p className="mt-2 text-sm text-slate-400 line-clamp-2">
         {tool.description}
       </p>
+
+      {awards.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {awards.map((award, index) => (
+            <span
+              key={index}
+              className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-300"
+            >
+              {award}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="mt-5 flex items-center justify-between">
         <span className="text-xs text-cyan-400 group-hover:underline">
@@ -984,6 +1024,36 @@ export default function ToolDetailPage() {
             <p className="text-lg leading-8 text-slate-300">
               {tool.description || 'No description available.'}
             </p>
+            
+            {(tool.awards?.bestAiTool || tool.awards?.editorsChoice || tool.awards?.trending || tool.awards?.fastGrowing || tool.awards?.newArrival) && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {tool.awards?.bestAiTool && (
+                  <span className="rounded-full bg-amber-500/20 px-3 py-1 text-sm text-amber-300">
+                    🏆 Best AI Tool
+                  </span>
+                )}
+                {tool.awards?.editorsChoice && (
+                  <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-sm text-emerald-300">
+                    ⭐ Editor's Choice
+                  </span>
+                )}
+                {tool.awards?.trending && (
+                  <span className="rounded-full bg-rose-500/20 px-3 py-1 text-sm text-rose-300">
+                    🔥 Trending
+                  </span>
+                )}
+                {tool.awards?.fastGrowing && (
+                  <span className="rounded-full bg-violet-500/20 px-3 py-1 text-sm text-violet-300">
+                    📈 Fast Growing
+                  </span>
+                )}
+                {tool.awards?.newArrival && (
+                  <span className="rounded-full bg-sky-500/20 px-3 py-1 text-sm text-sky-300">
+                    ✨ New Arrival
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           <ToolFeatures tool={tool} />

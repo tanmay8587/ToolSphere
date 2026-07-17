@@ -43,36 +43,66 @@ export default function ToolHero({
                onError={handleImageError}
              />
 
-            <div>
+              <div>
 
-              <h1 className="text-4xl font-bold text-white">
-                {tool.name}
-              </h1>
+                <h1 className="text-4xl font-bold text-white">
+                  {tool.name}
+                </h1>
 
-              <p className="mt-2 text-slate-400">
-                {tool.category}
-              </p>
+                <p className="mt-2 text-slate-400">
+                  {tool.category}
+                </p>
 
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <div className="mt-4 flex flex-wrap items-center gap-3">
 
-                <span className="flex items-center gap-1 rounded-full bg-amber-500/20 px-3 py-1 text-amber-400">
-                  <FiStar />
-                  {tool.rating || 0}
-                </span>
-
-                <span className="rounded-full bg-cyan-500/20 px-3 py-1 text-cyan-300">
-                  {tool.pricing}
-                </span>
-
-                {tool.featured && (
-                  <span className="rounded-full bg-fuchsia-500/20 px-3 py-1 text-fuchsia-300">
-                    Featured
+                  <span className="flex items-center gap-1 rounded-full bg-amber-500/20 px-3 py-1 text-amber-400">
+                    <FiStar />
+                    {tool.rating || 0}
                   </span>
-                )}
+
+                  <span className="rounded-full bg-cyan-500/20 px-3 py-1 text-cyan-300">
+                    {tool.pricing}
+                  </span>
+
+                  {tool.featured && (
+                    <span className="rounded-full bg-fuchsia-500/20 px-3 py-1 text-fuchsia-300">
+                      Featured
+                    </span>
+                  )}
+
+                  {tool.awards?.bestAiTool && (
+                    <span className="rounded-full bg-amber-500/20 px-3 py-1 text-amber-300">
+                      🏆 Best AI Tool
+                    </span>
+                  )}
+
+                  {tool.awards?.editorsChoice && (
+                    <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-300">
+                      ⭐ Editor's Choice
+                    </span>
+                  )}
+
+                  {tool.awards?.trending && (
+                    <span className="rounded-full bg-rose-500/20 px-3 py-1 text-rose-300">
+                      🔥 Trending
+                    </span>
+                  )}
+
+                  {tool.awards?.fastGrowing && (
+                    <span className="rounded-full bg-violet-500/20 px-3 py-1 text-violet-300">
+                      📈 Fast Growing
+                    </span>
+                  )}
+
+                  {tool.awards?.newArrival && (
+                    <span className="rounded-full bg-sky-500/20 px-3 py-1 text-sky-300">
+                      ✨ New Arrival
+                    </span>
+                  )}
+
+                </div>
 
               </div>
-
-            </div>
 
           </div>
 

@@ -578,6 +578,17 @@ export const addTool = async (req, res) => {
 
     payload.updatedBy = req.admin?.email || "admin";
 
+    // Awards
+    if (req.body.awards) {
+      payload.awards = {
+        bestAiTool: Boolean(req.body.awards.bestAiTool),
+        editorsChoice: Boolean(req.body.awards.editorsChoice),
+        trending: Boolean(req.body.awards.trending),
+        fastGrowing: Boolean(req.body.awards.fastGrowing),
+        newArrival: Boolean(req.body.awards.newArrival),
+      };
+    }
+
     // Slug
     if (req.body.slug) {
       payload.slug = createSlug(req.body.slug);
@@ -738,6 +749,17 @@ export const updateTool = async (req, res) => {
 
       updatedBy: req.admin?.email || "admin",
     };
+
+    // Awards
+    if (req.body.awards) {
+      payload.awards = {
+        bestAiTool: Boolean(req.body.awards.bestAiTool),
+        editorsChoice: Boolean(req.body.awards.editorsChoice),
+        trending: Boolean(req.body.awards.trending),
+        fastGrowing: Boolean(req.body.awards.fastGrowing),
+        newArrival: Boolean(req.body.awards.newArrival),
+      };
+    }
 
     // ✅ Override logo if image uploaded
     if (imageUrl) {

@@ -238,6 +238,34 @@ const toolSchema = new mongoose.Schema(
         message: "Invalid canonical URL",
       },
     },
+
+    awards: {
+      bestAiTool: {
+        type: Boolean,
+        default: false,
+        index: true,
+      },
+      editorsChoice: {
+        type: Boolean,
+        default: false,
+        index: true,
+      },
+      trending: {
+        type: Boolean,
+        default: false,
+        index: true,
+      },
+      fastGrowing: {
+        type: Boolean,
+        default: false,
+        index: true,
+      },
+      newArrival: {
+        type: Boolean,
+        default: false,
+        index: true,
+      },
+    },
   },
   {
     timestamps: true,
