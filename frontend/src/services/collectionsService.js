@@ -165,3 +165,36 @@ export const deleteCollection = async (collectionId) => {
     return { success: false, message: error.message || "Failed to delete collection." };
   }
 };
+
+/**
+ * Fetches a public shared collection by its shareId (no auth required).
+ * @param {string} shareId
+ * @returns {Promise<{success: boolean, data?: object, message?: string}>}
+ */
+export const getSharedCollection = async (shareId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/collections/shared/${shareId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching shared collection:", error);
+    return { success: false, message: error.message || "Failed to load shared collection." };
+  }
+};
+
+/**
+ * Builds the absolute public shareable URL for a collection.
+ * @param {string} shareId
+ * @returns {string}
+ */
+export const buildShareUrl = (shareId) => {
+  if (!shareId) return "";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/shared/${shareId}`;
+};

@@ -48,6 +48,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
 const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
 const UserToolListsPage = lazy(() => import("./pages/UserToolListsPage"));
+const SharedCollectionPage = lazy(() => import("./pages/SharedCollectionPage"));
 const ToolRequestPage = lazy(() => import("./pages/ToolRequestPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
@@ -108,6 +109,7 @@ function App() {
               <Route path="cookies" element={<CookiePage />} />
               <Route path="disclaimer" element={<DisclaimerPage />} />
               <Route path="users/:userId" element={<PublicProfilePage />} />
+              <Route path="shared/:shareId" element={<SharedCollectionPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
 

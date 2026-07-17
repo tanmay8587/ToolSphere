@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiFolder, FiArrowRight } from "react-icons/fi";
-import { getCollections, createCollection, renameCollection, deleteCollection, removeToolFromCollection } from "../services/collectionsService";
+import { FiPlus, FiEdit2, FiTrash2, FiX, FiFolder, FiArrowRight, FiShare2, FiCopy, FiCheck, FiMail, FiGlobe } from "react-icons/fi";
+import { FaXTwitter, FaFacebook, FaLinkedin, FaWhatsapp } from "react-icons/fa6";
+import { getCollections, createCollection, renameCollection, deleteCollection, removeToolFromCollection, buildShareUrl } from "../services/collectionsService";
 import { getToolLogoProps } from "../utils/imageOptimization";
 import { useToast, ToastContainer } from "../components/common/Toast";
 import { isLoggedIn, getUser } from "../utils/auth";
@@ -176,6 +177,133 @@ function CreateModal({ isOpen, onCreate, onCancel, loading }) {
   );
 }
 
+function ShareModal({ isOpen, collection, onClose }) {
+  const [copied, setCopied] = useState(false);
+
+  if (!isOpen || !collection) return null;
+
+  const shareUrl = buildShareUrl(collection.shareId);
+  const shareText = `Check out my AI tool list "${collection.name}" on ToolSphere`;
+
+  const handleCopy = async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const el = document.createElement("textarea");
+        el.value = shareUrl;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy link:", err);
+    }
+  };
+
+  const encodedUrl = encodeURIComponent(shareUrl);
+  const encodedText = encodeURIComponent(shareText);
+
+  const socialLinks = [
+    {
+      name: "X",
+      icon: <FaXTwitter className="h-5 w-5" />,
+      href: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+      color: "hover:bg-slate-700",
+    },
+    {
+      name: "Facebook",
+      icon: <FaFacebook className="h-5 w-5" />,
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      color: "hover:bg-blue-600/30",
+    },
+    {
+      name: "LinkedIn",
+      icon: <FaLinkedin className="h-5 w-5" />,
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+      color: "hover:bg-blue-700/30",
+    },
+    {
+      name: "WhatsApp",
+      icon: <FaWhatsapp className="h-5 w-5" />,
+      href: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`,
+      color: "hover:bg-green-600/30",
+    },
+    {
+      name: "Email",
+      icon: <FiMail className="h-5 w-5" />,
+      href: `mailto:?subject=${encodeURIComponent(collection.name)}&body=${encodedText}%20${encodedUrl}`,
+      color: "hover:bg-red-600/30",
+    },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl"
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <FiShare2 className="h-5 w-5 text-cyan-300" />
+            <h3 className="text-lg font-semibold text-white">Share Collection</h3>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-white/5 hover:text-white"
+          >
+            <FiX className="h-5 w-5" />
+          </button>
+        </div>
+
+        <p className="mt-2 text-sm text-slate-400">
+          Anyone with this link can view <span className="text-white">"{collection.name}"</span>.
+        </p>
+
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 p-1.5">
+          <FiGlobe className="ml-2 h-4 w-4 shrink-0 text-slate-500" />
+          <input
+            readOnly
+            value={shareUrl}
+            onFocus={(e) => e.currentTarget.select()}
+            className="min-w-0 flex-1 bg-transparent px-1 text-sm text-slate-200 focus:outline-none"
+          />
+          <button
+            onClick={handleCopy}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-cyan-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-600"
+          >
+            {copied ? <FiCheck className="h-4 w-4" /> : <FiCopy className="h-4 w-4" />}
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </div>
+
+        <p className="mt-5 text-xs font-medium uppercase tracking-wide text-slate-500">Share via</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {socialLinks.map((s) => (
+            <a
+              key={s.name}
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Share on ${s.name}`}
+              className={`inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition-colors ${s.color}`}
+            >
+              {s.icon}
+              <span className="hidden sm:inline">{s.name}</span>
+            </a>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function ToolCard({ tool, onRemove, removing }) {
   return (
     <div className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/70 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500 hover:shadow-lg hover:shadow-cyan-500/10">
@@ -221,6 +349,8 @@ export default function CollectionsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [removeLoading, setRemoveLoading] = useState(null); // `${collectionId}:${toolId}`
+  const [shareTarget, setShareTarget] = useState(null);
+  const [shareLoading, setShareLoading] = useState(false);
 
   const loadCollections = async () => {
     setLoading(true);
@@ -331,6 +461,36 @@ export default function CollectionsPage() {
     }
   };
 
+  const handleShare = async (collection) => {
+    // A collection needs a shareId (generated on save) and must be public to be shared.
+    if (collection.shareId && collection.isPublic) {
+      setShareTarget(collection);
+      return;
+    }
+    setShareLoading(true);
+    try {
+      const { data } = await renameCollection(collection._id, collection.name, true);
+      if (data.success) {
+        const shareId = data.data?.shareId || collection.shareId;
+        setCollections((prev) =>
+          prev.map((c) =>
+            c._id === collection._id ? { ...c, isPublic: true, shareId } : c
+          )
+        );
+        setShareTarget({ ...collection, isPublic: true, shareId });
+        if (!collection.isPublic) {
+          addToast("Collection is now public and ready to share.", "success");
+        }
+      } else {
+        addToast(data.message || "Failed to prepare collection for sharing.", "error");
+      }
+    } catch (err) {
+      addToast(err.message || "Failed to prepare collection for sharing.", "error");
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
   const localUser = getUser();
 
   if (!localUser && !loading) {
@@ -437,6 +597,14 @@ export default function CollectionsPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <button
+                      onClick={() => handleShare(collection)}
+                      disabled={shareLoading}
+                      aria-label="Share collection"
+                      className="rounded-lg p-2 text-cyan-400 transition hover:bg-cyan-500/10 disabled:opacity-50"
+                    >
+                      <FiShare2 className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => setRenameTarget(collection)}
                       aria-label="Rename collection"
                       className="rounded-lg p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
@@ -514,6 +682,12 @@ export default function CollectionsPage() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
         loading={deleteLoading}
+      />
+
+      <ShareModal
+        isOpen={!!shareTarget}
+        collection={shareTarget}
+        onClose={() => setShareTarget(null)}
       />
     </motion.div>
   );

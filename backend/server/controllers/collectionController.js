@@ -142,4 +142,31 @@ export const deleteCollection = asyncHandler(async (req, res) => {
   });
 });
 
-export default { createCollection, getCollections, addToolToCollection, removeToolFromCollection, renameCollection, deleteCollection };
+/**
+ * GET /api/collections/shared/:shareId
+ * - Public (no authentication required).
+ * - Returns a single public collection by its shareId, with tool data and
+ *   owner info populated. Returns 404 if the collection is private or missing.
+ */
+export const getSharedCollection = asyncHandler(async (req, res) => {
+  const { shareId } = req.params;
+
+  if (!shareId) {
+    return sendErrorResponse(res, 400, "Share ID is required.");
+  }
+
+  const collection = await Collection.findOne({ shareId, isPublic: true })
+    .populate("tools")
+    .populate("user", "name avatar");
+
+  if (!collection) {
+    return sendErrorResponse(res, 404, "Shared collection not found or is private.");
+  }
+
+  res.status(200).json({
+    success: true,
+    data: collection,
+  });
+});
+
+export default { createCollection, getCollections, addToolToCollection, removeToolFromCollection, renameCollection, deleteCollection, getSharedCollection };

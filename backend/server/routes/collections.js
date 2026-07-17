@@ -1,12 +1,18 @@
 import express from "express";
-import { createCollection, getCollections, addToolToCollection, removeToolFromCollection, renameCollection, deleteCollection } from "../controllers/collectionController.js";
+import { createCollection, getCollections, addToolToCollection, removeToolFromCollection, renameCollection, deleteCollection, getSharedCollection } from "../controllers/collectionController.js";
 import { verifyUser } from "../middleware/auth.js";
 
 /* ===========================
    COLLECTION ROUTES  (/api/collections)
-   All routes require an authenticated user.
    =========================== */
 const router = express.Router();
+
+/**
+ * GET /api/collections/shared/:shareId
+ * - Public (no authentication required).
+ * - Returns a single public collection by its shareId.
+ */
+router.get("/shared/:shareId", getSharedCollection);
 
 /**
  * POST /api/collections
