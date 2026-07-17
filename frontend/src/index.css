@@ -384,3 +384,127 @@ pre .copy-button:active {
 .blog-content > :last-child {
   margin-bottom: 0;
 }
+
+/* =========================
+   PRINT STYLES FOR COMPARISON
+   ========================= */
+
+@media print {
+  /* Reset body for print */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Hide non-essential elements */
+  nav,
+  footer,
+  .no-print,
+  button,
+  select,
+  .sticky {
+    display: none !important;
+  }
+
+  /* Show comparison table properly */
+  .printing-comparison {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .printing-comparison > div {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Table styles for print */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    page-break-inside: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  th,
+  td {
+    border: 1px solid #333 !important;
+    padding: 8px !important;
+    text-align: left !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  th {
+    background: #f0f0f0 !important;
+    font-weight: bold !important;
+    color: black !important;
+  }
+
+  /* Comparison highlights for print */
+  td.bg-emerald-500\/10,
+  td.bg-emerald-500\/20 {
+    background: #d4edda !important;
+    border-color: #28a745 !important;
+  }
+
+  td.bg-amber-500\/10,
+  td.bg-amber-500\/20 {
+    background: #fff3cd !important;
+    border-color: #ffc107 !important;
+  }
+
+  /* Show legend in print */
+  .rounded-xl.border {
+    border: 1px solid #333 !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Links */
+  a {
+    text-decoration: none !important;
+    color: black !important;
+  }
+
+  /* Add page title */
+  body::before {
+    content: "Tool Comparison - ToolSphere";
+    display: block;
+    font-size: 18pt;
+    font-weight: bold;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #333;
+  }
+
+  /* Add timestamp */
+  body::after {
+    content: "Generated: " attr(data-timestamp);
+    display: block;
+    font-size: 10pt;
+    color: #666;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+  }
+}
+
+/* Add timestamp data attribute when printing */
+body.printing-comparison {
+  position: relative;
+}
+
+body.printing-comparison::before {
+  content: "";
+  display: none;
+}
