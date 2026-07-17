@@ -583,12 +583,15 @@ export const addTool = async (req, res) => {
       details: `Created tool "${tool.name}"`,
     });
 
-    await Notification.create({
-      title: "New Tool Submitted",
-      message: "A new tool is waiting for approval.",
-      type: "tool",
-      isRead: false,
-    });
+    // Only create a "waiting for approval" notification if the tool is not already active
+    if (tool.status !== "active") {
+      await Notification.create({
+        title: "New Tool Submitted",
+        message: "A new tool is waiting for approval.",
+        type: "tool",
+        isRead: false,
+      });
+    }
 
     // Send newsletter if requested
     let newsletterResult = null;

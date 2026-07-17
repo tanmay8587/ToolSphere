@@ -239,6 +239,19 @@ app.options("*", cors(corsOptions));
 
 app.use(compression());
 
+// Cache-control headers for static assets
+app.use((req, res, next) => {
+  // Cache sitemap and robots.txt for 4 hours
+  if (req.path === "/sitemap.xml" || req.path === "/robots.txt") {
+    res.setHeader("Cache-Control", "public, max-age=14400");
+  }
+  // Cache health check endpoint briefly
+  if (req.path === "/api/health") {
+    res.setHeader("Cache-Control", "no-cache");
+  }
+  next();
+});
+
 // Request body size limit (100kb for JSON, 50mb for file uploads)
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ limit: "100kb", extended: true }));
@@ -304,21 +317,35 @@ Sitemap: ${process.env.CORS_ORIGIN || "http://localhost:5173"}/sitemap.xml
 `);
 });
 
-// sitemap.xml
+// sitemap.xml (includes tools and blog posts)
 app.get("/sitemap.xml", async (req, res) => {
   try {
     const Tool = (await import("./models/Tool.js")).default;
-    const tools = await Tool.find({ approved: true, isDeleted: false, status: "active" })
-      .select("slug updatedAt")
-      .lean();
+    const Blog = (await import("./models/Blog.js")).default;
+
+    const [tools, blogs] = await Promise.all([
+      Tool.find({ approved: true, isDeleted: false, status: "active" })
+        .select("slug updatedAt")
+        .lean(),
+      Blog.find({ isDeleted: false, status: "published" })
+        .select("slug updatedAt")
+        .lean(),
+    ]);
 
     const baseUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
-    const urls = tools.map(tool => `
+    const toolUrls = tools.map(tool => `
   <url>
     <loc>${baseUrl}/tools/${tool.slug}</loc>
     <lastmod>${tool.updatedAt ? tool.updatedAt.toISOString() : new Date().toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>`).join("");
+    const blogUrls = blogs.map(blog => `
+  <url>
+    <loc>${baseUrl}/blog/${blog.slug}</loc>
+    <lastmod>${blog.updatedAt ? blog.updatedAt.toISOString() : new Date().toISOString()}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>`).join("");
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -340,7 +367,31 @@ app.get("/sitemap.xml", async (req, res) => {
     <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-  </url>${urls}
+  </url>
+  <url>
+    <loc>${baseUrl}/blog</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/about</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/faq</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/contact</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>${toolUrls}${blogUrls}
 </urlset>`;
 
     res.type("application/xml");

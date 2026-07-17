@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { FiBell, FiX, FiCheck, FiCheckCheck, FiTrash2 } from "react-icons/fi";
+import { FiBell, FiX, FiCheck, FiCheckSquare, FiTrash2 } from "react-icons/fi";
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification } from "../../services/notificationService";
 
 /**
@@ -188,7 +188,7 @@ export default function NotificationDropdown() {
                     aria-label="Mark all as read"
                     title="Mark all as read"
                   >
-                    <FiCheckCheck size={14} />
+                    <FiCheckSquare size={14} />
                   </button>
                 )}
                 <button

@@ -173,47 +173,13 @@ export const googleAuth = async (req, res) => {
       const verificationTokenExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
       const hashedVerificationToken = crypto.createHash("sha256").update(verificationToken).digest("hex");
 
+      // Google-authenticated users are already verified by Google
       user = await User.create({
         name: sanitizedName,
         email: sanitizedEmail.toLowerCase(),
         avatar: avatar || "",
         googleId,
-        isVerified: false,
-        emailVerificationToken: hashedVerificationToken,
-        emailVerificationExpire: verificationTokenExpire,
-      });
-
-      // Send verification email
-      try {
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-        const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
-
-        const html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #06b6d4;">Verify Your Email Address</h2>
-            <p>Thank you for registering with ToolSphere! Please click the link below to verify your email address:</p>
-            <p style="margin: 20px 0;">
-              <a href="${verificationUrl}" style="background-color: #06b6d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
-                Verify Email Address
-              </a>
-            </p>
-            <p style="color: #6b7280; font-size: 14px;">This link will expire in 24 hours.</p>
-            <p style="color: #6b7280; font-size: 14px;">If you did not create an account, please ignore this email.</p>
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-            <p style="color: #6b7280; font-size: 12px;">ToolSphere</p>
-          </div>
-        `;
-
-        await sendEmail(user.email, "Verify Your Email - ToolSphere", html);
-      } catch (emailError) {
-        logger.error("Failed to send verification email:", emailError);
-      }
-
-      // Don't return token for unverified users
-      return res.status(201).json({
-        success: true,
-        user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, isVerified: false },
-        message: "Registration successful! Please check your email to verify your account."
+        isVerified: true,
       });
     }
 
