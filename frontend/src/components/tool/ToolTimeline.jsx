@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getToolTimeline } from '../../services/toolsService';
-import { FiClock, FiCheck, FiBug, FiZap, FiAlertTriangle, FiShield, FiInfo } from 'react-icons/fi';
+import { FiClock, FiCheck, FiTool, FiZap, FiAlertTriangle, FiShield, FiInfo } from 'react-icons/fi';
 
 const CHANGE_TYPE_CONFIG = {
   feature: {
@@ -9,7 +9,7 @@ const CHANGE_TYPE_CONFIG = {
     color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
   },
   bugfix: {
-    icon: FiBug,
+    icon: FiTool,
     label: 'Bug Fix',
     color: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
   },
