@@ -1,6 +1,7 @@
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FiUser, FiLogOut, FiChevronDown, FiX, FiFolder } from "react-icons/fi";
+import { FiUser, FiLogOut, FiChevronDown, FiX, FiFolder, FiPlusCircle } from "react-icons/fi";
 
 import { logout as clearUserSession } from "../../utils/auth";
 import { getCollections } from "../../services/collectionsService";
@@ -172,6 +173,7 @@ export default function UserMenu({ user }) {
                 <span>My Profile</span>
               </Link>
 
+
               <Link
                 to="/collections"
                 onClick={close}
@@ -185,6 +187,16 @@ export default function UserMenu({ user }) {
                     {collections.length}
                   </span>
                 )}
+              </Link>
+
+              <Link
+                to="/submit-tool"
+                onClick={close}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                role="menuitem"
+              >
+                <FiPlusCircle size={16} className="text-slate-500" />
+                <span>Submit a Tool</span>
               </Link>
 
               {/* User's collections list */}

@@ -661,6 +661,7 @@ export const addTool = async (req, res) => {
         response.message = `Tool published successfully. Newsletter sent to ${newsletterResult.count} subscribers.`;
       } else {
         response.message = "Tool published successfully. No active newsletter subscribers to notify.";
+
       }
     }
 
@@ -675,7 +676,112 @@ export const addTool = async (req, res) => {
 };
 
 /* =====================================
-   ADMIN - UPDATE TOOL
+   USER - SUBMIT TOOL (PENDING APPROVAL)
+   ===================================== */
+
+export const submitTool = async (req, res) => {
+  try {
+    if (!req.user || !req.user.email) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    // Upload logo to Cloudinary if provided
+    let logoUrl = "";
+    if (req.file && req.file.buffer) {
+      const uploadResult = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "tools",
+            transformation: [{ quality: "auto", fetch_format: "auto" }],
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+      });
+      logoUrl = uploadResult.secure_url;
+    }
+
+    const payload = {
+      name: req.body.name?.trim() || "",
+      category: req.body.category?.trim() || "",
+      website: req.body.website?.trim() || "",
+      description: req.body.description?.trim() || "",
+      pricing: req.body.pricing || "Freemium",
+      tags: req.body.tags ? normalizeTags(req.body.tags) : [],
+      features: req.body.features ? normalizeTags(req.body.features) : [],
+      logo: logoUrl,
+      // Submissions always start pending and require admin approval
+      status: "pending",
+      approved: false,
+      createdBy: req.user.email,
+    };
+
+    const errors = validateToolPayload(payload);
+
+    if (errors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: errors.join(" "),
+      });
+    }
+
+    // Generate a unique slug
+    const baseSlug = createSlug(payload.name);
+    let slugCandidate = baseSlug;
+    let count = 1;
+
+    while (await Tool.findOne({ slug: slugCandidate })) {
+      slugCandidate = `${baseSlug}-${count}`;
+      count++;
+    }
+
+    payload.slug = slugCandidate;
+
+    const tool = await Tool.create(payload);
+
+    await logActivity({
+      admin: req.user.id || null,
+      adminName: req.user.email,
+      action: "submit",
+      resource: "Tool",
+      resourceId: tool._id,
+      details: `User submitted tool "${tool.name}" for approval`,
+    });
+
+    // Notify admins of the new pending submission
+    try {
+      await Notification.create({
+        title: "New Tool Submission",
+        message: `"${tool.name}" was submitted by ${req.user.email} and is awaiting approval.`,
+        type: "tool_submission",
+        isRead: false,
+      });
+    } catch (err) {
+      logger.error("[submitTool] Failed to create notification:", err);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Tool submitted successfully. It will appear after admin approval.",
+      tool,
+    });
+  } catch (err) {
+    logger.error("[submitTool] Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to submit tool.",
+    });
+  }
+};
+
+/* =====================================
+    ADMIN - UPDATE TOOL
 ===================================== */
 
 export const updateTool = async (req, res) => {

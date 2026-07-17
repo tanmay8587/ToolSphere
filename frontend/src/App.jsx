@@ -49,7 +49,9 @@ const EditProfile = lazy(() => import("./pages/EditProfile"));
 const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
 const UserToolListsPage = lazy(() => import("./pages/UserToolListsPage"));
 const SharedCollectionPage = lazy(() => import("./pages/SharedCollectionPage"));
+
 const ToolRequestPage = lazy(() => import("./pages/ToolRequestPage"));
+const SubmitToolPage = lazy(() => import("./pages/SubmitToolPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
@@ -161,11 +163,21 @@ function App() {
               }
             />
 
+
             <Route
               path="/request-tool"
               element={
                 <ProtectedRoute role="user">
                   <ToolRequestPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/submit-tool"
+              element={
+                <ProtectedRoute role="user">
+                  <SubmitToolPage />
                 </ProtectedRoute>
               }
             />

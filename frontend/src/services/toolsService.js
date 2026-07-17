@@ -1,6 +1,8 @@
+
 const API_BASE = import.meta.env.VITE_API_URL;
 
 import { withDeduplication } from "../utils/performance.js";
+import { getToken } from "../utils/auth.js";
 
 /* ===========================
    SAFE REQUEST WRAPPER
@@ -220,6 +222,7 @@ export async function getToolTimeline(slug) {
   };
 }
 
+
 /* ===========================
     TOOL RECOMMENDATION SCORE
 =========================== */
@@ -236,4 +239,56 @@ export async function getToolRecommendationScore(toolId) {
     success: data?.success ?? false,
     score: data?.score ?? 0,
   };
+}
+
+/* ===========================
+   SUBMIT TOOL (USER -> PENDING APPROVAL)
+   =========================== */
+/**
+ * Submit a new AI tool on behalf of the logged-in user.
+ * Sends multipart/form-data (including an optional logo file) to the
+ * protected /api/tools/submit endpoint. The tool is created with
+ * status "pending" and requires admin approval before it goes live.
+ *
+ * @param {FormData} formData - Fields: name, category, website, description,
+ *   pricing, tags (comma-separated), features (comma-separated), logo (file).
+ * @returns {Promise<{success: boolean, tool?: object, message?: string}>}
+ */
+export async function submitTool(formData) {
+  const token = getToken();
+  if (!token) {
+    return { success: false, message: "Authentication required." };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/tools/submit`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Do NOT set Content-Type: the browser sets the multipart boundary.
+      },
+      body: formData,
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data?.message || `Submission failed: ${response.status}`,
+      };
+    }
+
+    return {
+      success: data?.success ?? true,
+      tool: data?.tool ?? null,
+      message: data?.message || "Tool submitted successfully.",
+    };
+  } catch (error) {
+    console.error("[toolsService] submitTool failed:", error);
+    return {
+      success: false,
+      message: error.message || "Failed to submit tool.",
+    };
+  }
 }

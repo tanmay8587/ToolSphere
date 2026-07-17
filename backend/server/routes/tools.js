@@ -1,3 +1,4 @@
+
 import express from "express";
 
 import {
@@ -16,7 +17,11 @@ import {
   updateToolTimeline,
   deleteToolTimeline,
   getToolRecommendationScore,
+  submitTool,
 } from "../controllers/toolController.js";
+
+import { verifyUser } from "../middleware/auth.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -78,11 +83,19 @@ router.get("/:slug", getToolBySlug);
  */
 router.get("/:id/recommendation-score", getToolRecommendationScore);
 
+
 /**
  * POST /api/tools/report
  * - Report a tool
  */
 router.post("/report", reportTool);
+
+/**
+ * POST /api/tools/submit
+ * - User-submitted tool (pending admin approval)
+ * - Requires user auth + optional logo upload
+ */
+router.post("/submit", verifyUser, upload.single("logo"), submitTool);
 
 /**
  * GET /api/tools/:slug/timeline
