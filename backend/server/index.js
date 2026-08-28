@@ -43,6 +43,7 @@ import toolRequestRoutes from "./routes/toolRequests.js";
 import homeSettingsRoutes from "./routes/homeSettings.js";
 import announcementRoutes from "./routes/announcements.js";
 import searchRoutes from "./routes/search.js";
+import moderationRoutes from "./routes/moderation.js";
 import logger from "./utils/logger.js";
 import validateEnvironment from "./utils/envValidation.js";
 import { checkMaintenanceMode } from "./middleware/maintenance.js";
@@ -435,6 +436,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api", homeSettingsRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/moderation", moderationRoutes);
 
 /* ===========================
    404 HANDLER

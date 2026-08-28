@@ -122,7 +122,7 @@ const toolSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["active", "pending", "rejected"],
+      enum: ["active", "pending", "rejected", "changes_requested"],
       default: "active",
       index: true,
     },
@@ -179,6 +179,11 @@ const toolSchema = new mongoose.Schema(
     },
 
     rejectedReason: {
+      type: String,
+      default: "",
+    },
+
+    moderationNote: {
       type: String,
       default: "",
     },
@@ -345,6 +350,9 @@ toolSchema.pre("save", function(next) {
   if (this.isModified("rejectedReason") && this.rejectedReason) {
     this.rejectedReason = sanitizeTextField(this.rejectedReason);
   }
+  if (this.isModified("moderationNote") && this.moderationNote) {
+    this.moderationNote = sanitizeTextField(this.moderationNote);
+  }
   next();
 });
 
@@ -365,6 +373,7 @@ const sanitizeUpdate = (update) => {
   if (update.seoDescription) update.seoDescription = sanitizeTextField(update.seoDescription);
   if (update.seoKeywords) update.seoKeywords = sanitizeArray(update.seoKeywords);
   if (update.rejectedReason) update.rejectedReason = sanitizeTextField(update.rejectedReason);
+  if (update.moderationNote) update.moderationNote = sanitizeTextField(update.moderationNote);
 };
 
 // Pre hooks for update operations to sanitize text fields for XSS prevention
