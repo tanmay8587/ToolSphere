@@ -85,6 +85,7 @@ const ToolRequests = lazy(() => import("./pages/admin/ToolRequests"));
 const ClaimRequests = lazy(() => import("./pages/admin/ClaimRequests"));
 const ActivityLogs = lazy(() => import("./pages/admin/ActivityLogs"));
 const Announcements = lazy(() => import("./pages/admin/Announcements"));
+const ToolAnalyticsPage = lazy(() => import("./pages/admin/ToolAnalytics"));
 
 function App() {
 
@@ -223,6 +224,15 @@ function App() {
               element={
                 <ProtectedRoute role="admin">
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin/tool-analytics"
+              element={
+                <ProtectedRoute role="admin">
+                  <ToolAnalyticsPage />
                 </ProtectedRoute>
               }
             />

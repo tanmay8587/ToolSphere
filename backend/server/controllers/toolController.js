@@ -267,10 +267,10 @@ export const getToolBySlug = async (req, res) => {
       });
     }
 
-    await Tool.updateOne(
-      { slug: req.params.slug },
-      { $inc: { views: 1 } }
-    );
+    // NOTE: Views are tracked via the dedicated POST /api/tool-analytics/:slug/view
+    // endpoint, which enforces backend-side unique view tracking (ToolAnalytics
+    // model, 24h dedup). This prevents refresh/back-forward/re-open from
+    // inflating the counter, mirroring the blog view-tracking approach.
 
     res.json({
       success: true,

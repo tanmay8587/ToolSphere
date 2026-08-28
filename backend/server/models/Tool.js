@@ -147,9 +147,25 @@ const toolSchema = new mongoose.Schema(
       default: 0,
     },
 
-    bookmarkCount: {
+        bookmarkCount: {
       type: Number,
       default: 0,
+    },
+
+    /* ===========================
+       TOOL LIKES (USER APPRECIATION)
+       =========================== */
+    likes: {
+      type: Number,
+      default: 0,
+      min: 0,
+      index: true,
+    },
+
+    // Users who liked this tool (prevents duplicate likes / enables unlike).
+    likedBy: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      default: [],
     },
 
     createdBy: {

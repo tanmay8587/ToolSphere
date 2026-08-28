@@ -12,6 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag, FiFolder, FiX, FiColumns, FiShield } from 'react-icons/fi';
 import { getToolBySlug, getRelatedTools, getRecommendedTools, getToolAlternatives, getToolRecommendationScore } from '../services/toolsService';
 import { bookmarkTool, getProfile, reviewTool } from '../services/userApi';
+import { recordToolView, trackToolClick, toggleToolLike } from '../services/toolAnalyticsService';
 import { addViewedTool } from '../services/recentlyViewedService';
 import { getCollections, addToolToCollection } from '../services/collectionsService';
 import { isLoggedIn } from '../utils/auth';
@@ -221,6 +222,9 @@ export default function ToolDetailPage() {
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   const [saveAnim, setSaveAnim] = useState(false);
   const [userReview, setUserReview] = useState(null);
   const [reviewRating, setReviewRating] = useState(5);
@@ -255,6 +259,12 @@ export default function ToolDetailPage() {
         }
 
         setTool(data.tool);
+        setLikesCount(data.tool.likes || 0);
+
+        // Record a unique view for this tool. The backend enforces 24h
+        // dedup per visitor/user via the ToolAnalytics model, so refreshes
+        // do not inflate the counter.
+        recordToolView(slug);
 
       } catch (err) {
         setTool(null);
@@ -442,6 +452,15 @@ export default function ToolDetailPage() {
           );
           setIsBookmarked(!!bookmarked);
 
+          // Reflect the user's current like state on this tool
+          const profileId = data.user?._id;
+          if (profileId) {
+            setIsLiked(
+              Array.isArray(tool.likedBy) &&
+                tool.likedBy.some((id) => id === profileId || id?._id === profileId)
+            );
+          }
+
           const review = data.reviews?.find(
             (item) => item.tool?._id === tool._id || item.tool === tool._id
           );
@@ -562,6 +581,36 @@ export default function ToolDetailPage() {
       setFeedback(err.response?.data?.message || 'Unable to update bookmark.');
     } finally {
       setBookmarkLoading(false);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!tool || !ensureLoggedIn()) {
+      return;
+    }
+
+    try {
+      setLikeLoading(true);
+      const data = await toggleToolLike(tool.slug);
+
+      if (data.success) {
+        setIsLiked(data.liked);
+        setLikesCount(data.totalLikes || 0);
+        addToast(data.liked ? 'Added to your liked tools' : 'Like removed', 'success');
+      } else {
+        addToast(data.message || 'Unable to update like.', 'error');
+      }
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Unable to update like.', 'error');
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  // Fire-and-forget click tracking for the "Visit Website" link.
+  const handleVisit = () => {
+    if (tool?.slug) {
+      trackToolClick(tool.slug);
     }
   };
 
@@ -964,6 +1013,11 @@ export default function ToolDetailPage() {
         bookmarkAnim={saveAnim}
         onBookmark={handleBookmark}
         onShare={handleShare}
+        isLiked={isLiked}
+        likeLoading={likeLoading}
+        likesCount={likesCount}
+        onLike={handleLike}
+        onVisit={handleVisit}
       />
 
       {/* RECOMMENDATION SCORE */}

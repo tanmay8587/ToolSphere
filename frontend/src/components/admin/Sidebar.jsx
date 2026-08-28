@@ -19,6 +19,7 @@ import {
   FiActivity,
   FiBell,
   FiShield,
+  FiBarChart2,
 } from "react-icons/fi";
 import { useState, useEffect } from "react";
 
@@ -84,6 +85,11 @@ export default function Sidebar() {
       name: "Tools",
       icon: <FiGrid size={20} />,
       path: "/admin/tools",
+    },
+    {
+      name: "Tool Analytics",
+      icon: <FiBarChart2 size={20} />,
+      path: "/admin/tool-analytics",
     },
     {
       name: "Add Tool",

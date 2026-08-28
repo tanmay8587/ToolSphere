@@ -4,6 +4,7 @@ import {
   FiShare2,
   FiStar,
   FiCheckCircle,
+  FiHeart,
 } from "react-icons/fi";
 
 export default function ToolHero({
@@ -13,6 +14,11 @@ export default function ToolHero({
   bookmarkAnim,
   onBookmark,
   onShare,
+  isLiked,
+  likeLoading,
+  likesCount,
+  onLike,
+  onVisit,
 }) {
   if (!tool) return null;
 
@@ -122,6 +128,24 @@ export default function ToolHero({
           <div className="flex flex-wrap gap-3">
 
             <button
+              onClick={onLike}
+              disabled={likeLoading}
+              className={`rounded-2xl border px-5 py-3 transition-all duration-200 disabled:opacity-50 ${
+                isLiked
+                  ? "bg-rose-500 border-rose-500 text-white hover:bg-rose-600"
+                  : "border-white/10 bg-slate-800 text-white hover:bg-slate-700"
+              }`}
+              aria-label={isLiked ? "Unlike this tool" : "Like this tool"}
+              aria-pressed={isLiked}
+            >
+              <FiHeart className="mr-2 inline" fill={isLiked ? "currentColor" : "none"} />
+              {isLiked ? "Liked" : "Like"}
+              {typeof likesCount === "number" && likesCount > 0 && (
+                <span className="ml-1.5">{likesCount.toLocaleString()}</span>
+              )}
+            </button>
+
+            <button
               onClick={onBookmark}
               disabled={bookmarkLoading}
               className={`rounded-2xl border px-5 py-3 transition-all duration-200 disabled:opacity-50 ${
@@ -150,6 +174,7 @@ export default function ToolHero({
                   href={tool.website}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={onVisit}
                   className="rounded-2xl bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-6 py-3 font-semibold text-white transition hover:scale-105"
                   aria-label={`Visit ${tool.name} website (opens in new tab)`}
                 >
