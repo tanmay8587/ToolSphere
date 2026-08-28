@@ -313,13 +313,16 @@ app.get("/api/health", async (req, res) => {
 =========================== */
 
 // robots.txt
+// Use FRONTEND_URL as the canonical base for public URLs. Fall back to CORS_ORIGIN
+// (may be comma-separated) or localhost when FRONTEND_URL isn't set.
 app.get("/robots.txt", (req, res) => {
+  const base = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || "http://localhost:5173";
   res.type("text/plain");
   res.send(`User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api
-Sitemap: ${process.env.CORS_ORIGIN || "http://localhost:5173"}/sitemap.xml
+Sitemap: ${base}/sitemap.xml
 `);
 });
 
@@ -338,7 +341,9 @@ app.get("/sitemap.xml", async (req, res) => {
         .lean(),
     ]);
 
-    const baseUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
+    // Use FRONTEND_URL for sitemap generation when available; fall back to CORS_ORIGIN
+    // to keep backwards compatibility with existing deployments that set only CORS_ORIGIN.
+    const baseUrl = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || "http://localhost:5173";
     const toolUrls = tools.map(tool => `
   <url>
     <loc>${baseUrl}/tools/${tool.slug}</loc>
