@@ -53,6 +53,12 @@ const SharedCollectionPage = lazy(() => import("./pages/SharedCollectionPage"));
 const ToolRequestPage = lazy(() => import("./pages/ToolRequestPage"));
 const SubmitToolPage = lazy(() => import("./pages/SubmitToolPage"));
 const ClaimToolPage = lazy(() => import("./pages/ClaimToolPage"));
+const CompanyLayout = lazy(() => import("./layout/CompanyLayout"));
+const CompanyDashboard = lazy(() => import("./pages/company/CompanyDashboard"));
+const CompanyMyTools = lazy(() => import("./pages/company/MyTools"));
+const CompanyToolEdit = lazy(() => import("./pages/company/ToolEdit"));
+const CompanyAnalytics = lazy(() => import("./pages/company/Analytics"));
+const CompanyTeam = lazy(() => import("./pages/company/TeamMembers"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
@@ -192,6 +198,22 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* COMPANY DASHBOARD */}
+            <Route
+              path="/company"
+              element={
+                <ProtectedRoute role="user">
+                  <CompanyLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<CompanyDashboard />} />
+              <Route path="tools" element={<CompanyMyTools />} />
+              <Route path="tools/:id/edit" element={<CompanyToolEdit />} />
+              <Route path="analytics" element={<CompanyAnalytics />} />
+              <Route path="team" element={<CompanyTeam />} />
+            </Route>
 
             <Route path="/admin/login" element={<AdminLogin />} />
 

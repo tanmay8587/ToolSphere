@@ -41,6 +41,7 @@ import collectionRoutes from "./routes/collections.js";
 import userToolListRoutes from "./routes/userToolLists.js";
 import toolRequestRoutes from "./routes/toolRequests.js";
 import toolClaimRoutes from "./routes/toolClaims.js";
+import companyRoutes from "./routes/company.js";
 import homeSettingsRoutes from "./routes/homeSettings.js";
 import announcementRoutes from "./routes/announcements.js";
 import searchRoutes from "./routes/search.js";
@@ -439,6 +440,7 @@ app.use("/api", homeSettingsRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/moderation", moderationRoutes);
+app.use("/api/company", companyRoutes);
 
 /* ===========================
    404 HANDLER
