@@ -47,7 +47,7 @@ import homeSettingsRoutes from "./routes/homeSettings.js";
 import announcementRoutes from "./routes/announcements.js";
 import searchRoutes from "./routes/search.js";
 import moderationRoutes from "./routes/moderation.js";
-import logger from "./utils/logger.js";
+import logger, { sanitizeRequestForLog, redactReason } from "./utils/logger.js";
 import validateEnvironment from "./utils/envValidation.js";
 import { checkMaintenanceMode } from "./middleware/maintenance.js";
 import { trackVisitor } from "./middleware/visitorTracking.js";
@@ -277,7 +277,21 @@ app.use(trackVisitor);
 =========================== */
 
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.url}`);
+  const start = Date.now();
+
+  res.on("finish", () => {
+    if (!isProduction && res.statusCode < 400) return;
+
+    const durationMs = Date.now() - start;
+    const level = res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info";
+
+    logger[level]("HTTP request completed", {
+      ...sanitizeRequestForLog(req),
+      statusCode: res.statusCode,
+      durationMs,
+    });
+  });
+
   next();
 });
 
@@ -466,7 +480,15 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   // Log the error
-  logger.error("Unhandled Error:", err);
+  logger.error("Unhandled Error", {
+    error: {
+      message: err.message,
+      name: err.name,
+      stack: isProduction ? undefined : err.stack,
+      code: err.code,
+    },
+    request: sanitizeRequestForLog(req),
+  });
 
   // Handle Mongoose Validation Error
   if (err.name === "ValidationError") {
@@ -479,7 +501,7 @@ app.use((err, req, res, next) => {
 
   // Handle Mongoose Cast Error (Invalid ID)
   if (err.name === "CastError") {
-    return sendErrorResponse(res, 400, `Invalid ${err.path}: ${err.value}`);
+    return sendErrorResponse(res, 400, `Invalid ${err.path}`);
   }
 
   // Handle Duplicate Key Error
@@ -499,6 +521,22 @@ app.use((err, req, res, next) => {
   
   sendErrorResponse(res, statusCode, message, {
     stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+  });
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error("Unhandled Promise Rejection", {
+    error: redactReason(reason),
+  });
+});
+
+process.on("uncaughtException", (error) => {
+  logger.error("Uncaught Exception", {
+    error: {
+      message: error.message,
+      name: error.name,
+      stack: isProduction ? undefined : error.stack,
+    },
   });
 });
 

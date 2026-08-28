@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import { FiAlertTriangle, FiRefreshCw, FiHome } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
+import { reportFrontendError } from '../../utils/monitoring';
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -13,7 +14,7 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    reportFrontendError(error, { componentStack: errorInfo?.componentStack });
   }
 
   handleRetry = () => {

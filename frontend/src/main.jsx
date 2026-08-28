@@ -5,6 +5,9 @@ import { HelmetProvider } from 'react-helmet-async';
 import App from './App';
 import { ComparisonProvider } from './context/ComparisonContext';
 import './index.css';
+import { setupGlobalFrontendMonitoring } from './utils/monitoring';
+
+setupGlobalFrontendMonitoring();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
