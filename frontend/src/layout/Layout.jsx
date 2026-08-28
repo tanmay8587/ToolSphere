@@ -405,7 +405,7 @@ export default function Layout() {
   }), [brandingSettings, footerSettings, socialLinks]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen overflow-x-hidden bg-slate-950 text-slate-100">
 
       {/* SKIP TO CONTENT */}
       <a
@@ -426,21 +426,25 @@ export default function Layout() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950 md:hidden">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950 md:hidden">
 
-          <div className="flex items-center justify-between border-b border-white/10 p-5">
+          <div className="flex items-center justify-between border-b border-white/10 p-4 sm:p-5">
 
               <h2 className="text-xl font-bold text-white">
                 {brandingSettings.site_name || "ToolSphere"}
               </h2>
 
-            <button onClick={() => setMenuOpen(false)} aria-label="Close menu">
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full text-white transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              aria-label="Close menu"
+            >
               <FiX className="h-7 w-7 text-white" />
             </button>
 
           </div>
 
-          <div className="flex flex-col gap-2 p-6">
+          <div className="flex flex-col gap-2 p-4 sm:p-6">
 
             {navItems.map((item) => (
               <NavLink
@@ -448,7 +452,7 @@ export default function Layout() {
                 to={item.path}
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
-                  `rounded-xl px-4 py-4 text-lg transition ${isActive
+                  `rounded-xl px-4 py-4 text-base sm:text-lg transition ${isActive
                     ? "bg-cyan-500/10 text-cyan-300"
                     : "text-white hover:bg-white/5"
                   }`

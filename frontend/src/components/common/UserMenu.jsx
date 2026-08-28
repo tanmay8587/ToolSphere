@@ -99,7 +99,7 @@ export default function UserMenu({ user }) {
       <button
         ref={buttonRef}
         onClick={toggle}
-        className="flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-cyan-300 transition hover:bg-cyan-500/20"
+        className="flex min-h-11 items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-cyan-300 transition hover:bg-cyan-500/20"
         aria-label="Account menu"
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -133,7 +133,7 @@ export default function UserMenu({ user }) {
           <div
             ref={dropdownRef}
             role="menu"
-            className="absolute right-0 top-full z-50 mt-3 w-56 origin-top-right rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50"
+            className="absolute right-0 top-full z-50 mt-3 w-[calc(100vw-1rem)] max-w-56 origin-top-right rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50 sm:w-56"
           >
             {/* Header */}
             <div className="border-b border-white/10 px-4 py-4">
@@ -153,7 +153,7 @@ export default function UserMenu({ user }) {
                 </div>
                 <button
                   onClick={close}
-                  className="rounded-lg p-1 text-slate-500 transition hover:bg-white/5 hover:text-white"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/5 hover:text-white"
                   aria-label="Close menu"
                 >
                   <FiX size={14} />
@@ -166,7 +166,7 @@ export default function UserMenu({ user }) {
               <Link
                 to="/profile"
                 onClick={close}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                className="flex min-h-11 w-full items-center gap-3 px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                 role="menuitem"
               >
                 <FiUser size={16} className="text-slate-500" />
@@ -176,7 +176,7 @@ export default function UserMenu({ user }) {
               <Link
                 to="/company"
                 onClick={close}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                className="flex min-h-11 w-full items-center gap-3 px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                 role="menuitem"
               >
                 <FiBriefcase size={16} className="text-slate-500" />
@@ -186,7 +186,7 @@ export default function UserMenu({ user }) {
               <Link
                 to="/collections"
                 onClick={close}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                className="flex min-h-11 w-full items-center gap-3 px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                 role="menuitem"
               >
                 <FiFolder size={16} className="text-slate-500" />
@@ -221,7 +221,7 @@ export default function UserMenu({ user }) {
                         key={collection._id}
                         to="/collections"
                         onClick={close}
-                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
+                        className="flex min-h-10 w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
                         role="menuitem"
                       >
                         <FiFolder size={14} className="shrink-0 text-slate-500" />
@@ -243,7 +243,7 @@ export default function UserMenu({ user }) {
             <div className="py-2">
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-400 transition hover:bg-red-500/10"
+                className="flex min-h-11 w-full items-center gap-3 px-4 py-3 text-sm text-red-400 transition hover:bg-red-500/10"
                 role="menuitem"
                 tabIndex={0}
                 onKeyDown={(e) => {

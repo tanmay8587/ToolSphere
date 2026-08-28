@@ -941,12 +941,12 @@ export default function ToolDetailPage() {
 
         {/* Mobile Bottom Bar */}
         {!loading && tool && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-900/95 backdrop-blur flex justify-around py-3" role="toolbar" aria-label="Tool actions">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-900/95 backdrop-blur flex justify-around gap-2 px-2 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]" role="toolbar" aria-label="Tool actions">
 
             <button
               onClick={handleBookmark}
               disabled={bookmarkLoading}
-              className={`flex flex-col items-center rounded-2xl px-3 py-1 text-xs disabled:opacity-50 transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+              className={`flex min-w-0 flex-1 flex-col items-center rounded-2xl px-2 py-2 text-xs disabled:opacity-50 transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                 isBookmarked ? "bg-white text-slate-900" : "text-white"
               } ${saveAnim ? "scale-110" : "scale-100"}`}
               aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this tool"}
@@ -958,7 +958,7 @@ export default function ToolDetailPage() {
 
             <button
               onClick={handleShare}
-              className="flex flex-col items-center text-white text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+              className="flex min-w-0 flex-1 flex-col items-center rounded-2xl px-2 py-2 text-white text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               aria-label="Share this tool"
             >
               <FiShare2 size={18} />
@@ -967,7 +967,7 @@ export default function ToolDetailPage() {
 
             <button
               onClick={() => setShowCollectionModal(true)}
-              className="flex flex-col items-center text-white text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+              className="flex min-w-0 flex-1 flex-col items-center rounded-2xl px-2 py-2 text-white text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               aria-label="Add this tool to a collection"
             >
               <FiFolder size={18} />
@@ -976,7 +976,7 @@ export default function ToolDetailPage() {
 
             <button
               onClick={handleCompareToggle}
-              className={`flex flex-col items-center text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+              className={`flex min-w-0 flex-1 flex-col items-center rounded-2xl px-2 py-2 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                 comparing ? "text-cyan-300" : "text-white"
               }`}
               aria-label={comparing ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}

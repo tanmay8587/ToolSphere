@@ -36,7 +36,7 @@ export default function CompanyLayout() {
         </div>
         <button
           onClick={() => setOpen(false)}
-          className="rounded-lg p-1.5 text-slate-400 hover:bg-white/5 lg:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-white/5 lg:hidden"
           aria-label="Close menu"
         >
           <FiX className="h-5 w-5" />
@@ -80,7 +80,7 @@ export default function CompanyLayout() {
         <p className="text-sm font-semibold text-white">Company Dashboard</p>
         <button
           onClick={() => setOpen(true)}
-          className="rounded-lg p-1.5 text-slate-300 hover:bg-white/10"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10"
           aria-label="Open menu"
         >
           <FiMenu className="h-5 w-5" />
@@ -92,7 +92,7 @@ export default function CompanyLayout() {
 
       {/* Mobile drawer */}
       {open && (
-        <div className="fixed inset-0 z-40 md:hidden">
+        <div className="fixed inset-0 z-40 overflow-y-auto md:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 left-0">{sidebar}</div>
         </div>

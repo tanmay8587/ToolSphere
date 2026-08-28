@@ -175,7 +175,7 @@ export default function NotificationDropdown() {
           <div
             ref={dropdownRef}
             role="menu"
-            className="absolute right-0 top-full z-50 mt-3 w-80 origin-top-right rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50"
+            className="absolute right-0 top-full z-50 mt-3 w-[calc(100vw-1rem)] max-w-80 origin-top-right rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50 sm:w-80"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -184,7 +184,7 @@ export default function NotificationDropdown() {
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
-                    className="rounded-lg p-1.5 text-xs text-cyan-300 transition hover:bg-cyan-500/10"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-xs text-cyan-300 transition hover:bg-cyan-500/10"
                     aria-label="Mark all as read"
                     title="Mark all as read"
                   >
@@ -193,7 +193,7 @@ export default function NotificationDropdown() {
                 )}
                 <button
                   onClick={close}
-                  className="rounded-lg p-1.5 text-slate-500 transition hover:bg-white/5 hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/5 hover:text-white"
                   aria-label="Close notifications"
                 >
                   <FiX size={14} />

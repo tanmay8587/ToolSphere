@@ -98,7 +98,7 @@ export default function ProfileDropdown() {
       <button
         ref={buttonRef}
         onClick={toggle}
-        className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 transition hover:bg-white/10"
+        className="flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 transition hover:bg-white/10"
         aria-label="Admin profile menu"
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -133,7 +133,7 @@ export default function ProfileDropdown() {
           <div
             ref={dropdownRef}
             role="menu"
-            className="absolute right-0 top-full z-50 mt-3 w-56 origin-top-right animate-dropdown-in rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50"
+            className="absolute right-0 top-full z-50 mt-3 w-[calc(100vw-1rem)] max-w-56 origin-top-right animate-dropdown-in rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50 sm:w-56"
           >
             {/* Header */}
             <div className="border-b border-white/10 px-4 py-4">
@@ -149,7 +149,7 @@ export default function ProfileDropdown() {
                 </div>
                 <button
                   onClick={close}
-                  className="rounded-lg p-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/5 hover:text-white"
                   aria-label="Close profile menu"
                 >
                   <FiX size={14} />
@@ -165,7 +165,7 @@ export default function ProfileDropdown() {
                   <button
                     key={item.label}
                     onClick={item.action}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                    className="flex min-h-11 w-full items-center gap-3 px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                     role="menuitem"
                     tabIndex={0}
                     onKeyDown={(e) => {
@@ -192,7 +192,7 @@ export default function ProfileDropdown() {
                   close();
                   handleLogout();
                 }}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-400 transition hover:bg-red-500/10"
+                className="flex min-h-11 w-full items-center gap-3 px-4 py-3 text-sm text-red-400 transition hover:bg-red-500/10"
                 role="menuitem"
                 tabIndex={0}
                 onKeyDown={(e) => {

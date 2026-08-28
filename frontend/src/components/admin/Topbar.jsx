@@ -106,16 +106,16 @@ export default function Topbar() {
   };
 
   return (
-    <header className="flex h-20 items-center justify-between border-b border-white/10 bg-slate-950 px-4 sm:px-8">
+    <header className="flex min-h-20 flex-col gap-4 border-b border-white/10 bg-slate-950 px-4 py-4 sm:px-6 lg:h-20 lg:flex-row lg:items-center lg:justify-between lg:py-0 lg:px-8">
       {/* LEFT SECTION */}
-      <div className="flex items-center gap-4">
+      <div className="flex min-w-0 flex-1 items-start gap-4 lg:items-center">
         {/* Mobile Menu Button */}
         <button
           onClick={() => {
             // Dispatch custom event for mobile menu
             window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'));
           }}
-          className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white lg:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-white lg:hidden"
           aria-label="Toggle sidebar menu"
         >
           <FiMenu size={20} />
@@ -134,7 +134,7 @@ export default function Topbar() {
       {/* RIGHT SECTION */}
       <div className="flex items-center gap-2 sm:gap-4">
         {/* SEARCH */}
-        <div ref={searchRef} className="relative hidden md:block">
+        <div ref={searchRef} className="relative hidden md:block w-full max-w-md">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
           <input
             ref={searchInputRef}
@@ -146,7 +146,7 @@ export default function Topbar() {
               setShowSearchResults(true);
             }}
             onFocus={handleSearchFocus}
-            className="w-48 sm:w-64 rounded-xl border border-white/10 bg-white/5 py-2 pl-10 pr-10 text-sm text-white outline-none transition focus:border-cyan-400 focus:bg-white/10"
+            className="w-48 sm:w-64 rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-10 text-sm text-white outline-none transition focus:border-cyan-400 focus:bg-white/10"
           />
           {searchQuery && (
               <button
@@ -155,7 +155,7 @@ export default function Topbar() {
                   setSearchResults(null);
                   searchInputRef.current?.focus();
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-300 hover:bg-white/5 hover:text-white"
                 aria-label="Clear search"
               >
                 <FiX size={14} />
@@ -164,7 +164,7 @@ export default function Topbar() {
 
           {/* Search Results Dropdown */}
           {showSearchResults && searchQuery && (
-            <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-2xl border border-slate-800 bg-slate-950 shadow-xl" role="listbox" aria-label="Search results">
+            <div className="absolute left-0 right-0 top-full z-50 mt-2 w-full rounded-2xl border border-slate-800 bg-slate-950 shadow-xl md:left-auto md:right-0 md:w-80" role="listbox" aria-label="Search results">
               {searchLoading ? (
                 <div className="flex items-center justify-center px-5 py-8">
                   <FiRefreshCw className="animate-spin text-cyan-400" size={20} />
@@ -193,7 +193,7 @@ export default function Topbar() {
                               setSearchQuery("");
                             }
                           }}
-                          className="cursor-pointer rounded-lg px-2 py-2 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                           className="cursor-pointer rounded-lg px-2 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
                         >
                           <p className="font-medium">{tool.name}</p>
                           <p className="text-xs text-slate-300">{tool.category} • {tool.status}</p>

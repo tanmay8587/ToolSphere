@@ -202,13 +202,13 @@ export default function Sidebar() {
       </div>
 
       {/* NAV - Scrollable */}
-      <nav className="flex-1 min-h-0 space-y-2 px-4 py-6 overflow-y-auto overflow-x-hidden scrollbar-thin" aria-label="Admin navigation">
+      <nav className="flex-1 min-h-0 space-y-2 px-3 py-5 overflow-y-auto overflow-x-hidden scrollbar-thin" aria-label="Admin navigation">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 relative ${
+               `group flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 relative ${
                 isActive
                   ? "bg-cyan-500/10 text-cyan-300 border border-cyan-500/20"
                   : "text-slate-200 hover:bg-white/5 hover:text-white"
@@ -269,7 +269,7 @@ export default function Sidebar() {
         <button
           onClick={handleLogout}
           className={`
-            flex w-full items-center justify-center gap-3 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500 hover:text-white focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900
+            flex min-h-11 w-full items-center justify-center gap-3 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500 hover:text-white focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900
             ${collapsed ? "px-3" : ""}
           `}
           aria-label="Logout"
