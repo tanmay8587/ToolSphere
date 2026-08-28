@@ -13,7 +13,12 @@ import Visitor from "./server/models/Visitor.js";
 import { getStatistics } from "./server/controllers/statisticsController.js";
 
 // Test configuration
-const TEST_DB_URI = process.env.MONGO_URI || "mongodb://localhost:27017/ai-tools-test";
+const TEST_DB_URI = process.env.MONGO_URI;
+
+if (!TEST_DB_URI) {
+  console.error("❌ MONGO_URI not found in environment");
+  process.exit(1);
+}
 const TEST_TIMEOUT = 10000;
 
 // Test results tracker

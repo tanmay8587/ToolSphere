@@ -6,7 +6,12 @@ import mongoose from "mongoose";
 import Newsletter from "./server/models/Newsletter.js";
 import { notifyNewTool, notifyNewBlog, getActiveSubscriberCount } from "./server/utils/newsletterEmail.js";
 
-const TEST_DB_URL = "mongodb://localhost:27017/toolsphere_test";
+const TEST_DB_URL = process.env.MONGO_URI;
+
+if (!TEST_DB_URL) {
+  console.error("❌ MONGO_URI not found in environment");
+  process.exit(1);
+}
 
 async function runTests() {
   console.log("🧪 Starting Newsletter System Tests...\n");

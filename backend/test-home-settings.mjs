@@ -6,7 +6,7 @@ dotenv.config({ path: "./backend/.env" });
 const { MONGO_URI, JWT_SECRET } = process.env;
 
 if (!MONGO_URI) {
-  console.error("❌ MONGO_URI not found in .env file");
+  console.error("❌ MONGO_URI not found in environment");
   process.exit(1);
 }
 

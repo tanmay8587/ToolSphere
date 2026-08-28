@@ -108,6 +108,20 @@ cd backend
 npm test
 ```
 
+### Running database test scripts with `MONGO_URI`
+
+Set `MONGO_URI` before running any backend database test script so the tests connect to the intended MongoDB instance:
+
+```powershell
+$env:MONGO_URI="mongodb://127.0.0.1:27017/ai-tools-directory"
+cd backend
+node test-statistics.mjs
+```
+
+Available test scripts include `test-home-settings.mjs`, `test-statistics.mjs`, `test-tool-analytics.mjs`, `test-visitor-tracking.mjs`, `test-newsletter.mjs`, `test-newsletter-system.mjs`, `test-all-flows.mjs`, and `test-full-flow.mjs`.
+
+If you use a `.env` file, make sure it contains `MONGO_URI` and any other required values before running the tests.
+
 ## License
 
 MIT

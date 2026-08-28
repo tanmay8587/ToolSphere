@@ -15,14 +15,19 @@ import Tool from "./server/models/Tool.js";
 import Blog from "./server/models/Blog.js";
 import User from "./server/models/User.js";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/toolsphere";
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("❌ MONGO_URI not found in environment");
+  process.exit(1);
+}
 
 async function testNewsletterSystem() {
   console.log("🧪 Starting Newsletter System Tests...\n");
 
   try {
     // Connect to MongoDB
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGO_URI);
     console.log("✅ Connected to MongoDB\n");
 
     // Clean up test data
