@@ -271,6 +271,30 @@ const toolSchema = new mongoose.Schema(
         index: true,
       },
     },
+
+    /* ===========================
+       TOOL CLAIM / VERIFICATION
+    =========================== */
+    // Set to true when an admin approves a company's claim; renders the
+    // verified badge in the UI.
+    verified: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    // When the tool was verified (approved claim).
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // User account that owns the verified claim.
+    claimedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,

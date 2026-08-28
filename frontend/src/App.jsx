@@ -52,6 +52,7 @@ const SharedCollectionPage = lazy(() => import("./pages/SharedCollectionPage"));
 
 const ToolRequestPage = lazy(() => import("./pages/ToolRequestPage"));
 const SubmitToolPage = lazy(() => import("./pages/SubmitToolPage"));
+const ClaimToolPage = lazy(() => import("./pages/ClaimToolPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
@@ -75,6 +76,7 @@ const BlogForm = lazy(() => import("./pages/admin/BlogForm"));
 const BlogComments = lazy(() => import("./pages/admin/BlogComments"));
 const BlogCategories = lazy(() => import("./pages/admin/BlogCategories"));
 const ToolRequests = lazy(() => import("./pages/admin/ToolRequests"));
+const ClaimRequests = lazy(() => import("./pages/admin/ClaimRequests"));
 const ActivityLogs = lazy(() => import("./pages/admin/ActivityLogs"));
 const Announcements = lazy(() => import("./pages/admin/Announcements"));
 
@@ -178,6 +180,15 @@ function App() {
               element={
                 <ProtectedRoute role="user">
                   <SubmitToolPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/claim-tool/:slug"
+              element={
+                <ProtectedRoute role="user">
+                  <ClaimToolPage />
                 </ProtectedRoute>
               }
             />
@@ -352,6 +363,15 @@ function App() {
               element={
                 <ProtectedRoute role="admin">
                   <ToolRequests />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin/tool-claims"
+              element={
+                <ProtectedRoute role="admin">
+                  <ClaimRequests />
                 </ProtectedRoute>
               }
             />

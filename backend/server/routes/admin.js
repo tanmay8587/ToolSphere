@@ -44,6 +44,11 @@ import {
   updateToolRequestStatus,
 } from "../controllers/toolRequestController.js";
 
+import {
+  getAllClaims,
+  updateClaimStatus,
+} from "../controllers/toolClaimController.js";
+
 import { verifyAdmin } from "../middleware/auth.js";
 import loginLimiter from "../middleware/loginRateLimiter.js";
 import upload from "../middleware/upload.js";
@@ -188,6 +193,12 @@ router.delete("/reviews/:id", verifyAdmin, deleteReview);
    =========================== */
 router.get("/tool-requests", verifyAdmin, getAllToolRequests);
 router.put("/tool-requests/:id/status", verifyAdmin, updateToolRequestStatus);
+
+/* ===========================
+   TOOL CLAIMS (ADMIN)
+   =========================== */
+router.get("/tool-claims", verifyAdmin, getAllClaims);
+router.put("/tool-claims/:id/status", verifyAdmin, updateClaimStatus);
 
 /* ===========================
    ACTIVITY LOGS (ADMIN)

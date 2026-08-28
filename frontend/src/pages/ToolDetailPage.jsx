@@ -9,7 +9,7 @@ import ReportToolModal from "../components/tool/ReportToolModal";
 import { useEffect, useState, memo } from 'react';
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag, FiFolder, FiX, FiColumns } from 'react-icons/fi';
+import { FiArrowRight, FiBookmark, FiShare2, FiStar, FiFlag, FiFolder, FiX, FiColumns, FiShield } from 'react-icons/fi';
 import { getToolBySlug, getRelatedTools, getRecommendedTools, getToolAlternatives, getToolRecommendationScore } from '../services/toolsService';
 import { bookmarkTool, getProfile, reviewTool } from '../services/userApi';
 import { addViewedTool } from '../services/recentlyViewedService';
@@ -855,6 +855,17 @@ export default function ToolDetailPage() {
             <FiColumns />
             {comparing ? "Comparing" : "Compare"}
           </button>
+
+          {isLoggedIn() && tool && !tool.verified && (
+            <Link
+              to={`/claim-tool/${tool.slug}`}
+              className="flex items-center gap-2 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 px-4 py-3 text-emerald-300 hover:bg-emerald-600/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+              aria-label={`Claim ${tool.name} for your company`}
+            >
+              <FiShield />
+              Claim
+            </Link>
+          )}
 
           {tool?.website && (
             <a

@@ -3,6 +3,7 @@ import {
   FiBookmark,
   FiShare2,
   FiStar,
+  FiCheckCircle,
 } from "react-icons/fi";
 
 export default function ToolHero({
@@ -45,9 +46,21 @@ export default function ToolHero({
 
               <div>
 
-                <h1 className="text-4xl font-bold text-white">
-                  {tool.name}
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-4xl font-bold text-white">
+                    {tool.name}
+                  </h1>
+
+                  {tool.verified && (
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-500/30"
+                      title="This tool is verified by its official company/owner"
+                    >
+                      <FiCheckCircle className="inline" />
+                      Verified
+                    </span>
+                  )}
+                </div>
 
                 <p className="mt-2 text-slate-400">
                   {tool.category}

@@ -18,6 +18,7 @@ import {
   FiFolder,
   FiActivity,
   FiBell,
+  FiShield,
 } from "react-icons/fi";
 import { useState, useEffect } from "react";
 
@@ -134,6 +135,11 @@ export default function Sidebar() {
       name: "Announcements",
       icon: <FiBell size={20} />,
       path: "/admin/announcements",
+    },
+    {
+      name: "Claim Requests",
+      icon: <FiShield size={20} />,
+      path: "/admin/tool-claims",
     },
     {
       name: "Settings",
