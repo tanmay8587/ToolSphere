@@ -34,8 +34,18 @@ const upload = multer({
             return cb(new Error("Invalid file type. Only PNG, JPG, JPEG, WebP, SVG, and ICO images are allowed."));
         }
 
+        // Reject malformed or path-like filenames before checking the extension.
+        if (!file.originalname || /[\\/]/.test(file.originalname)) {
+            return cb(new Error("Invalid file name."));
+        }
+
         // Extension is a secondary check: accept any valid extension for the MIME type.
-        const fileExtension = file.originalname.toLowerCase().slice(file.originalname.lastIndexOf("."));
+        const lastDotIndex = file.originalname.lastIndexOf(".");
+        if (lastDotIndex === -1) {
+            return cb(new Error("File extension is required."));
+        }
+
+        const fileExtension = file.originalname.toLowerCase().slice(lastDotIndex);
         const expectedExtensions = mimeToExtensions[file.mimetype] || [];
 
         if (fileExtension && !expectedExtensions.includes(fileExtension)) {
