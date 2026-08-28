@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getProfile, updateNewsletterPreference, getLikedBlogs, changePassword, deleteAccount } from "../services/userApi";
-import { getSavedBlogs, removeBookmark, saveBlog, unlikeBlog } from "../services/blogInteractionService";
+import { getProfile, updateNewsletterPreference, getLikedBlogs, changePassword, deleteAccount, bookmarkTool } from "../services/userApi";
+import { getSavedBlogs, saveBlog, unlikeBlog } from "../services/blogInteractionService";
 import { getRecentlyViewedTools } from "../services/recentlyViewedService";
 import { getUser, logout } from "../utils/auth";
 import { useToast, ToastContainer } from "../components/common/Toast";
@@ -368,7 +368,9 @@ export default function Profile() {
 
   const handleRemoveBookmark = async (toolId) => {
     try {
-      await removeBookmark(toolId);
+      // Tool bookmarks live on the tool bookmark endpoint (toggle); the blog
+      // bookmark endpoint is a different resource and must not be used here.
+      await bookmarkTool(toolId);
       // Remove the tool from the bookmarks state
       setBookmarks((prev) => prev.filter((tool) => tool._id !== toolId));
       addToast("Bookmark removed successfully.", "success");

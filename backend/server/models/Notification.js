@@ -2,10 +2,15 @@ import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema(
   {
+    // `user` is optional: user-scoped notifications always set it, while
+    // admin-wide (platform) notifications (new registration, new review,
+    // new tool submission, contact messages, newsletter subscribers) are
+    // created without one and surfaced via GET /api/admin/notifications.
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
+      default: null,
     },
     title: {
       type: String,

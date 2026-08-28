@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import Review from "../models/Review.js";
 import Notification from "../models/Notification.js";
 import Bookmark from "../models/Bookmark.js";
+import Collection from "../models/Collection.js";
 import Tool from "../models/Tool.js";
 import { validateEmail, validatePassword, sanitizeInput } from "../utils/validation.js";
 import { sendEmail } from "./smtpController.js";

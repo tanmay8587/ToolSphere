@@ -19,7 +19,7 @@ const buildInteractionState = (blog, userId, savedBlogIds) => ({
   success: true,
   likes: blog.likes || 0,
   bookmarks: blog.bookmarkedBy?.length || 0,
-  isLiked: !!(userId && blog.likedBy?.some((id) => id.toString() === userId)),
+  isLiked: !!(userId && blog.likedBy?.some((id) => id.toString() === userId.toString())),
   isBookmarked: !!(
     userId &&
     savedBlogIds &&
@@ -144,25 +144,29 @@ export const bookmarkBlog = async (req, res) => {
   try {
     const { slug } = req.params;
     const userId = req.user.id;
+    const user = await User.findById(userId).select("savedBlogs");
 
     const blog = await resolveBlogBySlug(slug);
     if (!blog) {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
-    if (blog.bookmarkedBy?.some((id) => id.toString() === userId)) {
-      return res.json(buildInteractionState(blog, userId));
+    if (!user) {
+      return sendErrorResponse(res, 404, "User not found");
     }
 
-    const updated = await Blog.findByIdAndUpdate(
-      blog._id,
-      { $addToSet: { bookmarkedBy: userId } },
-      { new: true }
-    );
+    if (user.savedBlogs?.some((id) => id.toString() === blog._id.toString())) {
+      return res.json(buildInteractionState(blog, userId, user.savedBlogs || []));
+    }
+
+    user.savedBlogs.push(blog._id);
+    await user.save();
+
+    const updated = await Blog.findByIdAndUpdate(blog._id, { $addToSet: { bookmarkedBy: userId } }, { new: true });
 
     logger.info(`[bookmarkBlog] User ${userId} bookmarked blog ${slug}`);
 
-    return res.json(buildInteractionState(updated, userId));
+    return res.json(buildInteractionState(updated, userId, user.savedBlogs || []));
   } catch (err) {
     logger.error("[bookmarkBlog] Error:", err);
     return sendErrorResponse(res, 500, "Failed to bookmark blog");
@@ -178,25 +182,29 @@ export const removeBookmark = async (req, res) => {
   try {
     const { slug } = req.params;
     const userId = req.user.id;
+    const user = await User.findById(userId).select("savedBlogs");
 
     const blog = await resolveBlogBySlug(slug);
     if (!blog) {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
-    if (!blog.bookmarkedBy?.some((id) => id.toString() === userId)) {
-      return res.json(buildInteractionState(blog, userId));
+    if (!user) {
+      return sendErrorResponse(res, 404, "User not found");
     }
 
-    const updated = await Blog.findByIdAndUpdate(
-      blog._id,
-      { $pull: { bookmarkedBy: userId } },
-      { new: true }
-    );
+    if (!user.savedBlogs?.some((id) => id.toString() === blog._id.toString())) {
+      return res.json(buildInteractionState(blog, userId, user.savedBlogs || []));
+    }
+
+    user.savedBlogs = user.savedBlogs.filter((id) => id.toString() !== blog._id.toString());
+    await user.save();
+
+    const updated = await Blog.findByIdAndUpdate(blog._id, { $pull: { bookmarkedBy: userId } }, { new: true });
 
     logger.info(`[removeBookmark] User ${userId} removed bookmark on blog ${slug}`);
 
-    return res.json(buildInteractionState(updated, userId));
+    return res.json(buildInteractionState(updated, userId, user.savedBlogs || []));
   } catch (err) {
     logger.error("[removeBookmark] Error:", err);
     return sendErrorResponse(res, 500, "Failed to remove bookmark");

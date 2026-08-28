@@ -954,7 +954,8 @@ export const unlikeBlog = async (req, res) => {
     ===================================== */
 export const bookmarkBlog = async (req, res) => {
   try {
-    const blog = await Blog.findOne({ _id: req.params.id, isDeleted: false });
+    // Resolve by id or slug — the public route passes the blog slug.
+    const blog = await resolveBlogForInteraction(req.params.id);
 
     if (!blog) {
       return sendErrorResponse(res, 404, "Blog not found");
@@ -962,14 +963,30 @@ export const bookmarkBlog = async (req, res) => {
 
     const userId = req.user.id;
 
-    // Check if user already bookmarked this blog (prevent duplicates)
-    if (blog.bookmarkedBy.includes(userId)) {
-      return sendErrorResponse(res, 400, "You have already bookmarked this blog");
+    const user = await User.findById(userId);
+    if (!user) {
+      return sendErrorResponse(res, 404, "User not found");
     }
 
-    // Add user to bookmarkedBy array
-    blog.bookmarkedBy.push(userId);
-    await blog.save();
+    // Check if user already bookmarked this blog (prevent duplicates)
+    if (user.savedBlogs.some((id) => id.toString() === blog._id.toString())) {
+      return res.json({
+        success: true,
+        message: "Blog bookmarked successfully",
+        bookmarks: blog.bookmarkedBy.length,
+        isBookmarked: true,
+      });
+    }
+
+    // Store the bookmark on the user record (source of truth for saved blogs)
+    user.savedBlogs.push(blog._id);
+    await user.save();
+
+    // Keep blog.bookmarkedBy in sync for count/display purposes
+    if (!blog.bookmarkedBy.some((id) => id.toString() === userId.toString())) {
+      blog.bookmarkedBy.push(userId);
+      await blog.save();
+    }
 
     return res.json({
       success: true,
@@ -988,21 +1005,37 @@ export const bookmarkBlog = async (req, res) => {
     ===================================== */
 export const removeBookmark = async (req, res) => {
   try {
-    const blog = await Blog.findOne({ _id: req.params.id, isDeleted: false });
+    // Resolve by id or slug — the public route passes the blog slug.
+    const blog = await resolveBlogForInteraction(req.params.id);
 
     if (!blog) {
       return sendErrorResponse(res, 404, "Blog not found");
     }
 
     const userId = req.user.id;
-
-    // Check if user has bookmarked this blog
-    if (!blog.bookmarkedBy.includes(userId)) {
-      return sendErrorResponse(res, 400, "You have not bookmarked this blog");
+    const user = await User.findById(userId);
+    if (!user) {
+      return sendErrorResponse(res, 404, "User not found");
     }
 
-    // Remove user from bookmarkedBy array
-    blog.bookmarkedBy = blog.bookmarkedBy.filter(id => id.toString() !== userId.toString());
+    const hasSavedBlog = user.savedBlogs.some((id) => id.toString() === blog._id.toString());
+
+    // Check if user has bookmarked this blog
+    if (!hasSavedBlog) {
+      return res.json({
+        success: true,
+        message: "Bookmark removed successfully",
+        bookmarks: blog.bookmarkedBy.length,
+        isBookmarked: false,
+      });
+    }
+
+    // Remove blog from user.savedBlogs (source of truth)
+    user.savedBlogs = user.savedBlogs.filter((id) => id.toString() !== blog._id.toString());
+    await user.save();
+
+    // Keep blog.bookmarkedBy in sync for count/display purposes
+    blog.bookmarkedBy = blog.bookmarkedBy.filter((id) => id.toString() !== userId.toString());
     await blog.save();
 
     return res.json({

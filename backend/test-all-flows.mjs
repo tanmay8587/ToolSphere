@@ -12,7 +12,13 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
+import dns from "dns";
 import mongoose from "mongoose";
+
+// Same DNS configuration the server uses — required for mongodb+srv SRV lookups.
+dns.setDefaultResultOrder("ipv4first");
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, ".env") });
@@ -83,6 +89,11 @@ const S = {
   blogCreated: false,
   commentId: null,
   review1Id: null,
+  review2Id: null,
+  toolRequestId: null,
+  collectionId: null,
+  toolListId: null,
+};
 
 /* ================================================================
    0. HEALTH
@@ -339,7 +350,11 @@ async function testBlogsPublic() {
   );
 
   const related = await api("GET", `/blogs/${S.blog.slug}/related`);
-  check("GET /blogs/:slug/related → 200", related.status === 200 && Array.isArray(related.data.blogs));
+  check(
+    "GET /blogs/:slug/related → 200",
+    related.status === 200 && Array.isArray(related.data.relatedBlogs),
+    `got ${related.status}`
+  );
 
   const adjacent = await api("GET", `/blogs/${S.blog.slug}/adjacent`);
   check("GET /blogs/:slug/adjacent → 200", adjacent.status === 200);
@@ -383,7 +398,11 @@ async function testAuth() {
   const reg = await api("POST", "/auth/register", {
     body: { name: USER1.name, email: USER1.email, password: PW },
   });
-  check("register → success (unverified)", reg.status === 200 && reg.data.success === true, `got ${reg.status}`);
+  check(
+    "register → success (unverified)",
+    (reg.status === 200 || reg.status === 201) && reg.data.success === true,
+    `got ${reg.status}`
+  );
 
   const dup = await api("POST", "/auth/register", {
     body: { name: USER1.name, email: USER1.email, password: PW },
@@ -540,9 +559,9 @@ async function testBlogInteractions() {
 
   const state1 = await api("GET", `/blogs/${S.blog.slug}/interaction`, { token: S.user2Token });
   check(
-    "interaction state → liked: true",
-    state1.status === 200 && state1.data.success && state1.data.liked === true,
-    `got ${state1.status} liked=${state1.data.liked}`
+    "interaction state → isLiked: true",
+    state1.status === 200 && state1.data.success && state1.data.isLiked === true,
+    `got ${state1.status} isLiked=${state1.data.isLiked}`
   );
 
   const likedList = await api("GET", "/users/me/liked-blogs", { token: S.user2Token });
@@ -557,7 +576,7 @@ async function testBlogInteractions() {
   check("unlike blog → success", unlike.status === 200 && unlike.data.success, `got ${unlike.status}`);
 
   const state2 = await api("GET", `/blogs/${S.blog.slug}/interaction`, { token: S.user2Token });
-  check("interaction state → liked: false after unlike", state2.data.liked === false);
+  check("interaction state → liked: false after unlike", state2.data.isLiked === false);
 
   const bm = await api("POST", `/blogs/${S.blog.slug}/bookmark`, { token: S.user2Token });
   check("bookmark blog → success", bm.status === 200 && bm.data.success, `got ${bm.status}`);
@@ -565,8 +584,8 @@ async function testBlogInteractions() {
   const state3 = await api("GET", `/blogs/${S.blog.slug}/interaction`, { token: S.user2Token });
   check(
     "interaction state → bookmarked: true",
-    state3.data.bookmarked === true,
-    `bookmarked=${state3.data.bookmarked}`
+    state3.data.isBookmarked === true,
+    `bookmarked=${state3.data.isBookmarked}`
   );
 
   const savedList = await api("GET", "/users/me/saved-blogs", { token: S.user2Token });
@@ -581,7 +600,7 @@ async function testBlogInteractions() {
   check("remove bookmark → success", unbm.status === 200 && unbm.data.success, `got ${unbm.status}`);
 
   const state4 = await api("GET", `/blogs/${S.blog.slug}/interaction`, { token: S.user2Token });
-  check("interaction state → bookmarked: false after removal", state4.data.bookmarked === false);
+  check("interaction state → bookmarked: false after removal", state4.data.isBookmarked === false);
 
   // re-like so leaderboard/feed data stays sane; then un-like in cleanup
   await api("POST", `/blogs/${S.blog.slug}/like`, { token: S.user2Token });
@@ -1004,7 +1023,7 @@ async function testAdminCategoriesUsers() {
 
   const bcatUpd = await api("PUT", `/admin/blog-categories/${bcat.data.category?._id}`, {
     token: S.adminToken,
-    body: { description: "E2E updated" },
+    body: { name: `E2E BlogCat ${RUN}`, description: "E2E updated" },
   });
   check("admin update blog category", bcatUpd.status === 200 && bcatUpd.data.success, `got ${bcatUpd.status}`);
 
@@ -1241,8 +1260,3 @@ async function main() {
 
 main();
 
-  review2Id: null,
-  toolRequestId: null,
-  collectionId: null,
-  toolListId: null,
-};
