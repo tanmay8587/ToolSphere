@@ -319,7 +319,10 @@ export default function NotificationDropdown() {
     setUnreadCount(0);
 
     try {
-      await markAllAsRead();
+      const result = await markAllAsRead();
+      if (!result?.success) {
+        throw new Error(result?.message || "Failed to mark all notifications as read.");
+      }
     } catch (err) {
       // Revert on failure
       setNotifications((prev) =>
@@ -349,19 +352,29 @@ export default function NotificationDropdown() {
       setConfirmingId(null);
 
       // Optimistic update
+      const removedNotification = notifications.find((n) => n._id === id);
       setNotifications((prev) => prev.filter((n) => n._id !== id));
       if (wasUnread) {
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
 
       try {
-        await deleteNotification(id);
+        const result = await deleteNotification(id);
+        if (!result?.success) {
+          throw new Error(result?.message || "Failed to delete notification.");
+        }
       } catch (err) {
         // Revert on failure - refetch
+        if (removedNotification) {
+          setNotifications((prev) => [removedNotification, ...prev]);
+          if (wasUnread) {
+            setUnreadCount((prev) => prev + 1);
+          }
+        }
         fetchNotifications(page, false);
       }
     },
-    [page, fetchNotifications]
+    [page, fetchNotifications, notifications]
   );
 
   /* ==========================================
