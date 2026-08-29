@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import Admin from "../models/Admin.js";
 import User from "../models/User.js";
+import Membership, { MEMBERSHIP_STATUS, MEMBERSHIP_TIER } from "../models/Membership.js";
+import { getMembershipPermissions } from "../utils/membershipPermissions.js";
 
 export const verifyAdmin = async (req, res, next) => {
   try {
@@ -70,7 +72,9 @@ export const verifyUser = async (req, res, next) => {
       });
     }
 
-    req.user = { id: user._id, email: user.email };
+    const membership = await Membership.findOne({ user: user._id });
+    const tier = membership?.tier || user.membershipTier || MEMBERSHIP_TIER.FREE;
+    req.user = { id: user._id, email: user.email, membershipTier: tier, membershipStatus: membership?.status || user.membershipStatus || MEMBERSHIP_STATUS.ACTIVE, membershipPermissions: getMembershipPermissions(tier) };
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: "Invalid or expired token." });
@@ -95,7 +99,9 @@ export const optionalUser = async (req, res, next) => {
     const user = await User.findById(decoded.id);
 
     if (user && user.isVerified) {
-      req.user = { id: user._id, email: user.email };
+      const membership = await Membership.findOne({ user: user._id });
+      const tier = membership?.tier || user.membershipTier || MEMBERSHIP_TIER.FREE;
+      req.user = { id: user._id, email: user.email, membershipTier: tier, membershipStatus: membership?.status || user.membershipStatus || MEMBERSHIP_STATUS.ACTIVE, membershipPermissions: getMembershipPermissions(tier) };
     }
   } catch {
     // Ignore: treat as guest

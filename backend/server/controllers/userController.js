@@ -7,14 +7,24 @@ import Notification from "../models/Notification.js";
 import Bookmark from "../models/Bookmark.js";
 import Collection from "../models/Collection.js";
 import Tool from "../models/Tool.js";
+import Membership, { MEMBERSHIP_STATUS, MEMBERSHIP_TIER } from "../models/Membership.js";
 import { validateEmail, validatePassword, sanitizeInput } from "../utils/validation.js";
 import { sendEmail } from "./smtpController.js";
 import logger from "../utils/logger.js";
+import { getMembershipPermissions } from "../utils/membershipPermissions.js";
 
 const createToken = (user) =>
   jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
+
+const buildMembershipPayload = (user, membership) => ({
+  tier: membership?.tier || user.membershipTier || MEMBERSHIP_TIER.FREE,
+  status: membership?.status || user.membershipStatus || MEMBERSHIP_STATUS.ACTIVE,
+  permissions: getMembershipPermissions(membership?.tier || user.membershipTier || MEMBERSHIP_TIER.FREE),
+  startedAt: membership?.startedAt || user.membershipSince || null,
+  endsAt: membership?.endsAt || null,
+});
 
 export const registerUser = async (req, res) => {
   try {
@@ -61,6 +71,13 @@ export const registerUser = async (req, res) => {
       isVerified: false,
       emailVerificationToken: hashedVerificationToken,
       emailVerificationExpire: verificationTokenExpire,
+    });
+
+    await Membership.create({
+      user: user._id,
+      tier: MEMBERSHIP_TIER.FREE,
+      status: MEMBERSHIP_STATUS.ACTIVE,
+      startedAt: new Date(),
     });
 
     await Notification.create({
@@ -139,7 +156,8 @@ export const loginUser = async (req, res) => {
 
     const token = createToken(user);
 
-    res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, isVerified: user.isVerified } });
+    const membership = await Membership.findOne({ user: user._id });
+    res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, isVerified: user.isVerified, membership: buildMembershipPayload(user, membership) } });
   } catch (err) {
     res.status(500).json({ success: false, message: "Login failed." });
   }
@@ -185,7 +203,8 @@ export const googleAuth = async (req, res) => {
     }
 
     const token = createToken(user);
-    res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, isVerified: user.isVerified } });
+    const membership = await Membership.findOne({ user: user._id });
+    res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, isVerified: user.isVerified, membership: buildMembershipPayload(user, membership) } });
   } catch (err) {
     res.status(500).json({ success: false, message: "Google authentication failed." });
   }

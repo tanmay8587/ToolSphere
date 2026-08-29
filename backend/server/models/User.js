@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { sanitizeTextField } from "../utils/validation.js";
+import { MEMBERSHIP_TIER } from "./Membership.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -42,6 +43,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "user",
       enum: ["user", "admin"],
+    },
+    membershipTier: {
+      type: String,
+      enum: Object.values(MEMBERSHIP_TIER),
+      default: MEMBERSHIP_TIER.FREE,
+      required: true,
+    },
+    membershipStatus: {
+      type: String,
+      default: "active",
+    },
+    membershipSince: {
+      type: Date,
+      default: null,
     },
     isVerified: {
       type: Boolean,
