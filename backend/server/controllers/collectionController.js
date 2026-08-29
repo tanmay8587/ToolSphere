@@ -1,4 +1,5 @@
 import asyncHandler from "../middleware/asyncHandler.js";
+import mongoose from "mongoose";
 import Collection from "../models/Collection.js";
 import { sendErrorResponse } from "../utils/errorResponse.js";
 
@@ -171,16 +172,31 @@ export const addToolToCollection = asyncHandler(async (req, res) => {
 });
 
 export const removeToolFromCollection = asyncHandler(async (req, res) => {
+  const { id: collectionId } = req.params;
   const { toolId } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(collectionId)) {
+    return sendErrorResponse(res, 400, "Invalid collection ID.");
+  }
 
   if (!toolId) {
     return sendErrorResponse(res, 400, "Tool ID is required.");
   }
 
-  const collection = await Collection.findOne({ _id: req.params.id, user: req.user.id });
+  if (!mongoose.Types.ObjectId.isValid(toolId)) {
+    return sendErrorResponse(res, 400, "Invalid tool ID.");
+  }
+
+  const collection = await Collection.findOne({ _id: collectionId, user: req.user.id });
 
   if (!collection) {
     return sendErrorResponse(res, 404, "Collection not found.");
+  }
+
+  const isInCollection = collection.tools.some((id) => id.toString() === toolId.toString());
+
+  if (!isInCollection) {
+    return sendErrorResponse(res, 404, "Tool not found in collection.");
   }
 
   collection.tools = collection.tools.filter(
@@ -203,7 +219,16 @@ export const renameCollection = asyncHandler(async (req, res) => {
     return sendErrorResponse(res, 400, "Collection name is required.");
   }
 
+  console.log("[COLLECTION DEBUG] req.user.id:", req.user?.id);
+  console.log("[COLLECTION DEBUG] collectionId:", req.params.id);
+
+  const collectionById = await Collection.findById(req.params.id);
+  console.log("[COLLECTION DEBUG] collection exists:", !!collectionById);
+  console.log("[COLLECTION DEBUG] collection owner:", collectionById?.user?.toString());
+  console.log("[COLLECTION DEBUG] owner matches req.user.id:", collectionById?.user?.toString() === req.user?.id?.toString());
+
   const collection = await Collection.findOne({ _id: req.params.id, user: req.user.id });
+  console.log("[COLLECTION DEBUG] ownership query result:", !!collection);
 
   if (!collection) {
     return sendErrorResponse(res, 404, "Collection not found.");
@@ -222,10 +247,19 @@ export const renameCollection = asyncHandler(async (req, res) => {
 });
 
 export const deleteCollection = asyncHandler(async (req, res) => {
+  console.log("[COLLECTION DEBUG] req.user.id:", req.user?.id);
+  console.log("[COLLECTION DEBUG] collectionId:", req.params.id);
+
+  const collectionById = await Collection.findById(req.params.id);
+  console.log("[COLLECTION DEBUG] collection exists:", !!collectionById);
+  console.log("[COLLECTION DEBUG] collection owner:", collectionById?.user?.toString());
+  console.log("[COLLECTION DEBUG] owner matches req.user.id:", collectionById?.user?.toString() === req.user?.id?.toString());
+
   const collection = await Collection.findOneAndDelete({
     _id: req.params.id,
     user: req.user.id,
   });
+  console.log("[COLLECTION DEBUG] ownership query result:", !!collection);
 
   if (!collection) {
     return sendErrorResponse(res, 404, "Collection not found.");
