@@ -1,6 +1,7 @@
 import SmtpSetting from "../models/SmtpSetting.js";
 import logger from "../utils/logger.js";
 import { Resend } from "resend";
+import { normalizeResendResult } from "../utils/emailTransport.js";
 
 // Initialize Resend client only if API key is available
 let resend = null;
@@ -327,29 +328,56 @@ export const testEmail = async (req, res) => {
 
 export const sendEmail = async (to, subject, html) => {
   try {
-    // Check if Resend is configured
+    const recipient = typeof to === "string" ? to.trim() : "";
+
+    logger.info("Email send started", {
+      recipientProvided: Boolean(recipient),
+      providerInitialized: Boolean(resend),
+      subject,
+      provider: "resend",
+    });
+
+    if (!recipient) {
+      throw new Error("Recipient email is required.");
+    }
+
     if (!resend) {
       throw new Error("Email service is not configured. RESEND_API_KEY is missing.");
     }
 
     const config = await getSmtpConfig();
+    const fromAddress = process.env.SMTP_FROM || config?.senderEmail || "";
 
-    if (!config || !config.senderEmail) {
-      throw new Error("SMTP settings are not configured");
+    if (!fromAddress) {
+      throw new Error("No valid sender address is configured. Set SMTP_FROM or smtp_sender_email.");
     }
 
-    const fromAddress = process.env.SMTP_FROM || config.senderEmail;
-
-    const data = await resend.emails.send({
+    const payload = await resend.emails.send({
       from: fromAddress,
-      to,
+      to: recipient,
       subject,
       html,
     });
 
-    return { success: true, messageId: data.id };
+    const normalized = normalizeResendResult(payload);
+    logger.info("Resend request completed", {
+      recipient,
+      success: normalized.success,
+      messageId: normalized.messageId,
+      code: normalized.code,
+    });
+
+    if (!normalized.success) {
+      throw new Error(normalized.message || "Unable to send email.");
+    }
+
+    return normalized;
   } catch (err) {
-    logger.error("Failed to send email", { error: err.message });
+    logger.error("Failed to send email", {
+      error: err.message,
+      code: err.code,
+      response: err.response?.data,
+    });
     throw err;
   }
 };

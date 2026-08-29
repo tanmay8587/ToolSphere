@@ -461,7 +461,18 @@ export const forgotPassword = async (req, res) => {
       message: "If an account with that email exists, we have sent a password reset link.",
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to process forgot password request." });
+    const code = err?.code || "EMAIL_SEND_FAILED";
+    const message = err?.message || "Unable to send email. Please try again.";
+    logger.error("Forgot password email failed", {
+      code,
+      message,
+      email: req.body?.email,
+    });
+    res.status(500).json({
+      success: false,
+      code,
+      message,
+    });
   }
 };
 
@@ -735,11 +746,19 @@ export const resendVerificationEmail = async (req, res) => {
         message: "If an account with that email exists and needs verification, we have sent a new verification link.",
       });
     } catch (emailError) {
-      logger.error("Failed to send verification email:", emailError);
-      res.status(500).json({ success: false, message: "Failed to send verification email. Please try again later." });
+      logger.error("Failed to send verification email:", {
+        error: emailError?.message,
+        code: emailError?.code,
+        email: user?.email,
+      });
+      res.status(500).json({
+        success: false,
+        code: emailError?.code || "EMAIL_SEND_FAILED",
+        message: emailError?.message || "Unable to send email. Please try again later.",
+      });
     }
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to resend verification email." });
+    res.status(500).json({ success: false, code: "EMAIL_SEND_FAILED", message: "Failed to resend verification email." });
   }
 };
 

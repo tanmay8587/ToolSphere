@@ -3,6 +3,7 @@ import { getToken, logout } from "../utils/auth";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
+  timeout: 20000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -22,6 +23,13 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+      error.response = {
+        status: 408,
+        data: { success: false, code: "EMAIL_SEND_TIMEOUT", message: "The email request timed out. Please try again." },
+      };
+    }
+
     // Handle 401 – user not found / invalid token / deleted account
     if (error.response?.status === 401) {
       logout();
