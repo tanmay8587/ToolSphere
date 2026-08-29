@@ -14,7 +14,7 @@ import { getToolBySlug, getRelatedTools, getRecommendedTools, getToolAlternative
 import { bookmarkTool, getProfile, reviewTool } from '../services/userApi';
 import { recordToolView, trackToolClick, toggleToolLike } from '../services/toolAnalyticsService';
 import { addViewedTool } from '../services/recentlyViewedService';
-import { getCollections, addToolToCollection } from '../services/collectionsService';
+import { getCollections, addToolToCollection, createCollectionWithTool } from '../services/collectionsService';
 import { isLoggedIn } from '../utils/auth';
 import EmptyState from '../components/common/EmptyState';
 import { Link } from 'react-router-dom';
@@ -169,8 +169,47 @@ const RecentlyViewedCard = memo(({ tool }) => {
 });
 
 // Modal that lets the user pick a collection to add the current tool to
-function CollectionPickerModal({ isOpen, collections, loading, addLoading, toolName, onSelect, onClose }) {
+function CollectionPickerModal({
+  isOpen,
+  collections,
+  loading,
+  addLoading,
+  toolName,
+  selectedCollectionIds = [],
+  onSelect,
+  onCreateCollection,
+  onClose,
+}) {
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowCreateForm(false);
+      setName("");
+      setDescription("");
+      setSubmitting(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const handleCreate = async () => {
+    if (!name.trim()) return;
+    setSubmitting(true);
+    try {
+      const result = await onCreateCollection?.({ name: name.trim(), description: description.trim() });
+      if (result !== false) {
+        setShowCreateForm(false);
+        setName("");
+        setDescription("");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -187,26 +226,91 @@ function CollectionPickerModal({ isOpen, collections, loading, addLoading, toolN
         </div>
 
         {toolName && (
-          <p className="mt-1 text-sm text-slate-400 truncate">Add &ldquo;{toolName}&rdquo; to one of your collections.</p>
+          <p className="mt-1 truncate text-sm text-slate-400">Add &ldquo;{toolName}&rdquo; to one of your collections.</p>
         )}
 
-        <div className="mt-5">
-          <CollectionSelector
-            collections={collections}
-            loading={loading}
-            onSelect={(collection) => onSelect(collection._id)}
-            emptyMessage="You don't have any collections yet. Create one from the Collections page."
-          />
-        </div>
+        {!showCreateForm ? (
+          <>
+            <div className="mt-5">
+              <CollectionSelector
+                collections={collections}
+                loading={loading}
+                selectedIds={selectedCollectionIds}
+                onSelect={(collection) => onSelect?.(collection)}
+                emptyMessage="No collections yet. Create a collection to save this tool."
+              />
+            </div>
 
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={onClose}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/10"
-          >
-            Cancel
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setShowCreateForm(true)}
+              disabled={addLoading}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-cyan-500/40 bg-cyan-500/5 px-4 py-3 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400 hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <span className="text-base">＋</span>
+              Create New Collection
+            </button>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={onClose}
+                disabled={addLoading}
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="mt-5 space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-200">Collection Name</label>
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="My favorite tools"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                autoFocus
+                disabled={submitting || addLoading}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-200">Description (optional)</label>
+              <textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Add a quick note about this collection"
+                rows={3}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                disabled={submitting || addLoading}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setName("");
+                  setDescription("");
+                }}
+                disabled={submitting || addLoading}
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCreate}
+                disabled={!name.trim() || submitting || addLoading}
+                className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? "Creating..." : "Create Collection"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -246,6 +350,7 @@ export default function ToolDetailPage() {
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [addToCollectionLoading, setAddToCollectionLoading] = useState(false);
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState([]);
 
   useEffect(() => {
     const loadTool = async () => {
@@ -523,25 +628,91 @@ export default function ToolDetailPage() {
     }
   };
 
-  const handleAddToCollection = async (collectionId) => {
-    if (!tool || !ensureLoggedIn()) {
+  const getToolInCollectionCheck = (collection) => {
+    if (!tool?._id || !collection?.tools) return false;
+    return collection.tools.some((collectionTool) => {
+      const collectionToolId = typeof collectionTool === "string" ? collectionTool : collectionTool?._id;
+      return collectionToolId === tool._id;
+    });
+  };
+
+  useEffect(() => {
+    if (!tool || collections.length === 0) {
+      setSelectedCollectionIds([]);
       return;
+    }
+
+    const matchedIds = collections
+      .filter((collection) => getToolInCollectionCheck(collection))
+      .map((collection) => collection._id);
+
+    setSelectedCollectionIds(matchedIds);
+  }, [tool, collections]);
+
+  const handleAddToCollection = async (collection) => {
+    if (!tool || !ensureLoggedIn()) {
+      return false;
+    }
+
+    const collectionId = typeof collection === "string" ? collection : collection?._id;
+    const matchedCollection = collections.find((item) => item._id === collectionId);
+
+    if (!collectionId || !matchedCollection) {
+      return false;
+    }
+
+    if (getToolInCollectionCheck(matchedCollection)) {
+      addToast("This tool is already in that collection.", "success");
+      return false;
     }
 
     try {
       setAddToCollectionLoading(true);
-      const { data } = await addToolToCollection(collectionId, tool._id);
+      const result = await addToolToCollection(collectionId, tool._id);
 
-      if (data.success) {
-        addToast(`Added to "${data.data?.name || "collection"}"`, "success");
-        // Refresh collection data to reflect the updated tool list
+      if (result.success) {
+        addToast(`Added to "${result.data?.name || matchedCollection.name}"`, "success");
         await refreshCollections();
         setShowCollectionModal(false);
-      } else {
-        addToast(data.message || "Failed to add tool to collection.", "error");
+        return true;
       }
+
+      addToast(result.message || "Failed to add tool to collection.", "error");
+      return false;
     } catch (err) {
       addToast(err.message || "Failed to add tool to collection.", "error");
+      return false;
+    } finally {
+      setAddToCollectionLoading(false);
+    }
+  };
+
+  const handleCreateCollectionFromTool = async ({ name, description }) => {
+    if (!tool || !ensureLoggedIn()) {
+      return false;
+    }
+
+    if (!name?.trim()) {
+      addToast("Collection name is required.", "error");
+      return false;
+    }
+
+    try {
+      setAddToCollectionLoading(true);
+      const result = await createCollectionWithTool(name.trim(), description?.trim() || "", tool._id, false);
+
+      if (result.success) {
+        addToast(result.message || 'Collection created and tool added.', 'success');
+        await refreshCollections();
+        setShowCollectionModal(false);
+        return true;
+      }
+
+      addToast(result.message || "Failed to create collection.", "error");
+      return false;
+    } catch (err) {
+      addToast(err.message || "Failed to create collection.", "error");
+      return false;
     } finally {
       setAddToCollectionLoading(false);
     }
@@ -1327,7 +1498,9 @@ export default function ToolDetailPage() {
         loading={collectionsLoading}
         addLoading={addToCollectionLoading}
         toolName={tool?.name}
+        selectedCollectionIds={selectedCollectionIds}
         onSelect={handleAddToCollection}
+        onCreateCollection={handleCreateCollectionFromTool}
         onClose={() => setShowCollectionModal(false)}
       />
     </>

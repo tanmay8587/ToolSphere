@@ -9,7 +9,7 @@ import { sendErrorResponse } from "../utils/errorResponse.js";
  * - Returns the created collection.
  */
 export const createCollection = asyncHandler(async (req, res) => {
-  const { name, isPublic } = req.body;
+  const { name, description, isPublic } = req.body;
 
   if (!name || !name.trim()) {
     return sendErrorResponse(res, 400, "Collection name is required.");
@@ -18,6 +18,7 @@ export const createCollection = asyncHandler(async (req, res) => {
   const collection = await Collection.create({
     user: req.user.id,
     name: name.trim(),
+    description: description ? description.trim() : "",
     tools: [],
     isPublic: isPublic || false,
   });
@@ -25,6 +26,41 @@ export const createCollection = asyncHandler(async (req, res) => {
   res.status(201).json({
     success: true,
     data: collection,
+  });
+});
+
+export const createCollectionWithTool = asyncHandler(async (req, res) => {
+  const { name, description, toolId, isPublic } = req.body;
+
+  if (!name || !name.trim()) {
+    return sendErrorResponse(res, 400, "Collection name is required.");
+  }
+
+  if (!toolId) {
+    return sendErrorResponse(res, 400, "Tool ID is required.");
+  }
+
+  const collection = await Collection.create({
+    user: req.user.id,
+    name: name.trim(),
+    description: description ? description.trim() : "",
+    tools: [],
+    isPublic: isPublic || false,
+  });
+
+  const alreadyAdded = collection.tools.some((existingToolId) => existingToolId.toString() === toolId.toString());
+
+  if (!alreadyAdded) {
+    collection.tools.push(toolId);
+    await collection.save();
+  }
+
+  const populated = await collection.populate("tools");
+
+  res.status(201).json({
+    success: true,
+    data: populated,
+    message: alreadyAdded ? "Tool was already in the collection." : "Collection created and tool added.",
   });
 });
 
@@ -60,7 +96,9 @@ export const addToolToCollection = asyncHandler(async (req, res) => {
     return sendErrorResponse(res, 404, "Collection not found.");
   }
 
-  if (collection.tools.includes(toolId)) {
+  const alreadyAdded = collection.tools.some((existingToolId) => existingToolId.toString() === toolId.toString());
+
+  if (alreadyAdded) {
     return sendErrorResponse(res, 400, "Tool already exists in this collection.");
   }
 

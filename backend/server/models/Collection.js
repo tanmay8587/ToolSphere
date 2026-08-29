@@ -13,6 +13,11 @@ const collectionSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     tools: {
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tool" }],
       default: [],

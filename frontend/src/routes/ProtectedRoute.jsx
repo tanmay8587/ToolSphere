@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { isLoggedIn, isAdminLoggedIn, logout } from "../utils/auth";
+import { isLoggedIn, isAdminLoggedIn, logout, saveUser, getToken } from "../utils/auth";
 import { getProfile } from "../services/userApi";
 
 /**
@@ -37,7 +37,18 @@ export default function ProtectedRoute({ children, role = "user" }) {
 
     const verify = async () => {
       try {
-        await getProfile();
+        const token = getToken();
+        if (!token) {
+          throw new Error("No token");
+        }
+
+        const profileResponse = await getProfile();
+        const user = profileResponse?.data?.user;
+        if (user) {
+          saveUser(user);
+          window.dispatchEvent(new Event("auth-change"));
+        }
+
         if (!cancelled) setValid(true);
       } catch {
         // Profile fetch failed (401/User account not found) — clear session
@@ -52,6 +63,8 @@ export default function ProtectedRoute({ children, role = "user" }) {
 
     if (isLoggedIn()) {
       verify();
+    } else if (getToken()) {
+      verify();
     } else {
       setVerifying(false);
       setValid(false);
@@ -61,8 +74,14 @@ export default function ProtectedRoute({ children, role = "user" }) {
   }, []);
 
   if (verifying) {
-    // Show nothing while verifying (prevents flash of content)
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-300">
+        <div className="flex items-center gap-3">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-600 border-t-cyan-400" />
+          <span>Loading your account...</span>
+        </div>
+      </div>
+    );
   }
 
   if (!valid) {

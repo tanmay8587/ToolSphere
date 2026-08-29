@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { loginUser, registerUser, googleAuth, resendVerificationEmail } from "../services/userApi";
+import { loginUser, registerUser, googleAuth, resendVerificationEmail, getProfile } from "../services/userApi";
 import { saveToken, saveUser } from "../utils/auth";
 import PasswordInput from "../components/common/PasswordInput";
 import { FiMail, FiRefreshCw } from "react-icons/fi";
@@ -60,23 +60,36 @@ export default function Login() {
     }
   };
 
-  const handleLoginResponse = (data) => {
+  const handleLoginResponse = async (data) => {
     // DEBUG LOGGING - Frontend Login
-    console.log("=== FRONTEND LOGIN DEBUG ===");
-    console.log("Login response data:", data);
-    console.log("data.success:", data.success);
-    console.log("data.user?.isVerified:", data.user?.isVerified);
+    console.log("[AUTH DEBUG] LOGIN SUCCESS");
+    console.log("[AUTH DEBUG] TOKEN STORED");
+    console.log("[AUTH DEBUG] FETCHING CURRENT USER");
 
     if (data.success) {
       // Only save token and navigate if user is verified
       if (data.user?.isVerified === true) {
         saveToken(data.token);
         saveUser(data.user);
+
+        try {
+          const profileResponse = await getProfile();
+          const currentUser = profileResponse?.data?.user || data.user;
+          if (currentUser) {
+            saveUser(currentUser);
+            console.log("[AUTH DEBUG] CURRENT USER SUCCESS");
+          }
+        } catch (profileErr) {
+          console.log("[AUTH DEBUG] CURRENT USER FAILED");
+          setError(profileErr.response?.data?.message || "Unable to load your account.");
+          return;
+        }
+
         // Notify the navbar (and other components) that the session changed
         // so the UserMenu appears immediately without a full page reload.
         window.dispatchEvent(new Event("auth-change"));
-        // Return to the page the user was trying to reach (if any),
-        // otherwise go to the home page.
+        console.log("[AUTH DEBUG] AUTH STATE READY");
+
         const destination = location.state?.from?.pathname || "/";
         navigate(destination, { replace: true });
       } else {
@@ -127,7 +140,7 @@ export default function Login() {
         }
       } else {
         const response = await loginUser(payload);
-        handleLoginResponse(response.data);
+        await handleLoginResponse(response.data);
       }
     } catch (err) {
       if (err.response?.status === 403) {

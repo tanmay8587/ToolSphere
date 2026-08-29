@@ -14,6 +14,7 @@ export default function CollectionSelector({
   collections = [],
   loading = false,
   selectedId = null,
+  selectedIds = [],
   onSelect,
   emptyMessage = "You don't have any collections yet.",
 }) {
@@ -35,10 +36,16 @@ export default function CollectionSelector({
     );
   }
 
+  const activeSelectedIds = new Set(
+    Array.isArray(selectedIds) && selectedIds.length > 0
+      ? selectedIds
+      : selectedId ? [selectedId] : []
+  );
+
   return (
     <div className="max-h-72 space-y-2 overflow-y-auto">
       {collections.map((collection) => {
-        const isSelected = collection._id === selectedId;
+        const isSelected = activeSelectedIds.has(collection._id);
         return (
           <button
             key={collection._id}
@@ -54,8 +61,9 @@ export default function CollectionSelector({
               <FiFolder className="shrink-0 text-slate-400" />
               <span className="truncate">{collection.name}</span>
             </span>
-            <span className="shrink-0 text-xs text-slate-400">
-              {collection.tools?.length || 0} tools
+            <span className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
+              {isSelected && <span className="font-semibold text-cyan-300">✓</span>}
+              <span>{collection.tools?.length || 0} tools</span>
             </span>
           </button>
         );

@@ -6,9 +6,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
  * Creates a new collection for the logged-in user.
  * @param {string} name - The collection name.
  * @param {boolean} isPublic - Whether the collection is public.
+ * @param {string} description - Optional description for the collection.
  * @returns {Promise<{success: boolean, data?: object, message?: string}>}
  */
-export const createCollection = async (name, isPublic = false) => {
+export const createCollection = async (name, isPublic = false, description = "") => {
   try {
     const token = getToken();
     if (!token) return { success: false, message: "Authentication required." };
@@ -19,13 +20,43 @@ export const createCollection = async (name, isPublic = false) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ name, isPublic }),
+      body: JSON.stringify({ name, description, isPublic }),
     });
 
     const data = await response.json();
     return data;
   } catch (error) {
     console.error("Error creating collection:", error);
+    return { success: false, message: error.message || "Failed to create collection." };
+  }
+};
+
+/**
+ * Creates a new collection and immediately adds the current tool to it.
+ * @param {string} name
+ * @param {string} description
+ * @param {string} toolId
+ * @param {boolean} isPublic
+ * @returns {Promise<{success: boolean, data?: object, message?: string}>}
+ */
+export const createCollectionWithTool = async (name, description = "", toolId, isPublic = false) => {
+  try {
+    const token = getToken();
+    if (!token) return { success: false, message: "Authentication required." };
+
+    const response = await fetch(`${API_BASE_URL}/collections/with-tool`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name, description, toolId, isPublic }),
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error creating collection with tool:", error);
     return { success: false, message: error.message || "Failed to create collection." };
   }
 };

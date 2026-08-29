@@ -1,5 +1,5 @@
 import express from "express";
-import { createCollection, getCollections, addToolToCollection, removeToolFromCollection, renameCollection, deleteCollection, getSharedCollection } from "../controllers/collectionController.js";
+import { createCollection, createCollectionWithTool, getCollections, addToolToCollection, removeToolFromCollection, renameCollection, deleteCollection, getSharedCollection } from "../controllers/collectionController.js";
 import { verifyUser } from "../middleware/auth.js";
 
 /* ===========================
@@ -20,6 +20,13 @@ router.get("/shared/:shareId", getSharedCollection);
  * - Creates a new collection with a name.
  */
 router.post("/", verifyUser, createCollection);
+
+/**
+ * POST /api/collections/with-tool
+ * - Logged-in user only.
+ * - Creates a collection and adds the tool in one operation.
+ */
+router.post("/with-tool", verifyUser, createCollectionWithTool);
 
 /**
  * GET /api/collections
