@@ -11,26 +11,63 @@ import { sendErrorResponse } from "../utils/errorResponse.js";
 export const createCollection = asyncHandler(async (req, res) => {
   const { name, description, isPublic } = req.body;
 
+  console.log("[COLLECTION DEBUG] create request received");
+  console.log(`[COLLECTION DEBUG] authenticated user ID: ${req.user?.id ? String(req.user.id) : "none"}`);
+  console.log(`[COLLECTION DEBUG] collection name exists: ${Boolean(name && name.trim())}`);
+
+  if (!req.user?.id) {
+    return res.status(401).json({ success: false, code: "AUTH_ERROR", message: "Authentication required." });
+  }
+
   if (!name || !name.trim()) {
     return sendErrorResponse(res, 400, "Collection name is required.");
   }
 
-  const collection = await Collection.create({
-    user: req.user.id,
-    name: name.trim(),
-    description: description ? description.trim() : "",
-    tools: [],
-    isPublic: isPublic || false,
-  });
+  try {
+    console.log("[COLLECTION DEBUG] database operation started");
+    const collection = await Collection.create({
+      user: req.user.id,
+      name: name.trim(),
+      description: description ? description.trim() : "",
+      tools: [],
+      isPublic: isPublic || false,
+    });
+    console.log("[COLLECTION DEBUG] database operation succeeded");
 
-  res.status(201).json({
-    success: true,
-    data: collection,
-  });
+    res.status(201).json({
+      success: true,
+      data: collection,
+    });
+  } catch (error) {
+    console.error("[COLLECTION DEBUG] database operation failed", {
+      name: error?.name,
+      code: error?.code,
+      message: error?.message,
+    });
+
+    if (error?.name === "ValidationError") {
+      return res.status(400).json({ success: false, code: "VALIDATION_ERROR", message: "Invalid collection data." });
+    }
+
+    if (error?.code === 11000) {
+      return res.status(409).json({ success: false, code: "DUPLICATE_COLLECTION", message: "This collection already exists." });
+    }
+
+    return res.status(500).json({ success: false, code: "DATABASE_ERROR", message: "Unable to create collection right now." });
+  }
 });
 
 export const createCollectionWithTool = asyncHandler(async (req, res) => {
   const { name, description, toolId, isPublic } = req.body;
+
+  console.log("[COLLECTION DEBUG] create with tool request received");
+  console.log(`[COLLECTION DEBUG] authenticated user ID: ${req.user?.id ? String(req.user.id) : "none"}`);
+  console.log(`[COLLECTION DEBUG] collection name exists: ${Boolean(name && name.trim())}`);
+  console.log(`[COLLECTION DEBUG] tool ID provided: ${Boolean(toolId)}`);
+
+  if (!req.user?.id) {
+    return res.status(401).json({ success: false, code: "AUTH_ERROR", message: "Authentication required." });
+  }
 
   if (!name || !name.trim()) {
     return sendErrorResponse(res, 400, "Collection name is required.");
@@ -40,28 +77,48 @@ export const createCollectionWithTool = asyncHandler(async (req, res) => {
     return sendErrorResponse(res, 400, "Tool ID is required.");
   }
 
-  const collection = await Collection.create({
-    user: req.user.id,
-    name: name.trim(),
-    description: description ? description.trim() : "",
-    tools: [],
-    isPublic: isPublic || false,
-  });
+  try {
+    console.log("[COLLECTION DEBUG] database operation started");
+    const collection = await Collection.create({
+      user: req.user.id,
+      name: name.trim(),
+      description: description ? description.trim() : "",
+      tools: [],
+      isPublic: isPublic || false,
+    });
 
-  const alreadyAdded = collection.tools.some((existingToolId) => existingToolId.toString() === toolId.toString());
+    const alreadyAdded = collection.tools.some((existingToolId) => existingToolId.toString() === toolId.toString());
 
-  if (!alreadyAdded) {
-    collection.tools.push(toolId);
-    await collection.save();
+    if (!alreadyAdded) {
+      collection.tools.push(toolId);
+      await collection.save();
+    }
+
+    const populated = await collection.populate("tools");
+    console.log("[COLLECTION DEBUG] database operation succeeded");
+
+    res.status(201).json({
+      success: true,
+      data: populated,
+      message: alreadyAdded ? "Tool was already in the collection." : "Collection created and tool added.",
+    });
+  } catch (error) {
+    console.error("[COLLECTION DEBUG] database operation failed", {
+      name: error?.name,
+      code: error?.code,
+      message: error?.message,
+    });
+
+    if (error?.name === "ValidationError") {
+      return res.status(400).json({ success: false, code: "VALIDATION_ERROR", message: "Invalid collection data." });
+    }
+
+    if (error?.code === 11000) {
+      return res.status(409).json({ success: false, code: "DUPLICATE_COLLECTION", message: "This collection already exists." });
+    }
+
+    return res.status(500).json({ success: false, code: "DATABASE_ERROR", message: "Unable to create collection right now." });
   }
-
-  const populated = await collection.populate("tools");
-
-  res.status(201).json({
-    success: true,
-    data: populated,
-    message: alreadyAdded ? "Tool was already in the collection." : "Collection created and tool added.",
-  });
 });
 
 /**

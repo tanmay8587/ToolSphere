@@ -66,13 +66,19 @@ announcementSchema.statics.getActiveAnnouncements = async function (limit = 10) 
   
   const announcements = await this.find({
     isActive: true,
-    $or: [
-      { scheduledAt: null },
-      { scheduledAt: { $lte: now } }
-    ],
-    $or: [
-      { expiresAt: null },
-      { expiresAt: { $gte: now } }
+    $and: [
+      {
+        $or: [
+          { scheduledAt: null },
+          { scheduledAt: { $lte: now } }
+        ]
+      },
+      {
+        $or: [
+          { expiresAt: null },
+          { expiresAt: { $gte: now } }
+        ]
+      }
     ]
   })
     .sort((a, b) => {
