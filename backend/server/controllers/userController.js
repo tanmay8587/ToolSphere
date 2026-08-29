@@ -13,10 +13,12 @@ import { sendEmail } from "./smtpController.js";
 import logger from "../utils/logger.js";
 import { getMembershipPermissions } from "../utils/membershipPermissions.js";
 
-const createToken = (user) => {
+export const createToken = (user) => {
   const userId = user?._id?.toString?.() || user?.id || user?.userId || "";
 
-  return jwt.sign({ userId, id: userId, email: user.email }, process.env.JWT_SECRET, {
+  console.log(`[AUTH DEBUG] JWT userId: ${userId || "none"}`);
+
+  return jwt.sign({ userId, email: user.email }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 };

@@ -48,9 +48,24 @@ export const verifyAdmin = async (req, res, next) => {
   }
 };
 
-const getUserIdFromToken = (decoded) => {
+export const getUserIdFromToken = (decoded) => {
   if (!decoded) return null;
-  return decoded.userId || decoded.id || decoded._id || null;
+
+  const rawUserId = decoded.userId ?? decoded.id ?? decoded._id ?? null;
+
+  if (rawUserId === null || rawUserId === undefined) {
+    return null;
+  }
+
+  if (typeof rawUserId === "string") {
+    return rawUserId;
+  }
+
+  if (typeof rawUserId === "object" && typeof rawUserId.toString === "function") {
+    return rawUserId.toString();
+  }
+
+  return String(rawUserId);
 };
 
 export const verifyUser = async (req, res, next) => {
@@ -65,20 +80,24 @@ export const verifyUser = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userIdFromToken = getUserIdFromToken(decoded);
 
+    console.log(`[AUTH DEBUG] JWT userId: ${userIdFromToken || "none"}`);
+
     if (!userIdFromToken) {
-      console.log({ authStep: "JWT_USER_LOOKUP", userIdFromToken: null, userFound: false, reason: "TOKEN_MISSING_USER_ID" });
+      console.log("[AUTH DEBUG] JWT userId: none");
       return res.status(401).json({ success: false, code: "INVALID_TOKEN", message: "Invalid or expired token." });
     }
 
     let user;
     try {
+      console.log(`[AUTH DEBUG] DB lookup userId: ${userIdFromToken}`);
       user = await User.findById(userIdFromToken);
     } catch (dbErr) {
-      console.log({ authStep: "JWT_USER_LOOKUP", userIdFromToken: userIdFromToken.toString(), userFound: false, reason: "DATABASE_ERROR", message: dbErr.message });
+      console.log(`[AUTH DEBUG] DB lookup userId: ${userIdFromToken}`);
+      console.log("[AUTH DEBUG] User found: false");
       return res.status(500).json({ success: false, code: "DATABASE_ERROR", message: "Authentication service is temporarily unavailable." });
     }
 
-    console.log({ authStep: "JWT_USER_LOOKUP", userIdFromToken: userIdFromToken.toString(), userFound: !!user });
+    console.log(`[AUTH DEBUG] User found: ${!!user}`);
 
     if (!user) {
       return res.status(401).json({ success: false, code: "USER_NOT_FOUND", message: "Your account no longer exists. Please sign in again." });
@@ -114,16 +133,22 @@ export const verifyMembership = (requiredTier = MEMBERSHIP_TIER.PRO) => async (r
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userIdFromToken = getUserIdFromToken(decoded);
 
+    console.log(`[AUTH DEBUG] JWT userId: ${userIdFromToken || "none"}`);
+
     if (!userIdFromToken) {
       return res.status(401).json({ success: false, code: "INVALID_TOKEN", message: "Invalid or expired token." });
     }
 
     let user;
     try {
+      console.log(`[AUTH DEBUG] DB lookup userId: ${userIdFromToken}`);
       user = await User.findById(userIdFromToken);
     } catch (dbErr) {
+      console.log(`[AUTH DEBUG] User found: false`);
       return res.status(500).json({ success: false, code: "DATABASE_ERROR", message: "Authentication service is temporarily unavailable." });
     }
+
+    console.log(`[AUTH DEBUG] User found: ${!!user}`);
 
     if (!user) {
       return res.status(401).json({ success: false, code: "USER_NOT_FOUND", message: "Your account no longer exists. Please sign in again." });

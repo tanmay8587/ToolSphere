@@ -44,6 +44,15 @@ API.interceptors.response.use(
       window.dispatchEvent(new Event("auth-change"));
       sessionStorage.setItem("authToast", "Your account no longer exists. Please sign in again.");
       window.location.href = "/login?deleted=true";
+    } else if (responseStatus === 401 && (responseCode === "INVALID_TOKEN" || responseCode === "TOKEN_EXPIRED")) {
+      logout();
+      window.dispatchEvent(new Event("auth-change"));
+      sessionStorage.setItem("authToast", "Your session has expired. Please sign in again.");
+      window.location.href = "/login?session=expired";
+    } else if (responseStatus === 500 && responseCode === "DATABASE_ERROR") {
+      logout();
+      window.dispatchEvent(new Event("auth-change"));
+      sessionStorage.setItem("authToast", "Authentication service is temporarily unavailable. Please try again.");
     } else if (responseStatus === 401) {
       logout();
       window.dispatchEvent(new Event("auth-change"));
