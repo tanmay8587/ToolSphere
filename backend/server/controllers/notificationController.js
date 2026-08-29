@@ -161,6 +161,36 @@ export const deleteNotification = async (req, res) => {
       });
     }
 
+    console.log("[NOTIFICATION DELETE DEBUG] userId:", userId);
+    console.log("[NOTIFICATION DELETE DEBUG] notificationId:", id);
+
+    const notificationById = await Notification.findById(id);
+
+    console.log(
+      "[NOTIFICATION DELETE DEBUG] notificationExists:",
+      !!notificationById
+    );
+
+    console.log(
+      "[NOTIFICATION DELETE DEBUG] notificationOwner:",
+      notificationById?.user?.toString?.() ?? null
+    );
+
+    console.log(
+      "[NOTIFICATION DELETE DEBUG] ownerMatches:",
+      notificationById?.user?.toString?.() === userId?.toString?.()
+    );
+
+    const authorizedNotificationFound = await Notification.findOne({
+      _id: id,
+      user: userId,
+    });
+
+    console.log(
+      "[NOTIFICATION DELETE DEBUG] authorizedNotificationFound:",
+      !!authorizedNotificationFound
+    );
+
     // For user-scoped requests, ensure the notification belongs to the user.
     const notification = await Notification.findOneAndDelete({
       _id: id,
