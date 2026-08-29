@@ -60,6 +60,7 @@ const CompanyToolEdit = lazy(() => import("./pages/company/ToolEdit"));
 const CompanyAnalytics = lazy(() => import("./pages/company/Analytics"));
 const CompanyTeam = lazy(() => import("./pages/company/TeamMembers"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
+const PremiumPage = lazy(() => import("./pages/PremiumPage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
 const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
@@ -111,6 +112,7 @@ function App() {
               <Route path="tools" element={<ToolsPage />} />
               <Route path="tools/:slug" element={<ToolDetailPage />} />
               <Route path="compare" element={<ComparePage />} />
+              <Route path="premium" element={<PremiumPage />} />
               <Route path="blog" element={<BlogPage />} />
               <Route path="blog/:slug" element={<BlogDetailPage />} />
               <Route path="about" element={<AboutPage />} />
