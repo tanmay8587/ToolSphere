@@ -134,7 +134,12 @@ export default function Login() {
         setNeedsVerification(true);
         setVerificationEmail(form.email);
       }
-      setError(err.response?.data?.message || "Authentication failed.");
+
+      if (err.response?.data?.code === "INVALID_CREDENTIALS") {
+        setError("Invalid email or password.");
+      } else {
+        setError(err.response?.data?.message || "Authentication failed.");
+      }
     } finally {
       setLoading(false);
     }

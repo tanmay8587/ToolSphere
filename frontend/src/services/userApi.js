@@ -29,14 +29,20 @@ API.interceptors.response.use(
     const responseStatus = error.response?.status;
     const responseCode = error.response?.data?.code;
     const responseMessage = error.response?.data?.message || "Authentication failed.";
+    const requestUrl = error.config?.url || "";
+    const isLoginRequest = requestUrl.includes("/auth/login") || requestUrl.includes("/auth/google");
 
-    console.log({ authStep: "AUTH_RESPONSE", status: responseStatus, authenticated: false, code: responseCode, message: responseMessage });
+    console.log({ authStep: "AUTH_RESPONSE", status: responseStatus, authenticated: false, code: responseCode, message: responseMessage, url: requestUrl });
 
     if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
       error.response = {
         status: 408,
         data: { success: false, code: "EMAIL_SEND_TIMEOUT", message: "The email request timed out. Please try again." },
       };
+    }
+
+    if (responseStatus === 401 && isLoginRequest) {
+      return Promise.reject(error);
     }
 
     if (responseStatus === 401 && responseCode === "USER_NOT_FOUND") {

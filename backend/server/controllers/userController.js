@@ -152,15 +152,25 @@ export const loginUser = async (req, res) => {
     const sanitizedEmail = sanitizeInput(email);
 
     const user = await User.findOne({ email: sanitizedEmail.toLowerCase() });
-    
+
     if (!user || !user.password) {
-      return res.status(401).json({ success: false, message: "Invalid credentials." });
+      console.log("[AUTH DEBUG] LOGIN FAILED: INVALID_CREDENTIALS");
+      return res.status(401).json({
+        success: false,
+        code: "INVALID_CREDENTIALS",
+        message: "Invalid email or password.",
+      });
     }
 
     const valid = await bcrypt.compare(password, user.password);
 
     if (!valid) {
-      return res.status(401).json({ success: false, message: "Invalid credentials." });
+      console.log("[AUTH DEBUG] LOGIN FAILED: INVALID_CREDENTIALS");
+      return res.status(401).json({
+        success: false,
+        code: "INVALID_CREDENTIALS",
+        message: "Invalid email or password.",
+      });
     }
 
     // Check if email is verified
