@@ -50,6 +50,8 @@ export const getMembership = () => API.get("/auth/membership");
 export const createCheckout = () => API.post("/payments/checkout");
 export const markPaymentSuccess = (data) => API.post("/payments/success", data);
 export const markPaymentFailed = (data) => API.post("/payments/failed", data);
+export const cancelSubscription = () => API.post("/payments/cancel");
+export const refreshSubscriptionState = () => API.post("/payments/refresh");
 export const updateProfile = (data) => API.put("/auth/profile", data);
 export const updateNewsletterPreference = (newsletterEnabled) =>
   API.put("/auth/newsletter-preference", { newsletterEnabled });

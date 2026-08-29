@@ -14,6 +14,15 @@ const buildMembershipPayload = (membership) => ({
   endsAt: membership.endsAt,
   autoRenew: membership.autoRenew,
   metadata: membership.metadata,
+  currentPlan: membership.metadata?.planName || (membership.tier || "free").toUpperCase(),
+  paymentStatus:
+    membership.status === MEMBERSHIP_STATUS.EXPIRED || membership.status === MEMBERSHIP_STATUS.CANCELED
+      ? "past_due"
+      : membership.tier === MEMBERSHIP_TIER.PRO
+        ? "paid"
+        : "free",
+  renewalDate: membership.endsAt || null,
+  isExpired: !!membership.endsAt && new Date(membership.endsAt).getTime() <= Date.now(),
 });
 
 const computeEndsAt = () => new Date(Date.now() + PRO_DURATION_DAYS * 24 * 60 * 60 * 1000);
@@ -159,6 +168,85 @@ export const handleFailedPayment = async (req, res) => {
   } catch (err) {
     logger.error(`Failed payment handling failed: ${err.message}`);
     return res.status(500).json({ success: false, message: "Failed to record payment failure." });
+  }
+};
+
+export const cancelSubscription = async (req, res) => {
+  try {
+    const membership = await Membership.findOne({ user: req.user.id });
+    if (!membership) {
+      return res.status(404).json({ success: false, message: "Membership record not found." });
+    }
+
+    if (membership.tier === MEMBERSHIP_TIER.FREE) {
+      return res.status(400).json({ success: false, message: "Free plans do not require cancellation." });
+    }
+
+    membership.status = MEMBERSHIP_STATUS.CANCELED;
+    membership.autoRenew = false;
+    membership.metadata = {
+      ...membership.metadata,
+      notes: "Subscription canceled by user.",
+    };
+    await membership.save();
+
+    await User.updateOne(
+      { _id: req.user.id },
+      {
+        $set: {
+          membershipStatus: MEMBERSHIP_STATUS.CANCELED,
+        },
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Subscription canceled successfully.",
+      membership: buildMembershipPayload(membership),
+    });
+  } catch (err) {
+    logger.error(`Cancel subscription failed: ${err.message}`);
+    return res.status(500).json({ success: false, message: "Failed to cancel subscription." });
+  }
+};
+
+export const refreshSubscriptionState = async (req, res) => {
+  try {
+    const membership = await Membership.findOne({ user: req.user.id });
+    if (!membership) {
+      return res.status(404).json({ success: false, message: "Membership record not found." });
+    }
+
+    const now = new Date();
+    const isExpired = !!membership.endsAt && new Date(membership.endsAt).getTime() <= now.getTime();
+
+    if (isExpired && membership.status !== MEMBERSHIP_STATUS.EXPIRED) {
+      membership.status = MEMBERSHIP_STATUS.EXPIRED;
+      membership.autoRenew = false;
+      membership.metadata = {
+        ...membership.metadata,
+        notes: "Membership expired automatically.",
+      };
+      await membership.save();
+
+      await User.updateOne(
+        { _id: req.user.id },
+        {
+          $set: {
+            membershipStatus: MEMBERSHIP_STATUS.EXPIRED,
+            membershipTier: MEMBERSHIP_TIER.FREE,
+          },
+        }
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      membership: buildMembershipPayload(membership),
+    });
+  } catch (err) {
+    logger.error(`Refresh subscription state failed: ${err.message}`);
+    return res.status(500).json({ success: false, message: "Failed to refresh subscription state." });
   }
 };
 

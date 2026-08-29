@@ -24,6 +24,18 @@ const buildMembershipPayload = (user, membership) => ({
   permissions: getMembershipPermissions(membership?.tier || user.membershipTier || MEMBERSHIP_TIER.FREE),
   startedAt: membership?.startedAt || user.membershipSince || null,
   endsAt: membership?.endsAt || null,
+  currentPlan: membership?.metadata?.planName || (membership?.tier || user.membershipTier || MEMBERSHIP_TIER.FREE).toUpperCase(),
+  paymentStatus:
+    membership?.status === MEMBERSHIP_STATUS.EXPIRED || membership?.status === MEMBERSHIP_STATUS.CANCELED
+      ? "past_due"
+      : membership?.tier === MEMBERSHIP_TIER.PRO
+        ? "paid"
+        : "free",
+  renewalDate: membership?.endsAt || null,
+  isExpired:
+    !!membership?.endsAt && new Date(membership.endsAt).getTime() <= Date.now()
+      ? true
+      : membership?.status === MEMBERSHIP_STATUS.EXPIRED,
 });
 
 export const registerUser = async (req, res) => {

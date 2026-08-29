@@ -11,7 +11,14 @@ import {
   FiStar,
   FiZap,
 } from "react-icons/fi";
-import { createCheckout, getMembership, markPaymentFailed, markPaymentSuccess } from "../services/userApi";
+import {
+  cancelSubscription,
+  createCheckout,
+  getMembership,
+  markPaymentFailed,
+  markPaymentSuccess,
+  refreshSubscriptionState,
+} from "../services/userApi";
 import { getUser, isLoggedIn } from "../utils/auth";
 
 const plans = [
@@ -67,11 +74,9 @@ const proFeatures = [
   "Unlock premium directory experiences as they roll out.",
 ];
 
-const currentPlan = {
-  name: "Free",
-  status: "Active",
-  renewal: "No renewal required",
-  usage: "3 of 5 saved comparisons used",
+const formatDate = (value) => {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
 };
 
 export default function PremiumPage() {
@@ -79,6 +84,8 @@ export default function PremiumPage() {
   const [loadingMembership, setLoadingMembership] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +114,10 @@ export default function PremiumPage() {
   }, []);
 
   const isPro = membership?.tier === "pro" || membership?.tier === "business";
+  const isExpired = membership?.isExpired || membership?.status === "expired";
+  const currentPlan = membership?.currentPlan || (isPro ? "Pro" : "Free");
+  const renewalDate = membership?.renewalDate || membership?.endsAt || null;
+  const paymentStatus = membership?.paymentStatus || (isPro ? "paid" : "free");
 
   const handleUpgrade = async () => {
     try {
@@ -123,6 +134,34 @@ export default function PremiumPage() {
       setCheckoutMessage(error.response?.data?.message || "Failed to start checkout.");
     } finally {
       setCheckoutLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    try {
+      setActionLoading(true);
+      setActionMessage("");
+      const { data } = await cancelSubscription();
+      setMembership(data.membership);
+      setActionMessage(data.message);
+    } catch (error) {
+      setActionMessage(error.response?.data?.message || "Failed to cancel subscription.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRefreshSubscription = async () => {
+    try {
+      setActionLoading(true);
+      setActionMessage("");
+      const { data } = await refreshSubscriptionState();
+      setMembership(data.membership);
+      setActionMessage(isExpired ? "Subscription status refreshed." : "Subscription status is up to date.");
+    } catch (error) {
+      setActionMessage(error.response?.data?.message || "Failed to refresh subscription state.");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -214,29 +253,74 @@ export default function PremiumPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm text-slate-400">Current plan status</p>
-                  <h2 className="mt-1 text-2xl font-semibold text-white">{currentPlan.name}</h2>
+                  <h2 className="mt-1 text-2xl font-semibold text-white">{currentPlan}</h2>
                 </div>
-                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
-                  {currentPlan.status}
+                <span
+                  className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                    isExpired
+                      ? "border-red-500/30 bg-red-500/10 text-red-300"
+                      : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                  }`}
+                >
+                  {isExpired ? "Expired" : "Active"}
                 </span>
               </div>
 
               <div className="mt-6 space-y-4 text-sm text-slate-300">
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <FiClock className="mt-0.5 h-5 w-5 text-cyan-300" />
-                  <div>
-                    <p className="font-medium text-white">{currentPlan.renewal}</p>
-                    <p className="mt-1 text-slate-400">You can upgrade anytime without payment setup yet.</p>
-                  </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="font-medium text-white">Renewal date</p>
+                  <p className="mt-1 text-slate-400">
+                    {renewalDate ? formatDate(renewalDate) : "No renewal date"}
+                  </p>
+                  <p className="mt-1 text-slate-500">
+                    {isExpired ? "Renewal has passed. Reactivate to restore access." : "Next renewal date or billing cycle end."}
+                  </p>
                 </div>
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <FiShield className="mt-0.5 h-5 w-5 text-fuchsia-300" />
-                  <div>
-                    <p className="font-medium text-white">Usage</p>
-                    <p className="mt-1 text-slate-400">{currentPlan.usage}</p>
-                  </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="font-medium text-white">Payment status</p>
+                  <p className="mt-1 text-slate-400">
+                    {paymentStatus === "paid" ? "Paid" : paymentStatus === "past_due" ? "Past due" : "Free"}
+                  </p>
                 </div>
               </div>
+
+              {membership?.status === "canceled" ? (
+                <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-100">
+                  Your subscription is canceled and will remain active until the current billing period ends.
+                </div>
+              ) : null}
+
+              {isExpired ? (
+                <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-red-100">
+                  Your subscription has expired. Access is restricted until payment is renewed.
+                </div>
+              ) : null}
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                {isPro && membership?.status !== "canceled" ? (
+                  <button
+                    type="button"
+                    onClick={handleCancelSubscription}
+                    disabled={actionLoading}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-red-400/30 bg-red-500/10 px-5 py-3 font-semibold text-red-200 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Cancel subscription
+                  </button>
+                ) : null}
+                {isExpired ? (
+                  <button
+                    type="button"
+                    onClick={handleRefreshSubscription}
+                    disabled={actionLoading}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-5 py-3 font-semibold text-cyan-200 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Refresh subscription
+                  </button>
+                ) : null}
+              </div>
+
+              {actionMessage ? <p className="mt-4 text-sm text-slate-300">{actionMessage}</p> : null}
             </motion.div>
           </div>
         </section>
