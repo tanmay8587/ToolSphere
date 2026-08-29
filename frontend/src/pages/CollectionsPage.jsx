@@ -380,13 +380,13 @@ export default function CollectionsPage() {
   const handleCreate = async (name, isPublic) => {
     setCreateLoading(true);
     try {
-      const { data } = await createCollection(name, isPublic);
-      if (data.success) {
-        setCollections((prev) => [data.data, ...prev]);
+      const result = await createCollection(name, isPublic);
+      if (result.success) {
+        setCollections((prev) => [result.data, ...prev]);
         setCreateOpen(false);
         addToast("Collection created successfully.", "success");
       } else {
-        addToast(data.message || "Failed to create collection.", "error");
+        addToast(result.message || "Failed to create collection.", "error");
       }
     } catch (err) {
       addToast(err.message || "Failed to create collection.", "error");
@@ -399,15 +399,15 @@ export default function CollectionsPage() {
     if (!renameTarget) return;
     setRenameLoading(true);
     try {
-      const { data } = await renameCollection(renameTarget._id, name, isPublic);
-      if (data.success) {
+      const result = await renameCollection(renameTarget._id, name, isPublic);
+      if (result.success) {
         setCollections((prev) =>
-          prev.map((c) => (c._id === renameTarget._id ? { ...c, name: data.data.name, isPublic: data.data.isPublic } : c))
+          prev.map((c) => (c._id === renameTarget._id ? { ...c, name: result.data.name, isPublic: result.data.isPublic } : c))
         );
         setRenameTarget(null);
         addToast("Collection renamed successfully.", "success");
       } else {
-        addToast(data.message || "Failed to rename collection.", "error");
+        addToast(result.message || "Failed to rename collection.", "error");
       }
     } catch (err) {
       addToast(err.message || "Failed to rename collection.", "error");
@@ -420,13 +420,13 @@ export default function CollectionsPage() {
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
-      const { data } = await deleteCollection(deleteTarget._id);
-      if (data.success) {
+      const result = await deleteCollection(deleteTarget._id);
+      if (result.success) {
         setCollections((prev) => prev.filter((c) => c._id !== deleteTarget._id));
         setDeleteTarget(null);
         addToast("Collection deleted successfully.", "success");
       } else {
-        addToast(data.message || "Failed to delete collection.", "error");
+        addToast(result.message || "Failed to delete collection.", "error");
       }
     } catch (err) {
       addToast(err.message || "Failed to delete collection.", "error");
@@ -469,9 +469,9 @@ export default function CollectionsPage() {
     }
     setShareLoading(true);
     try {
-      const { data } = await renameCollection(collection._id, collection.name, true);
-      if (data.success) {
-        const shareId = data.data?.shareId || collection.shareId;
+      const result = await renameCollection(collection._id, collection.name, true);
+      if (result.success) {
+        const shareId = result.data?.shareId || collection.shareId;
         setCollections((prev) =>
           prev.map((c) =>
             c._id === collection._id ? { ...c, isPublic: true, shareId } : c
@@ -482,7 +482,7 @@ export default function CollectionsPage() {
           addToast("Collection is now public and ready to share.", "success");
         }
       } else {
-        addToast(data.message || "Failed to prepare collection for sharing.", "error");
+        addToast(result.message || "Failed to prepare collection for sharing.", "error");
       }
     } catch (err) {
       addToast(err.message || "Failed to prepare collection for sharing.", "error");
