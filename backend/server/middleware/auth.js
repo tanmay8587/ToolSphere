@@ -48,26 +48,47 @@ export const verifyAdmin = async (req, res, next) => {
   }
 };
 
+const getUserIdFromToken = (decoded) => {
+  if (!decoded) return null;
+  return decoded.userId || decoded.id || decoded._id || null;
+};
+
 export const verifyUser = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ success: false, message: "Unauthorized." });
+      return res.status(401).json({ success: false, code: "INVALID_TOKEN", message: "Unauthorized." });
     }
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const userIdFromToken = getUserIdFromToken(decoded);
+
+    if (!userIdFromToken) {
+      console.log({ authStep: "JWT_USER_LOOKUP", userIdFromToken: null, userFound: false, reason: "TOKEN_MISSING_USER_ID" });
+      return res.status(401).json({ success: false, code: "INVALID_TOKEN", message: "Invalid or expired token." });
+    }
+
+    let user;
+    try {
+      user = await User.findById(userIdFromToken);
+    } catch (dbErr) {
+      console.log({ authStep: "JWT_USER_LOOKUP", userIdFromToken: userIdFromToken.toString(), userFound: false, reason: "DATABASE_ERROR", message: dbErr.message });
+      return res.status(500).json({ success: false, code: "DATABASE_ERROR", message: "Authentication service is temporarily unavailable." });
+    }
+
+    console.log({ authStep: "JWT_USER_LOOKUP", userIdFromToken: userIdFromToken.toString(), userFound: !!user });
 
     if (!user) {
-      return res.status(401).json({ success: false, message: "User account not found." });
+      return res.status(401).json({ success: false, code: "USER_NOT_FOUND", message: "Your account no longer exists. Please sign in again." });
     }
 
     // Check if user is verified
     if (!user.isVerified) {
       return res.status(403).json({
         success: false,
+        code: "EMAIL_NOT_VERIFIED",
         message: "Please verify your email before accessing this resource.",
       });
     }
@@ -77,7 +98,7 @@ export const verifyUser = async (req, res, next) => {
     req.user = { id: user._id, email: user.email, membershipTier: tier, membershipStatus: membership?.status || user.membershipStatus || MEMBERSHIP_STATUS.ACTIVE, membershipPermissions: getMembershipPermissions(tier) };
     next();
   } catch (err) {
-    return res.status(401).json({ success: false, message: "Invalid or expired token." });
+    return res.status(401).json({ success: false, code: "INVALID_TOKEN", message: "Invalid or expired token." });
   }
 };
 
@@ -86,20 +107,32 @@ export const verifyMembership = (requiredTier = MEMBERSHIP_TIER.PRO) => async (r
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ success: false, message: "Unauthorized." });
+      return res.status(401).json({ success: false, code: "INVALID_TOKEN", message: "Unauthorized." });
     }
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const userIdFromToken = getUserIdFromToken(decoded);
+
+    if (!userIdFromToken) {
+      return res.status(401).json({ success: false, code: "INVALID_TOKEN", message: "Invalid or expired token." });
+    }
+
+    let user;
+    try {
+      user = await User.findById(userIdFromToken);
+    } catch (dbErr) {
+      return res.status(500).json({ success: false, code: "DATABASE_ERROR", message: "Authentication service is temporarily unavailable." });
+    }
 
     if (!user) {
-      return res.status(401).json({ success: false, message: "User account not found." });
+      return res.status(401).json({ success: false, code: "USER_NOT_FOUND", message: "Your account no longer exists. Please sign in again." });
     }
 
     if (!user.isVerified) {
       return res.status(403).json({
         success: false,
+        code: "EMAIL_NOT_VERIFIED",
         message: "Please verify your email before accessing this resource.",
       });
     }
@@ -131,7 +164,7 @@ export const verifyMembership = (requiredTier = MEMBERSHIP_TIER.PRO) => async (r
 
     next();
   } catch (err) {
-    return res.status(401).json({ success: false, message: "Invalid or expired token." });
+    return res.status(401).json({ success: false, code: "INVALID_TOKEN", message: "Invalid or expired token." });
   }
 };
 
@@ -150,7 +183,13 @@ export const optionalUser = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const userIdFromToken = getUserIdFromToken(decoded);
+
+    if (!userIdFromToken) {
+      return next();
+    }
+
+    const user = await User.findById(userIdFromToken);
 
     if (user && user.isVerified) {
       const membership = await Membership.findOne({ user: user._id });

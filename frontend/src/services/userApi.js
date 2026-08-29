@@ -21,8 +21,17 @@ API.interceptors.request.use((config) => {
 
 // Response interceptor to handle auth errors globally
 API.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log({ authStep: "AUTH_RESPONSE", status: response.status, authenticated: response.data?.success });
+    return response;
+  },
   (error) => {
+    const responseStatus = error.response?.status;
+    const responseCode = error.response?.data?.code;
+    const responseMessage = error.response?.data?.message || "Authentication failed.";
+
+    console.log({ authStep: "AUTH_RESPONSE", status: responseStatus, authenticated: false, code: responseCode, message: responseMessage });
+
     if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
       error.response = {
         status: 408,
@@ -30,16 +39,17 @@ API.interceptors.response.use(
       };
     }
 
-    // Handle 401 – user not found / invalid token / deleted account
-    if (error.response?.status === 401) {
+    if (responseStatus === 401 && responseCode === "USER_NOT_FOUND") {
       logout();
-      // Dispatch event so Layout/navbar updates its auth state immediately
       window.dispatchEvent(new Event("auth-change"));
-      // Store a toast message that Layout will pick up on next mount
-      sessionStorage.setItem("authToast", "Your account has been deleted. Please sign in again.");
+      sessionStorage.setItem("authToast", "Your account no longer exists. Please sign in again.");
       window.location.href = "/login?deleted=true";
-    } else if (error.response?.status === 403) {
-      // Log out unverified users automatically
+    } else if (responseStatus === 401) {
+      logout();
+      window.dispatchEvent(new Event("auth-change"));
+      sessionStorage.setItem("authToast", "Your session has expired. Please sign in again.");
+      window.location.href = "/login?session=expired";
+    } else if (responseStatus === 403) {
       logout();
       window.dispatchEvent(new Event("auth-change"));
     }

@@ -31,11 +31,19 @@ export default function Login() {
       : "login"
   );
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
-  const [error, setError] = useState(
-    new URLSearchParams(location.search).get("deleted") === "true"
-      ? "Your account no longer exists. Please sign in again."
-      : ""
-  );
+  const [error, setError] = useState(() => {
+    const params = new URLSearchParams(location.search);
+
+    if (params.get("deleted") === "true") {
+      return "Your account no longer exists. Please sign in again.";
+    }
+
+    if (params.get("session") === "expired") {
+      return "Your session has expired. Please sign in again.";
+    }
+
+    return "";
+  });
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [needsVerification, setNeedsVerification] = useState(false);
