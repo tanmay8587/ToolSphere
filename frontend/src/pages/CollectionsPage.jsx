@@ -439,11 +439,9 @@ export default function CollectionsPage() {
     const key = `${collectionId}:${tool._id}`;
     setRemoveLoading(key);
     try {
-      const { data } = await removeToolFromCollection(collectionId, tool._id);
-      if (data.success) {
+      const result = await removeToolFromCollection(collectionId, tool._id);
+      if (result?.success) {
         addToast(`Removed "${tool.name}" from collection.`, "success");
-        // Refresh collection state immediately to reflect the removed tool
-        // (in-place update avoids a full-page loading flash and preserves UI state)
         setCollections((prev) =>
           prev.map((c) =>
             c._id === collectionId
@@ -453,15 +451,15 @@ export default function CollectionsPage() {
         );
       } else {
         const errorMessage =
-          data.code === "COLLECTION_NOT_FOUND"
+          result?.code === "COLLECTION_NOT_FOUND"
             ? "Collection not found."
-            : data.code === "TOOL_NOT_IN_COLLECTION"
+            : result?.code === "TOOL_NOT_IN_COLLECTION"
             ? "This tool is not in this collection."
-            : data.code === "INVALID_TOOL_ID"
+            : result?.code === "INVALID_TOOL_ID"
             ? "Invalid tool."
-            : data.code === "DATABASE_ERROR"
+            : result?.code === "DATABASE_ERROR"
             ? "Unable to remove the tool right now. Please try again."
-            : data.message || "Failed to remove tool from collection.";
+            : result?.message || "Failed to remove tool from collection.";
         addToast(errorMessage, "error");
       }
     } catch (err) {
