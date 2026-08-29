@@ -175,8 +175,16 @@ export const removeToolFromCollection = asyncHandler(async (req, res) => {
   const { id: collectionId } = req.params;
   const { toolId } = req.body;
 
+  console.log(`[COLLECTION REMOVE DEBUG] userId: ${req.user?.id ? String(req.user.id) : "none"}`);
+  console.log(`[COLLECTION REMOVE DEBUG] collectionId: ${collectionId || "none"}`);
+  console.log(`[COLLECTION REMOVE DEBUG] toolId: ${toolId || "none"}`);
+
   if (!mongoose.Types.ObjectId.isValid(collectionId)) {
-    return sendErrorResponse(res, 400, "Invalid collection ID.");
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_COLLECTION_ID",
+      message: "Invalid collection ID.",
+    });
   }
 
   if (!toolId) {
@@ -184,19 +192,34 @@ export const removeToolFromCollection = asyncHandler(async (req, res) => {
   }
 
   if (!mongoose.Types.ObjectId.isValid(toolId)) {
-    return sendErrorResponse(res, 400, "Invalid tool ID.");
+    return res.status(400).json({
+      success: false,
+      code: "INVALID_TOOL_ID",
+      message: "Invalid tool.",
+    });
   }
 
   const collection = await Collection.findOne({ _id: collectionId, user: req.user.id });
+  console.log(`[COLLECTION REMOVE DEBUG] collectionFound: ${Boolean(collection)}`);
 
   if (!collection) {
-    return sendErrorResponse(res, 404, "Collection not found.");
+    return res.status(404).json({
+      success: false,
+      code: "COLLECTION_NOT_FOUND",
+      message: "Collection not found.",
+    });
   }
 
   const isInCollection = collection.tools.some((id) => id.toString() === toolId.toString());
+  console.log(`[COLLECTION REMOVE DEBUG] toolInCollection: ${Boolean(isInCollection)}`);
+  console.log(`[COLLECTION REMOVE DEBUG] toolCountBefore: ${collection.tools?.length || 0}`);
 
   if (!isInCollection) {
-    return sendErrorResponse(res, 404, "Tool not found in collection.");
+    return res.status(404).json({
+      success: false,
+      code: "TOOL_NOT_IN_COLLECTION",
+      message: "Tool is not in this collection.",
+    });
   }
 
   collection.tools = collection.tools.filter(
@@ -205,10 +228,12 @@ export const removeToolFromCollection = asyncHandler(async (req, res) => {
   await collection.save();
 
   const updated = await collection.populate("tools");
+  console.log(`[COLLECTION REMOVE DEBUG] toolCountAfter: ${updated.tools?.length || 0}`);
 
   res.status(200).json({
     success: true,
-    data: updated,
+    message: "Tool removed from collection.",
+    collection: updated,
   });
 });
 

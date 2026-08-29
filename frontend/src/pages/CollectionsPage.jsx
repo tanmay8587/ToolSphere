@@ -452,7 +452,17 @@ export default function CollectionsPage() {
           )
         );
       } else {
-        addToast(data.message || "Failed to remove tool from collection.", "error");
+        const errorMessage =
+          data.code === "COLLECTION_NOT_FOUND"
+            ? "Collection not found."
+            : data.code === "TOOL_NOT_IN_COLLECTION"
+            ? "This tool is not in this collection."
+            : data.code === "INVALID_TOOL_ID"
+            ? "Invalid tool."
+            : data.code === "DATABASE_ERROR"
+            ? "Unable to remove the tool right now. Please try again."
+            : data.message || "Failed to remove tool from collection.";
+        addToast(errorMessage, "error");
       }
     } catch (err) {
       addToast(err.message || "Failed to remove tool from collection.", "error");
