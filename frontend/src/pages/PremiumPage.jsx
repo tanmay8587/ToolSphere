@@ -11,7 +11,7 @@ import {
   FiStar,
   FiZap,
 } from "react-icons/fi";
-import { getMembership } from "../services/userApi";
+import { createCheckout, getMembership, markPaymentFailed, markPaymentSuccess } from "../services/userApi";
 import { getUser, isLoggedIn } from "../utils/auth";
 
 const plans = [
@@ -77,6 +77,8 @@ const currentPlan = {
 export default function PremiumPage() {
   const [membership, setMembership] = useState(null);
   const [loadingMembership, setLoadingMembership] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutMessage, setCheckoutMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -105,6 +107,45 @@ export default function PremiumPage() {
   }, []);
 
   const isPro = membership?.tier === "pro" || membership?.tier === "business";
+
+  const handleUpgrade = async () => {
+    try {
+      setCheckoutLoading(true);
+      setCheckoutMessage("");
+      const { data } = await createCheckout();
+      const checkoutUrl = data?.checkout?.url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+        return;
+      }
+      setCheckoutMessage(data?.message || "Checkout is not available right now.");
+    } catch (error) {
+      setCheckoutMessage(error.response?.data?.message || "Failed to start checkout.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get("checkout");
+    const checkoutId = params.get("checkoutId");
+
+    if (checkout === "success") {
+      markPaymentSuccess({ checkoutId, eventId: checkoutId, paymentIntentId: checkoutId })
+        .then(({ data }) => {
+          setMembership(data.membership);
+          setCheckoutMessage(data.message);
+        })
+        .catch((error) => setCheckoutMessage(error.response?.data?.message || "Payment confirmation failed."));
+    }
+
+    if (checkout === "failed") {
+      markPaymentFailed({ checkoutId })
+        .then(({ data }) => setCheckoutMessage(data.message))
+        .catch((error) => setCheckoutMessage(error.response?.data?.message || "Failed to record payment failure."));
+    }
+  }, []);
 
   return (
     <>
@@ -325,13 +366,16 @@ export default function PremiumPage() {
               clear without collecting payment details.
             </p>
 
-            <button
+              <button
               type="button"
+                onClick={handleUpgrade}
+                disabled={checkoutLoading || isPro}
               className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3 font-semibold text-slate-950 transition hover:bg-slate-100"
             >
-              Upgrade to Pro
+              {checkoutLoading ? "Starting checkout…" : "Upgrade to Pro"}
               <FiArrowRight className="h-5 w-5" />
             </button>
+              {checkoutMessage ? <p className="mt-4 text-sm text-slate-300">{checkoutMessage}</p> : null}
           </div>
         </section>
 

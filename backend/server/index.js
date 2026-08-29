@@ -47,6 +47,7 @@ import homeSettingsRoutes from "./routes/homeSettings.js";
 import announcementRoutes from "./routes/announcements.js";
 import searchRoutes from "./routes/search.js";
 import moderationRoutes from "./routes/moderation.js";
+import paymentRoutes from "./routes/payments.js";
 import logger, { sanitizeRequestForLog, redactReason } from "./utils/logger.js";
 import validateEnvironment from "./utils/envValidation.js";
 import { checkMaintenanceMode } from "./middleware/maintenance.js";
@@ -461,6 +462,7 @@ app.use("/api", homeSettingsRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/moderation", moderationRoutes);
+app.use("/api/payments", paymentRoutes);
 app.use("/api/company", companyRoutes);
 
 /* ===========================

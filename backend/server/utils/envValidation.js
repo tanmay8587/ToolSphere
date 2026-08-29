@@ -180,6 +180,19 @@ const validateEnvironment = () => {
     if (isProduction) {
       logger.info("✅ CORS_ORIGIN is configured for production");
     }
+
+    const paymentProvider = (process.env.PAYMENT_PROVIDER || "mock").toLowerCase();
+    if (paymentProvider === "stripe") {
+      if (!validateNotEmpty(process.env.STRIPE_SECRET_KEY, "STRIPE_SECRET_KEY")) {
+        isValid = false;
+      }
+      if (!validateNotEmpty(process.env.STRIPE_WEBHOOK_SECRET, "STRIPE_WEBHOOK_SECRET")) {
+        isValid = false;
+      }
+      if (!validateNotEmpty(process.env.STRIPE_PRO_PRICE_ID, "STRIPE_PRO_PRICE_ID")) {
+        isValid = false;
+      }
+    }
     logger.info("\n==================================\n");
   }
 
