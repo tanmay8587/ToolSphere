@@ -16,6 +16,7 @@ import {
   resendVerificationEmail,
   logoutUser,
   deleteAccount,
+  getMembership,
 } from "../controllers/userController.js";
 import { verifyUser } from "../middleware/auth.js";
 
@@ -36,6 +37,7 @@ router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", resendVerificationEmail);
 
 router.get("/profile", verifyUser, getProfile);
+router.get("/membership", verifyUser, getMembership);
 router.put("/profile", verifyUser, updateProfile);
 router.put("/newsletter-preference", verifyUser, updateNewsletterPreference);
 router.post("/tools/:toolId/bookmark", verifyUser, toggleBookmark);

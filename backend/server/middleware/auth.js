@@ -81,6 +81,60 @@ export const verifyUser = async (req, res, next) => {
   }
 };
 
+export const verifyMembership = (requiredTier = MEMBERSHIP_TIER.PRO) => async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "Unauthorized." });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User account not found." });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email before accessing this resource.",
+      });
+    }
+
+    const membership = await Membership.findOne({ user: user._id });
+    const tier = membership?.tier || user.membershipTier || MEMBERSHIP_TIER.FREE;
+    const status = membership?.status || user.membershipStatus || MEMBERSHIP_STATUS.ACTIVE;
+    const permissions = getMembershipPermissions(tier);
+
+    req.user = {
+      id: user._id,
+      email: user.email,
+      membershipTier: tier,
+      membershipStatus: status,
+      membershipPermissions: permissions,
+    };
+
+    if (tier !== requiredTier && tier !== MEMBERSHIP_TIER.BUSINESS) {
+      return res.status(403).json({
+        success: false,
+        message: "Upgrade to Pro to access this feature.",
+        membership: {
+          tier,
+          status,
+          permissions,
+        },
+      });
+    }
+
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, message: "Invalid or expired token." });
+  }
+};
+
 /**
  * Optional user auth: populates req.user when a valid token is present,
  * but does NOT reject the request when no/invalid token is provided.

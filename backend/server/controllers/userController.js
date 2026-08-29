@@ -231,6 +231,25 @@ export const getProfile = async (req, res) => {
   }
 };
 
+export const getMembership = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    const membership = await Membership.findOne({ user: user._id });
+
+    res.json({
+      success: true,
+      membership: buildMembershipPayload(user, membership),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to fetch membership." });
+  }
+};
+
 export const updateProfile = async (req, res) => {
   try {
     const { name, avatar, bio } = req.body;

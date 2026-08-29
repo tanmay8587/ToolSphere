@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
@@ -10,6 +11,8 @@ import {
   FiStar,
   FiZap,
 } from "react-icons/fi";
+import { getMembership } from "../services/userApi";
+import { getUser, isLoggedIn } from "../utils/auth";
 
 const plans = [
   {
@@ -72,6 +75,37 @@ const currentPlan = {
 };
 
 export default function PremiumPage() {
+  const [membership, setMembership] = useState(null);
+  const [loadingMembership, setLoadingMembership] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadMembership = async () => {
+      try {
+        if (!isLoggedIn()) {
+          if (!cancelled) setMembership(getUser()?.membership || null);
+          return;
+        }
+
+        const { data } = await getMembership();
+        if (!cancelled) setMembership(data.membership);
+      } catch {
+        if (!cancelled) setMembership(getUser()?.membership || null);
+      } finally {
+        if (!cancelled) setLoadingMembership(false);
+      }
+    };
+
+    loadMembership();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const isPro = membership?.tier === "pro" || membership?.tier === "business";
+
   return (
     <>
       <Helmet>
@@ -299,6 +333,40 @@ export default function PremiumPage() {
               <FiArrowRight className="h-5 w-5" />
             </button>
           </div>
+        </section>
+
+        <section className="mt-12 rounded-[2rem] border border-white/10 bg-slate-900/70 p-8 shadow-xl">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">
+                Access check
+              </p>
+              <h2 className="mt-2 text-3xl font-semibold text-white">Backend-verified Pro access</h2>
+              <p className="mt-3 text-slate-400">
+                Free users see this upgrade prompt. Pro access is always verified on the server.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-200">
+              {loadingMembership ? (
+                <span>Checking membership…</span>
+              ) : isPro ? (
+                <span className="text-emerald-300">Pro membership confirmed</span>
+              ) : (
+                <span className="text-amber-300">Free plan detected — upgrade required</span>
+              )}
+            </div>
+          </div>
+
+          {!isPro && !loadingMembership ? (
+            <div className="mt-6 rounded-2xl border border-amber-400/20 bg-amber-500/10 p-5 text-amber-100">
+              <p className="font-medium">Upgrade required</p>
+              <p className="mt-1 text-sm text-amber-100/80">
+                Your account is on the Free plan. Pro-only features stay locked until the
+                server confirms an upgraded membership.
+              </p>
+            </div>
+          ) : null}
         </section>
       </div>
     </>

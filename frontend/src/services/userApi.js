@@ -46,6 +46,7 @@ export const forgotPassword = (data) => API.post("/auth/forgot-password", data);
 export const resetPassword = (token, data) => API.put(`/auth/reset-password/${token}`, data);
 export const verifyResetToken = (token) => API.get(`/auth/verify-reset-token/${token}`);
 export const getProfile = () => API.get("/auth/profile");
+export const getMembership = () => API.get("/auth/membership");
 export const updateProfile = (data) => API.put("/auth/profile", data);
 export const updateNewsletterPreference = (newsletterEnabled) =>
   API.put("/auth/newsletter-preference", { newsletterEnabled });

@@ -20,7 +20,7 @@ import {
   submitTool,
 } from "../controllers/toolController.js";
 
-import { verifyUser } from "../middleware/auth.js";
+import { verifyMembership, verifyUser } from "../middleware/auth.js";
 import upload from "../middleware/upload.js";
 
 const router = express.Router();
@@ -82,6 +82,22 @@ router.get("/:slug", getToolBySlug);
  * - Get AI recommendation score for a tool
  */
 router.get("/:id/recommendation-score", getToolRecommendationScore);
+
+/**
+ * GET /api/tools/pro-check
+ * - Protected Pro-only access check for backend verification.
+ */
+router.get("/pro-check", verifyMembership(), (req, res) => {
+  res.json({
+    success: true,
+    message: "Pro access verified.",
+    membership: {
+      tier: req.user.membershipTier,
+      status: req.user.membershipStatus,
+      permissions: req.user.membershipPermissions,
+    },
+  });
+});
 
 
 /**
